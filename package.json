@@ -1,0 +1,7 @@
+{
+    "private": true,
+    "name": "bread",
+    "packageManager": "pnpm@10.12.1",
+    "workspaces": ["bread-api", "bread-web", "packages/*"]
+  }
+  

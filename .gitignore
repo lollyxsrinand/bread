@@ -1,0 +1,48 @@
+# ───── Core stuff ─────
+node_modules/
+# pnpm-lock.yaml
+.pnpm-debug.log*
+
+# ───── Turbo cache ─────
+turbo/
+.cache/
+
+# ───── Env + Secrets ─────
+.env*
+*.pem
+*.key
+*.crt
+*.cert
+serviceAccount.json
+
+# ───── Next.js ─────
+bread-website/.next/
+bread-website/out/
+bread-website/.vercel
+bread-website/coverage/
+bread-website/next-env.d.ts
+
+# ───── Fastify backend ─────
+bread-api/build/
+bread-api/dist/
+bread-api/coverage/
+
+# ───── Shared package ─────
+packages/bread-core/dist/
+packages/bread-core/*.tsbuildinfo
+
+# ───── OS / Editor / Misc ─────
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.idea/
+.vscode/

@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "declaration": true,
+    "outDir": "dist",
+    "composite": true,
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {}
+  },
+  "include": ["src"]
+}
+

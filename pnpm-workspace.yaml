@@ -1,0 +1,4 @@
+packages:
+  - bread-api
+  - bread-web
+  - packages/*
