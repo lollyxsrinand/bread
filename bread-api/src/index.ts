@@ -26,7 +26,8 @@ app.post('/signup', async(request, reply) => {
     console.error(error)
     return reply.status(500).send({ error: 'Failed to create user' })
   }
-  console.log('created user, everyone in the hamptons is happy now ')
+
+  console.log('created user')
   return reply.status(200).send({ message: 'User created successfully' })
 
 })

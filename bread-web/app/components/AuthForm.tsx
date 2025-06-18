@@ -1,10 +1,11 @@
 "use client";
 import { auth } from "@/lib/firebase/client";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, } from "firebase/auth";
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Toast from "./Toast";
 
-// auth functions prolly throw them somewhere else and arrange them and tidy this component?
+// auth functions prolly put them somewhere else and arrange them and tidy this component?
 const handleFirebaseAuth = async (AuthType: string, email: string, password: string) => {
     try {
         return AuthType === 'Login'
@@ -50,6 +51,7 @@ const createSession = async (uid: string) => {
 // TODO: add loading state, error handling, and form validation
 export const AuthForm = ({ AuthType }: { AuthType: "Login" | "Signup" }) => {
     const router = useRouter();
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -63,6 +65,7 @@ export const AuthForm = ({ AuthType }: { AuthType: "Login" | "Signup" }) => {
         const userCredential = await handleFirebaseAuth(AuthType, email, password)
 
         if (!userCredential) {
+            setToastMessage("Authentication failed. Please try again.");
             console.log('something wrong');
             return
         }
@@ -85,6 +88,9 @@ export const AuthForm = ({ AuthType }: { AuthType: "Login" | "Signup" }) => {
     return (
         <>
             <div className="h-screen w-full flex items-center justify-center">
+                {toastMessage && (
+                    <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
+                )}
                 <form
                     onSubmit={handleSubmit}
                     className="h-[320px] w-[240px] p-[10px] flex flex-col items-center justify-center gap-[10px] text-center"
@@ -104,7 +110,7 @@ export const AuthForm = ({ AuthType }: { AuthType: "Login" | "Signup" }) => {
                             name="password"
                         />
                     </div>
-                    <button type="submit" className="bg-[#242628] w-full p-[10px] rounded-[4px] text-white">
+                    <button type="submit" className="bg-[#242628] w-full p-[10px] rounded-[4px] text-white cursor-pointer">
                         {AuthType}
                     </button>
                     <p> or {" "}
