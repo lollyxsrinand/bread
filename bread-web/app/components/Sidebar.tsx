@@ -6,7 +6,7 @@ const Sidebar = () => {
     <div className="h-full bg-black text-white w-1/5">
       <div className="w-full h-fit flex gap-2 p-2">
         <Icon name="bread" />
-        <h1 className="text-lg font-semibold">Srinand's Budget 2025</h1>
+        <h1 className="text-lg font-semibold">Srinand{"'"}s Budget 2025</h1>
       </div>
       <div className="flex flex-col w-full">
         <button type="button" className="sidebar-button bg-gray-400">
