@@ -12,7 +12,7 @@ const handleFirebaseAuth = async (AuthType: string, email: string, password: str
             ? await signInWithEmailAndPassword(auth, email, password)
             : await createUserWithEmailAndPassword(auth, email, password);
     } catch (error) {
-        toast((error as any).message, { type: "error" })
+        toast((error as Error).message, { type: "error" })
         // console.log(error);
         return null;
     }
@@ -80,8 +80,8 @@ export const AuthForm = ({ AuthType }: { AuthType: "Login" | "Signup" }) => {
         // console.log(`Session created in ${end - start}ms`); // log the time taken to create session
 
         if (sessionCreated) {
-            window.location.href = '/home'
-            // router.push("/home");
+            // window.location.href = '/home'
+            router.push("/home");
         }
     }
 

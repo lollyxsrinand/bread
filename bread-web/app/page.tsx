@@ -1,4 +1,4 @@
-import { Category } from 'bread-core/src'
+// import { Category } from 'bread-core/src'
 // import { Icon } from 'lucide-react';
 // import { Icon } from './components/Icon';
 // import { Camera } from 'lucide-react';

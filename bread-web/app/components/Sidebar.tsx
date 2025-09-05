@@ -8,14 +8,14 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = React.useState(false);
   const toggleSidebar = () => setIsOpen(!isOpen);
 
-  const SidebarButton = ({ icon, label }: { icon: string, label: string }) => {
-    return (
-      <div className='flex items-center hover:bg-neutral-800 rounded-lg cursor-pointer transition-all ease-in-out'>
-        <LucideIcon className='hover:bg-neutral-800 rounded-lg transition-all ease-in-out' name={'calendar'} />
-        <div className={`h-fit w-fit overflow-hidden whitespace-nowrap ${isOpen ? 'opacity-100':'opacity-0'} transition-all duration-200 ease-in-out`}>Plan</div>
-      </div>
-    )
-  }
+  // const SidebarButton = ({ icon, label }: { icon: string, label: string }) => {
+  //   return (
+  //     <div className='flex items-center hover:bg-neutral-800 rounded-lg cursor-pointer transition-all ease-in-out'>
+  //       <LucideIcon className='hover:bg-neutral-800 rounded-lg transition-all ease-in-out' name={'calendar'} />
+  //       <div className={`h-fit w-fit overflow-hidden whitespace-nowrap ${isOpen ? 'opacity-100':'opacity-0'} transition-all duration-200 ease-in-out`}>Plan</div>
+  //     </div>
+  //   )
+  // }
 
   const Dropdown = () => {
     const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
