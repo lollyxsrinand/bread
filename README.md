@@ -6,4 +6,4 @@ this is a budget management webapp clone
 - nextjs
 - typescript
 
-and im ~~building~~ overthinking this webapp to its core so
+and im ~~building~~ overthinking this webapp to its core
