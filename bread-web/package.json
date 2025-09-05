@@ -9,13 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "bread-core": "workspace:*",
     "firebase": "^11.8.1",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.524.0",
     "next": "15.3.3",
     "postcss": "^8.5.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "bread-core": "workspace:*"
+    "react-toastify": "^11.0.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

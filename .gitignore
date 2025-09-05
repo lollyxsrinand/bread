@@ -3,6 +3,10 @@ node_modules/
 # pnpm-lock.yaml
 .pnpm-debug.log*
 
+todos.md
+hardestThingsSoFar.md
+roast.png
+
 # ───── Turbo cache ─────
 turbo/
 .cache/
@@ -16,11 +20,11 @@ turbo/
 serviceAccount.json
 
 # ───── Next.js ─────
-bread-website/.next/
-bread-website/out/
-bread-website/.vercel
-bread-website/coverage/
-bread-website/next-env.d.ts
+bread-web/.next/
+bread-web/out/
+bread-web/.vercel
+bread-web/coverage/
+bread-web/next-env.d.ts
 
 # ───── Fastify backend ─────
 bread-api/build/

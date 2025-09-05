@@ -12,12 +12,11 @@
 
 @theme {
   --color-white-pitch: #ffffff;
-  --color-white: #f8f8f8;
   --color-gray-100: #e5e5ea;
   --color-gray-200: #ced0d3;
   --color-gray-300: #3b3c3e;
   --color-gray-400: #242628;
-  --color-black: #09090a;
+  --color-black: #000000;
   --color-red: #ff2e2e;
   --color-red-light: #ffc5c5;
 }
@@ -28,18 +27,45 @@
   font-style: normal;
 }
 
+button { @apply cursor-pointer; } 
+body { @apply bg-black text-white; }
+
+h1 { @apply text-4xl; }
+h2 { @apply text-3xl; }
+h3 { @apply text-2xl; }
+h4 { @apply text-xl; }
+
+form {
+  input {
+    @apply p-[10px] bg-neutral-900 rounded-[10px] w-full border-2 border-transparent outline outline-neutral-700 focus:border-neutral-600 ;
+  }
+}
 
 @layer utilities {
   .button {
-    @apply bg-black text-white px-4 py-2 w-full text-center rounded-md ;
+    @apply p-2.5 rounded-lg cursor-pointer transition-all;
+
   }
-}
-.sidebar {
-  button {
-      @apply rounded-lg w-full h-fit flex gap-2 p-2 items-center;
+  .button-gray {
+    @apply bg-gray-400 p-2.5 rounded-lg hover:invert-100 transition-all;
   }
 }
 
-.sidebar-button {
-  @apply w-full h-fit flex gap-2 p-2 items-center;
+.sidebar-collapsed {
+  @apply w-16 p-2.5 h-full absolute;
+  @apply outline; /* temporary */
+}
+
+.sidebar-expanded {
+  @apply flex flex-col relative;
+  @apply /* w-64 */ p-2.5 h-full;
+  @apply outline-2 outline-neutral-800;
+}
+.sidebar {
+  @apply h-full flex flex-col justify-between items-center relative p-2.5;
+  @apply transition-all duration-200 ease-out;
+  @apply outline outline-neutral-700; /* temporary */
+}
+.truncate {
+  @apply overflow-hidden overflow-ellipsis whitespace-nowrap;
 }
