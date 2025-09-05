@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { DynamicIcon } from 'lucide-react/dynamic'
+// import { DynamicIcon } from 'lucide-react/dynamic'
 
 export const Icon = ({ name = '', className = '', iconSize = 24, onClick }: { name?: string, className?: string, iconSize?: number, onClick?: () => void }) => {
   return (

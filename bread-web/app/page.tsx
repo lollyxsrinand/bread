@@ -1,7 +1,7 @@
 import { Category } from 'bread-core/src'
 // import { Icon } from 'lucide-react';
-import { Icon } from './components/Icon';
-import { Camera } from 'lucide-react';
+// import { Icon } from './components/Icon';
+// import { Camera } from 'lucide-react';
 export default function Page() {
   return (
     <div className='h-screen w-full flex items-center justify-center'>

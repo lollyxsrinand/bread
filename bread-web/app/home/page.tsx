@@ -3,8 +3,8 @@ import { JwtPayload } from 'jsonwebtoken'
 import { redirect } from 'next/navigation'
 import React from 'react'
 import Sidebar from '../components/Sidebar'
-import { Category } from 'bread-core/src'
-import Categories from './Categories'
+// import { Category } from 'bread-core/src'
+// import Categories from './Categories'
 import Topbar from './Categories'
 
 const Home = async () => {
