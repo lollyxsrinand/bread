@@ -1,28 +1,43 @@
-import { isAuthenticated } from '@/utils/isAuthenticated'
-import { JwtPayload } from 'jsonwebtoken'
-import { redirect } from 'next/navigation'
-import React from 'react'
+'use client'
+import React, { useState } from 'react'
 import Sidebar from '../components/Sidebar'
-// import { Category } from 'bread-core/src'
-// import Categories from './Categories'
-import Topbar from './Categories'
 
-const Home = async () => {
-    const jwtPayload = await isAuthenticated() as JwtPayload
-    if (!jwtPayload) {
-        redirect('/login')
+import PlanView from './PlanView'
+import ReportsView from './ReportsView';
+import AllAccountsView from './AllAccountsView';
+import SidebarNew from '../components/SidebarNew';
+
+type tabView = 'Plan' | 'Reports' | 'All Accounts';
+
+const Home = () => {
+    const [currMonth, setCurrMonth] = useState<number>(new Date().getMonth());
+    console.log(currMonth);
+    const [currTabView, setTabView] = useState<tabView>('Plan');
+
+    const renderView = () => {
+        switch (currTabView) {
+            case 'Plan':
+                return <PlanView />;
+            case 'Reports':
+                return <ReportsView />;
+            case 'All Accounts':
+                return <AllAccountsView />;
+            default:
+                return <PlanView />;
+        }
     }
-    const user_id = jwtPayload.uid
-    console.log(user_id);
 
     return (
         <div className="h-screen w-full flex">
-            <Sidebar />
-            <div className="h-screen w-full flex flex-col p-2.5"> 
-                <Topbar />
-                <div className='h-full w-full'>
-
-                </div>
+            {/* <Sidebar currTabView={currTabView} setTabView={setTabView}/> */}
+            <SidebarNew currTabView={currTabView} setTabView={setTabView}/>
+            <div className="h-full w-full flex p-2.5 gap-2.5">
+                {renderView()}
+                {/* <PlanView /> */}
+                {/* <div className='h-full w-full flex'>
+                    <Categories />
+                    <Info />
+                </div> */}
             </div>
         </div>
     )

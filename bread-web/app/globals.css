@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 
-/* variables or whatever */
+/* variables *//* or whatever */
 /* @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -25,6 +25,7 @@
   font-optical-sizing: auto;
   /* font-weight: <weight>; */
   font-style: normal;
+  letter-spacing: 0.01em;
 }
 
 button { @apply cursor-pointer; } 

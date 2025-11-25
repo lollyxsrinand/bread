@@ -1,10 +1,16 @@
 'use client'
 import React from 'react'
 import { LucideIcon } from './LucideIcon'
+import { BanknoteIcon } from 'lucide-react';
 
+type tabView = 'Plan' | 'Reports' | 'All Accounts';
+interface SidebarProps {
+  currTabView: tabView;
+  setTabView: React.Dispatch<React.SetStateAction<tabView>>;
+}
 
 /* TODO: use tailwind classes, create components */
-const Sidebar = () => {
+const Sidebar = ({currTabView, setTabView}: SidebarProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -45,12 +51,13 @@ const Sidebar = () => {
     )
   }
   return (
-    <div className={`${isOpen ? "w-xs bg-neutral-950" : "w-16 bg-neutral-900"} min-w-16 select-none max-w-xs h-full border-r border-neutral-800 flex flex-col gap-1 p-2.5 transition-all duration-250 ease-out overflow-hidden`}>
+    <div className={`${isOpen ? "w-xs bg-neutral-950" : "w-16 bg-neutral-950"} min-w-16 select-none max-w-xs h-full border-r border-neutral-800 flex flex-col gap-1 p-2.5 transition-all duration-250 ease-out overflow-hidden`}>
       <div className='relative flex items-center rounded-lg transition-all ease-in-out '>
         <LucideIcon className='hover:bg-neutral-800 rounded-lg transition-all ease-in-out cursor-pointer' name={'cake-slice'} />
         <LucideIcon onClick={toggleSidebar} className={`right-0 absolute hover:bg-neutral-800 rounded-lg transition-all ease-in-out cursor-pointer ${isOpen ? 'opacity-100' : 'opacity-0'}`} name={`panel-left`} />
         <LucideIcon onClick={!isOpen ? toggleSidebar : undefined} className={`left-0 absolute hover:bg-neutral-800 rounded-lg transition-all ease-in-out cursor-pointer hover:opacity-100 opacity-0`} name={isOpen ? 'cake-slice' : 'panel-left'} />
       </div>
+      <hr className="mb-2" />
 
       {/* <div className='flex items-center hover:bg-neutral-800 rounded-lg cursor-pointer transition-all ease-in-out'>
         <LucideIcon className='hover:bg-neutral-800 rounded-lg transition-all ease-in-out' name={'calendar'} />
@@ -60,17 +67,17 @@ const Sidebar = () => {
       {/* <div className={`flex flex-col gap-1 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out`}> */}
         {/* <SidebarButton icon='calendar' label='something' /> */}
       {/* </div> */}
-      <div className='flex items-center hover:bg-neutral-800 rounded-lg cursor-pointer transition-all ease-in-out'>
-        <LucideIcon className='hover:bg-neutral-800 rounded-lg transition-all ease-in-out' name={'calendar'} />
+      <div onClick={() => setTabView('Plan')} className={`flex items-center ${currTabView === 'Plan' ? 'bg-neutral-800':'hover:bg-neutral-900'} rounded-lg cursor-pointer transition-all ease-in-out`}>
+        <LucideIcon className={`${currTabView === 'Plan' ? 'bg-neutral-800':'hover:bg-neutral-900'} rounded-lg transition-all ease-in-out`} name={'calendar'} />
         <div className={`h-fit w-fit overflow-hidden whitespace-nowrap ${isOpen ? 'opacity-100' : 'opacity-0'} transition-all duration-200 ease-in-out`}>Plan</div>
       </div>
 
-      <div className='flex items-center hover:bg-neutral-800 rounded-lg cursor-pointer transition-all ease-in-out'>
-        <LucideIcon className='hover:bg-neutral-800 rounded-lg transition-all ease-in-out' name={'chart-no-axes-column'} />
+      <div onClick={() => setTabView('Reports')} className={`flex items-center ${currTabView === 'Reports' ? 'bg-neutral-800':'hover:bg-neutral-900'} rounded-lg cursor-pointer transition-all ease-in-out`}>
+        <LucideIcon className={`${currTabView === 'Reports' ? 'bg-neutral-800':'hover:bg-neutral-900'} rounded-lg transition-all ease-in-out`} name={'chart-no-axes-column'} />
         <div className={`h-fit w-fit overflow-hidden whitespace-nowrap ${isOpen ? 'opacity-100' : 'opacity-0'} transition-all duration-200 ease-in-out`}>Reports</div>
       </div>
-      <div className='flex items-center hover:bg-neutral-800 rounded-lg cursor-pointer transition-all ease-in-out'>
-        <LucideIcon className='hover:bg-neutral-800 rounded-lg transition-all ease-in-out' name={'landmark'} />
+      <div onClick={() => setTabView('All Accounts')} className={`flex items-center ${currTabView === 'All Accounts' ? 'bg-neutral-800':'hover:bg-neutral-900'} rounded-lg cursor-pointer transition-all ease-in-out`}>
+        <LucideIcon className={`${currTabView === 'All Accounts' ? 'bg-neutral-800':'hover:bg-neutral-900'} rounded-lg transition-all ease-in-out`} name={'landmark'} />
         <div className={`h-fit w-fit overflow-hidden whitespace-nowrap ${isOpen ? 'opacity-100' : 'opacity-0'} transition-all duration-200 ease-in-out`}>All Accounts</div>
       </div>
 
