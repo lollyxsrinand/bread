@@ -10,4 +10,4 @@ if (!admin.apps.length) {
   app = admin.app();
 }
 
-export { admin };
+export { admin, app };

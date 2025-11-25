@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { ArrowLeft, ArrowRight, Check, CheckCheckIcon, CheckSquare2, ChevronDown, Plus, Square } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckSquare2, ChevronDown, Plus, Square } from "lucide-react";
 import { useState } from "react";
 
 

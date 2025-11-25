@@ -4,7 +4,6 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "fire
 import { type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { FirebaseError } from "firebase/app";
 
 // TODO: add loading state, error handling, and form validation
 export const AuthForm = ({ AuthType }: { AuthType: "Login" | "Signup" }) => {

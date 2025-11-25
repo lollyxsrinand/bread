@@ -1,7 +1,6 @@
 'use client'
 import React from 'react'
 import { LucideIcon } from './LucideIcon'
-import { BanknoteIcon } from 'lucide-react';
 
 type tabView = 'Plan' | 'Reports' | 'All Accounts';
 interface SidebarProps {

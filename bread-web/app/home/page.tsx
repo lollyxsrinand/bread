@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import Sidebar from '../components/Sidebar'
+// import Sidebar from '../components/Sidebar'
 
 import PlanView from './PlanView'
 import ReportsView from './ReportsView';
@@ -10,8 +10,8 @@ import SidebarNew from '../components/SidebarNew';
 type tabView = 'Plan' | 'Reports' | 'All Accounts';
 
 const Home = () => {
-    const [currMonth, setCurrMonth] = useState<number>(new Date().getMonth());
-    console.log(currMonth);
+    // const [currMonth, setCurrMonth] = useState<number>(new Date().getMonth());
+    // console.log(currMonth);
     const [currTabView, setTabView] = useState<tabView>('Plan');
 
     const renderView = () => {
