@@ -6,7 +6,7 @@ const secret = new TextEncoder().encode(process.env.NEXT_PUBLIC_JWT_SECRET);
 
 const protectedPaths = ['/home', '/settings'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     if (!protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path))) {
         return NextResponse.next();
     }
