@@ -1,26 +1,37 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import cookie from '@fastify/cookie';
+
 import authRoutes from './routes/auth'
-import transactionRoutes from './routes/transactions';
+// import transactionRoutes from './routes/transactions';
 import accountRoutes from './routes/accounts';
-import categoryRoutes from './routes/categories';
+// import categoryRoutes from './routes/categories';
+import { getUserId } from './utils/auth';
 
 const app = Fastify({logger : false})
 
 const registerCors = async () => {
   await app.register(cors, {
-    origin: true,
+    origin: ['http://localhost:3000', 'https://bread-webapp.vercel.app', 'http://localhost:3001' ],
+    credentials: true,
   });
 }
-
 registerCors()
+
+app.register(cookie, { hook: 'onRequest' })
+
 app.register(authRoutes)
-app.register(transactionRoutes)
+// app.register(transactionRoutes)
 app.register(accountRoutes)
-app.register(categoryRoutes)
+// app.register(categoryRoutes)
 
 app.get('/ping', async (request, reply) => {
   return { message: 'pong 🏓' }
+})
+
+app.get('/auth-test', async (request, reply) => {
+  const userId = await getUserId(request, reply)
+  return reply.send({ message: `Authenticated as user '${userId}'` }) 
 })
 
 const start = async () => {
