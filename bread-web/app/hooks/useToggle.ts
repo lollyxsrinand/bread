@@ -8,9 +8,5 @@ export function useToggle(initial = false) {
     setValue(prev => !prev)
   }, [])
 
-  // const toggle = () => {
-  //   setValue((prev) => !prev)
-  // }
-
   return { value, toggle, setValue }
 }

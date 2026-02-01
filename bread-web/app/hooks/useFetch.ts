@@ -22,7 +22,8 @@ export function useFetch<T = unknown>(url: string, method: 'GET' | 'POST' | 'PUT
             }
             const result: T = await response.json() as T
             setData(result)
-        } catch (err: any) {
+        } catch (err: unknown) {
+            if(err instanceof Error)
             setError(err.message || 'Unknown error')
         } finally {
             setLoading(false)
