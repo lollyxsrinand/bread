@@ -3,7 +3,9 @@ import { AuthForm } from '../components/AuthForm'
 
 const Signup = () => {
   return (
-    <AuthForm AuthType='signup'/>
+    <div className="h-screen w-full justify-center items-center">
+      <AuthForm AuthType='signup'/>
+    </div>
   )
 }
 

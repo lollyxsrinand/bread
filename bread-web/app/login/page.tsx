@@ -3,7 +3,9 @@ import { AuthForm } from '../components/AuthForm'
 
 const Login = () => {
   return (
-    <AuthForm AuthType='login'/>
+    <div className="h-screen w-full flex justify-center items-center">
+      <AuthForm AuthType='login'/>
+    </div>
   )
 }
 
