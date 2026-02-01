@@ -3,7 +3,7 @@ import { AuthForm } from '../components/AuthForm'
 
 const Login = () => {
   return (
-    <AuthForm AuthType='Login'/>
+    <AuthForm AuthType='login'/>
   )
 }
 
