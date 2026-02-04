@@ -31,16 +31,16 @@
 button { @apply cursor-pointer; } 
 body { @apply bg-black text-white; }
 
-/* h1 { @apply text-4xl; }
+h1 { @apply text-4xl; }
 h2 { @apply text-3xl; }
 h3 { @apply text-2xl; }
-h4 { @apply text-xl; } */
-
+h4 { @apply text-xl; }
+/* 
 form {
   input {
     @apply p-[10px] bg-neutral-900 rounded-[10px] w-full border-2 border-transparent outline outline-neutral-700 focus:border-neutral-600 ;
   }
-}
+} */
 
 @layer utilities {
   .button {
