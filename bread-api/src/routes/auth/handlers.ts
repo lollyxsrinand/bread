@@ -57,6 +57,7 @@ export async function signupHandler(request: FastifyRequest, reply: FastifyReply
     return loginHandler(request, reply);
 }
 
+// or simply delete token bleh??>?D
 export async function logoutHandler(request: FastifyRequest, reply: FastifyReply) {
     const sessionCookie = request.cookies.session;
     if (sessionCookie) {
