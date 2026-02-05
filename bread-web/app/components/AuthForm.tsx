@@ -23,6 +23,7 @@ export const AuthForm = ({ AuthType }: { AuthType: 'login' | 'signup' }) => {
         : await createUserWithEmailAndPassword(auth, email, password);
 
       const idToken = await userCredential.user.getIdToken();
+      console.log(AuthType)
       console.log(process.env.NEXT_PUBLIC_API_URL);
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${AuthType}`, {
         method: 'POST',
