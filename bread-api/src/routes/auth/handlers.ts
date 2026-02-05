@@ -4,7 +4,6 @@ import { sign } from "jsonwebtoken";
 
 import { createUser } from "../../services/user-service";
 
-const isDev = process.env.NODE_ENV === "development";
 export async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
     // console.log('trying to login');
     const { idToken } = request.body as { idToken: string };
@@ -31,7 +30,6 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
         sameSite: "none",
         path: '/',
         maxAge: expiresIn,
-        ...(!isDev && { domain: '.onrender.com' })
     })
 
     return reply.status(200).send({ message: "login successful" });
@@ -67,7 +65,7 @@ export async function logoutHandler(request: FastifyRequest, reply: FastifyReply
         console.log(decoded);
         await admin.auth().revokeRefreshTokens(decoded.sub);
     }
-    reply.clearCookie("session", {
+    reply.clearCookie("token", {
         path: "/",
     });
     return reply.status(200).send({ message: "logout successful" });
