@@ -2,23 +2,22 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import admin from 'firebase-admin'
 import { sign } from "jsonwebtoken";
 
-import { createUser } from "../../services/user-service";
+import { setupUser } from "../../services/user-service";
 
 export async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
-    // console.log('trying to login');
     const { idToken } = request.body as { idToken: string };
     const expiresIn = 2 * 60 * 60; // 1 day
 
-    let decoded;
+    let user;
 
     try {
-        decoded = await admin.auth().verifyIdToken(idToken);
+        user = await admin.auth().verifyIdToken(idToken);
     } catch (error) {
         console.error('Error verifying ID token: ', error);
         return reply.status(401).send({ message: 'unauthorized' });
     }
 
-    const jwtToken = sign({ uid: decoded.uid, email: decoded.email },
+    const jwtToken = sign({ uid: user.uid, email: user.email },
         process.env.JWT_SECRET as string,
         { expiresIn: "2h", algorithm: "HS256" }
     )
@@ -38,18 +37,19 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
 export async function signupHandler(request: FastifyRequest, reply: FastifyReply) {
     const { idToken } = request.body as { idToken: string };
 
-    let decoded;
+    let user;
 
     try {
-        decoded = await admin.auth().verifyIdToken(idToken);
+        user = await admin.auth().verifyIdToken(idToken); // returns a decoded token -> user
     } catch (error) {
         console.error('Error verifying ID token: ', error);
         return reply.status(401).send({ message: `unauthorized: ${error}` });
     }
 
     try {
-        await createUser(decoded.uid, decoded.email || '')
-        // await createBudget(decoded.uid, (new Date()).getFullYear() as unknown as string);
+        // await createUser(user.uid, user.email || '')
+        // await createBudget(user.uid, 'starter-budget');
+        await setupUser(user.uid, user.email || '') // creates user, default budget and default categories
     } catch (error) {
         console.error('Error creating user document: ', error);
         return reply.status(500).send({ message: `Internal Server Error: ${error}` });
@@ -61,9 +61,9 @@ export async function signupHandler(request: FastifyRequest, reply: FastifyReply
 export async function logoutHandler(request: FastifyRequest, reply: FastifyReply) {
     const sessionCookie = request.cookies.session;
     if (sessionCookie) {
-        const decoded = await admin.auth().verifySessionCookie(sessionCookie);
-        console.log(decoded);
-        await admin.auth().revokeRefreshTokens(decoded.sub);
+        const user = await admin.auth().verifySessionCookie(sessionCookie);
+        console.log(user);
+        await admin.auth().revokeRefreshTokens(user.sub);
     }
     reply.clearCookie("token", {
         path: "/",
