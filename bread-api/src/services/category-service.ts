@@ -1,11 +1,8 @@
+import { formatDateId } from "../utils/date-id-format"
 import { db } from "../firebase/server"
 
 /**
- * 
- * @param userId 
- * @param budgetId
- * @param categoryGroupName 
- * @returns `categoryGroupRef.id`
+ * @returns `categoryGroupRef.id` of the created category group
  */
 export const createCategoryGroup = async (userId: string, budgetId: string, categoryGroupName: string) => {
     const categoryGroupRef = db
@@ -22,13 +19,8 @@ export const createCategoryGroup = async (userId: string, budgetId: string, cate
     return categoryGroupRef.id
 }
 
-/**
- * 
- * @param userId 
- * @param budgetId
- * @param categoryGroupId 
- * @param categoryName 
- * @returns `categoryId`
+/** 
+ * @returns `categoryId` of the created category
  */
 export const createCategory = async (userId: string, budgetId: string, categoryGroupId: string, categoryName: string) => {
     const categoryRef = db
@@ -44,4 +36,80 @@ export const createCategory = async (userId: string, budgetId: string, categoryG
     })
 
     return categoryRef.id
+}
+
+export const createCategoryMonth = async (userId: string, budgetId: string, categoryId: string, month: string) => {
+    const categoryMonthId = `${categoryId}${month}`
+
+    const ref = db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categoryMonths').doc(categoryMonthId)
+
+    await ref.set({
+        id: categoryMonthId,
+        categoryId,
+        month,
+        budgeted: 0,
+        activity: 0,
+        available: 0,
+        createdAt: new Date(),
+    })
+
+    return ref.id
+}
+
+export const getCategoryMonthRef = (userId: string, budgetId: string, categoryId: string, date: Date) => {
+    return db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categoryMonths').doc(`${categoryId}${formatDateId(date)}`)
+}
+
+export const getCategories = async (userId: string, budgetId: string) => {
+    const categoriesSnapshot = await db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categories').get()
+
+    const categories = [] as any
+
+    categoriesSnapshot.forEach(doc => {
+        categories.push(doc.data() as any)
+    })
+
+    return categories
+}
+
+export const getCategoriesMonth = async (userId: string, budgetId: string, month: string) => {
+    const categoryMonthsSnapshot = await db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categoryMonths')
+        .where('month', '==', month)
+        .get()
+
+    const categoryMonths = [] as any
+
+    categoryMonthsSnapshot.forEach(doc => {
+        categoryMonths.push(doc.data() as any)
+    })
+
+    return categoryMonths
+}
+
+export const getCategoryGroups = async (userId: string, budgetId: string) => {
+    const categoryGroupsSnapshot = await db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categoryGroups')
+        .get()
+
+    const categoryGroups = [] as any
+
+    categoryGroupsSnapshot.forEach(doc => {
+        categoryGroups.push(doc.data() as any)
+    })
+
+    return categoryGroups
 }

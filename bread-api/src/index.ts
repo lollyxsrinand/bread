@@ -4,6 +4,7 @@ import cookie from '@fastify/cookie';
 
 import authRoutes from './routes/auth'
 import accountRoutes from './routes/accounts';
+import budgetRoutes from './routes/budget';
 import { getUserId } from './utils/auth';
 
 const app = Fastify({logger : false})
@@ -20,6 +21,7 @@ app.register(cookie, { hook: 'onRequest' })
 
 app.register(authRoutes)
 app.register(accountRoutes)
+app.register(budgetRoutes)
 
 app.get('/ping', async (request, reply) => {
   return { message: 'pong 🏓' }

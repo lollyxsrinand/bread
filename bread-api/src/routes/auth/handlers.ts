@@ -3,6 +3,9 @@ import admin from 'firebase-admin'
 import { sign } from "jsonwebtoken";
 
 import { setupUser } from "../../services/user-service";
+import { getBudgetMonth, getBudgets, } from "../../services/budget-service";
+import { createCategoryMonth } from '../../services/category-service'
+import { formatDateId } from "../../utils/date-id-format";
 
 export async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
     const { idToken } = request.body as { idToken: string };
@@ -47,8 +50,6 @@ export async function signupHandler(request: FastifyRequest, reply: FastifyReply
     }
 
     try {
-        // await createUser(user.uid, user.email || '')
-        // await createBudget(user.uid, 'starter-budget');
         await setupUser(user.uid, user.email || '') // creates user, default budget and default categories
     } catch (error) {
         console.error('Error creating user document: ', error);

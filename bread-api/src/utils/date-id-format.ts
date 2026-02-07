@@ -1,3 +1,4 @@
+
 /**
  * formats a date to YYYYMM format
  * @param date Date object
@@ -10,7 +11,6 @@ export const formatDateId = (date: Date): string => {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     return `${year}${month}`;
 }
-
 export const getCurrentMonthId = (): string => {
     return formatDateId(new Date());
 }
