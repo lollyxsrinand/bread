@@ -17,7 +17,6 @@ export default function Page() {
         </div>
          <div className="flex gap-2.5 w-full items-center justify-center text-center">
            <a className="button w-full hover:bg-white hover:text-black" href="/login">login</a>
-           <a className="button w-full  hover:bg-white hover:text-black" href="/signup">signup</a>
          </div>
       </div>
     </div>

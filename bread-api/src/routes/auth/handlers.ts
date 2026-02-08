@@ -11,30 +11,30 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
     const { idToken } = request.body as { idToken: string };
     const expiresIn = 2 * 60 * 60; // 1 day
 
-    let user;
+    let decodedIdToken;
 
     try {
-        user = await admin.auth().verifyIdToken(idToken);
+        decodedIdToken = await admin.auth().verifyIdToken(idToken);
     } catch (error) {
         console.error('Error verifying ID token: ', error);
         return reply.status(401).send({ message: 'unauthorized' });
     }
 
-    const jwtToken = sign({ uid: user.uid, email: user.email },
+    const jwtToken = sign({ uid: decodedIdToken.uid, email: decodedIdToken.email },
         process.env.JWT_SECRET as string,
         { expiresIn: "2h", algorithm: "HS256" }
     )
-    // console.log(jwtToken);
 
-    reply.setCookie("token", jwtToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: '/',
-        maxAge: expiresIn,
-    })
+    // commenting cuz cross site ew
+    // reply.setCookie("token", jwtToken, {
+    //     httpOnly: true,
+    //     secure: true,
+    //     sameSite: "none",
+    //     path: '/',
+    //     maxAge: expiresIn,
+    // })
 
-    return reply.status(200).send({ message: "login successful" });
+    return reply.status(200).send({ jwtToken: jwtToken });
 }
 
 export async function signupHandler(request: FastifyRequest, reply: FastifyReply) {

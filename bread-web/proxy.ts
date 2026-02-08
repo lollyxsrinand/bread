@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import * as jose from 'jose';
 
-const secret = new TextEncoder().encode(process.env.NEXT_PUBLIC_JWT_SECRET);
+const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 const protectedPaths = ['/home', '/settings'];
 
@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
     try {
         const { payload } = await jose.jwtVerify(token, secret)
 
-        console.log('User authenticated:', payload.userId);
+        console.log('user authenticated with uid:', payload.uid);
         
         return NextResponse.next()
         // const response = NextResponse.next();
