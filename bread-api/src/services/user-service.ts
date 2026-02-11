@@ -12,8 +12,9 @@ export const createUser = async (userId: string, email: string) => {
 
   if (!userDoc.exists) {
     await userRef.set({
-      email: email || null,
+      email: email,
       createdAt: Date.now(),
+      currentBudgetId: null,
     });
   }
 }
@@ -46,4 +47,6 @@ export const setupUser = async (userId: string, email: string) => {
       await createCategoryMonth(userId, budgetId, categoryId, getCurrentMonthId())
     }
   }
+
+
 }

@@ -14,6 +14,11 @@ export const createBudget = async (userId: string, budgetName: string) => {
         currency: 'INR'
     })
 
+    // when a budget is created, we also need to update the user's currentBudgetId field to this newly created budget
+    await db.collection('users').doc(userId).update({
+        currentBudgetId: budgetRef.id,
+    })
+
     return budgetRef.id
 }
 
