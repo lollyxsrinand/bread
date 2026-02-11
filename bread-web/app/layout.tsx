@@ -7,7 +7,7 @@ import { ToastContainer } from "react-toastify";
 
 export const metadata: Metadata = {
   title: "bread",
-  description: "Not your average bread.",
+  description: "not your average bread.",
 };
 
 export default function RootLayout({ children, }: Readonly<{ children: React.ReactNode; }>) {

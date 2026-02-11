@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
     const { idToken } = await request.json()
+    
     const res = await fetch('http://localhost:3001/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

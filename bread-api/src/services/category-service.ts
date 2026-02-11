@@ -67,49 +67,43 @@ export const getCategoryMonthRef = (userId: string, budgetId: string, categoryId
 }
 
 export const getCategories = async (userId: string, budgetId: string) => {
-    const categoriesSnapshot = await db
+    const snapshot = await db
         .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
         .collection('categories').get()
 
-    const categories = [] as any
-
-    categoriesSnapshot.forEach(doc => {
-        categories.push(doc.data() as any)
-    })
+    const categories: Record<string, any> = Object.fromEntries(
+        snapshot.docs.map(doc => [doc.id, doc.data()])
+    )
 
     return categories
 }
 
 export const getCategoriesMonth = async (userId: string, budgetId: string, month: string) => {
-    const categoryMonthsSnapshot = await db
+    const snapshot = await db
         .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
         .collection('categoryMonths')
         .where('month', '==', month)
         .get()
 
-    const categoryMonths = [] as any
+    const categoriesMonth: Record<string, any> = Object.fromEntries(
+        snapshot.docs.map(doc => [doc.id, doc.data()])
+    )
 
-    categoryMonthsSnapshot.forEach(doc => {
-        categoryMonths.push(doc.data() as any)
-    })
-
-    return categoryMonths
+    return categoriesMonth
 }
 
 export const getCategoryGroups = async (userId: string, budgetId: string) => {
-    const categoryGroupsSnapshot = await db
+    const snapshot = await db
         .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
         .collection('categoryGroups')
         .get()
 
-    const categoryGroups = [] as any
-
-    categoryGroupsSnapshot.forEach(doc => {
-        categoryGroups.push(doc.data() as any)
-    })
+    const categoryGroups: Record<string, any> = Object.fromEntries(
+        snapshot.docs.map(doc => [doc.id, doc.data()])
+    )
 
     return categoryGroups
 }

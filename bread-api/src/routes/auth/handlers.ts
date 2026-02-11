@@ -3,9 +3,7 @@ import admin from 'firebase-admin'
 import { sign } from "jsonwebtoken";
 
 import { setupUser } from "../../services/user-service";
-import { getBudgetMonth, getBudgets, } from "../../services/budget-service";
-import { createCategoryMonth } from '../../services/category-service'
-import { formatDateId } from "../../utils/date-id-format";
+import { db } from "../../firebase/server";
 
 export async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
     const { idToken } = request.body as { idToken: string };
@@ -18,6 +16,14 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
     } catch (error) {
         console.error('Error verifying ID token: ', error);
         return reply.status(401).send({ message: 'unauthorized' });
+    }
+
+    const uid = decodedIdToken.uid
+    const userRef = db.collection('users').doc(uid)
+    const userSnap = await userRef.get()
+
+    if(!userSnap.exists) {
+        await setupUser(uid, decodedIdToken.email || '') // creates user, default budget and default categories
     }
 
     const jwtToken = sign({ uid: decodedIdToken.uid, email: decodedIdToken.email },
@@ -37,26 +43,27 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
     return reply.status(200).send({ jwtToken: jwtToken });
 }
 
-export async function signupHandler(request: FastifyRequest, reply: FastifyReply) {
-    const { idToken } = request.body as { idToken: string };
+// meaningless stuff
+// export async function signupHandler(request: FastifyRequest, reply: FastifyReply) {
+//     const { idToken } = request.body as { idToken: string };
 
-    let user;
+//     let user;
 
-    try {
-        user = await admin.auth().verifyIdToken(idToken); // returns a decoded token -> user
-    } catch (error) {
-        console.error('Error verifying ID token: ', error);
-        return reply.status(401).send({ message: `unauthorized: ${error}` });
-    }
+//     try {
+//         user = await admin.auth().verifyIdToken(idToken); // returns a decoded token -> user
+//     } catch (error) {
+//         console.error('Error verifying ID token: ', error);
+//         return reply.status(401).send({ message: `unauthorized: ${error}` });
+//     }
 
-    try {
-        await setupUser(user.uid, user.email || '') // creates user, default budget and default categories
-    } catch (error) {
-        console.error('Error creating user document: ', error);
-        return reply.status(500).send({ message: `Internal Server Error: ${error}` });
-    }
-    return loginHandler(request, reply);
-}
+//     try {
+//         await setupUser(user.uid, user.email || '') // creates user, default budget and default categories
+//     } catch (error) {
+//         console.error('Error creating user document: ', error);
+//         return reply.status(500).send({ message: `Internal Server Error: ${error}` });
+//     }
+//     return loginHandler(request, reply);
+// }
 
 // or simply delete token bleh??>?D
 export async function logoutHandler(request: FastifyRequest, reply: FastifyReply) {

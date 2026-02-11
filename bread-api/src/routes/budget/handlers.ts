@@ -1,12 +1,12 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { getBudgetMonth, getBudgets } from "../../services/budget-service";
+import { getUserId } from "../../utils/auth";
 
 export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { userId } = request.params as { userId: string }
+    const uid = await getUserId(request, reply)
 
-    console.log(userId);
     try {
-        const budgets = await getBudgets(userId)
+        const budgets = await getBudgets(uid)
         return reply.status(200).send(budgets)
     } catch (err) {
         console.error(err)
@@ -14,13 +14,10 @@ export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyR
     }
 }
 export async function getBudgetMonthHandler(request: FastifyRequest, reply: FastifyReply) {
-    const { userId, budgetId } = request.params as {
-        userId: string
-        budgetId: string
-    }
-    const { month } = request.query as { month: string }
+    const uid = await getUserId(request, reply)
+    const { budgetId, month } = request.params as { budgetId: string, month: string }
 
-    if (!userId)
+    if (!uid)
         return reply.status(400).send({ error: "user id is required" })
 
 
@@ -37,7 +34,7 @@ export async function getBudgetMonthHandler(request: FastifyRequest, reply: Fast
 
 
     try {
-        const budgetMonth = await getBudgetMonth(userId, budgetId, month)
+        const budgetMonth = await getBudgetMonth(uid, budgetId, month)
         return reply.status(200).send(budgetMonth)
     } catch (error) {
         return reply.status(500).send({ error: `internal error: ${error}` })

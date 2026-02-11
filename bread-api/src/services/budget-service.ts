@@ -32,26 +32,28 @@ export const getBudgets = async (userId: string) => {
     return budgets
 }
 
-// currently get
 export const getBudgetMonth = async (userId: string, budgetId: string, month: string) => {
     const categories = await getCategories(userId, budgetId)
     const categoryGroups = await getCategoryGroups(userId, budgetId)
     const categoriesMonth = await getCategoriesMonth(userId, budgetId, month)
-    console.log(categories);
-    console.log(categoriesMonth);
-    console.log(categoryGroups);
 
-    const budgetMonth = {
-        categories: categories.map((category: any) => {
-            const categoryMonth = categoriesMonth.find((cm: any) => cm.categoryId === category.id)
+    const budgetMonth: Record<string, any> = {}
 
-            return {
-                ...category,
-                activity: categoryMonth?.activity || 0,
-                available: categoryMonth?.available || 0,
-            }
-        }),
-        categoryGroups,
+    for (const categoryId in categories) {
+        categories[categoryId] = {
+            ...categories[categoryId],
+            available: categoriesMonth[`${categoryId}${month}`].available,
+            budgeted: categoriesMonth[`${categoryId}${month}`].budgeted,
+            activity: categoriesMonth[`${categoryId}${month}`].activity,
+        }
     }
-    return budgetMonth
+
+    for (const categoryGroupId in categoryGroups) {
+        budgetMonth[categoryGroupId] = {
+            ...categoryGroups[categoryGroupId],
+            categories: Object.values(categories).filter((category: any) => category.categoryGroupId === categoryGroupId)
+        }
+    }
+
+    return Object.values(budgetMonth)
 }

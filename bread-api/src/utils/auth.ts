@@ -2,17 +2,31 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { verify } from "jsonwebtoken";
 
 export async function getUserId(request: FastifyRequest, reply: FastifyReply) {
-  const token = request.cookies.token
+  const token = request.headers.authorization?.split(' ')[1]
 
-  if (!token) return reply.code(401).send({ error: "Not authenticated" }); 
+  if(!token) {
+    return reply.code(401).send({ error: "Not authenticated" }); 
+  }
 
   try {
     const { uid } = verify(token, process.env.JWT_SECRET as string) as { uid: string }
-    return uid
+    return  uid
   } catch (error) {
     return reply.code(401).send({ error: "Not authenticated" });
   }
 }
+// export async function getUserId(request: FastifyRequest, reply: FastifyReply) {
+//   const token = request.cookies.token
+
+//   if (!token) return reply.code(401).send({ error: "Not authenticated" }); 
+
+//   try {
+//     const { uid } = verify(token, process.env.JWT_SECRET as string) as { uid: string }
+//     return uid
+//   } catch (error) {
+//     return reply.code(401).send({ error: "Not authenticated" });
+//   }
+// }
 
 // old
 // export async function checkAuth(req: FastifyRequest, reply: FastifyReply) {
