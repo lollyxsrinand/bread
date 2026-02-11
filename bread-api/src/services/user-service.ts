@@ -47,6 +47,13 @@ export const setupUser = async (userId: string, email: string) => {
       await createCategoryMonth(userId, budgetId, categoryId, getCurrentMonthId())
     }
   }
+}
 
+export const getUser = async (userId: string) => {
+  const snapshot = await db.collection('users').doc(userId).get()
 
+  if(!snapshot.exists)
+    return null
+
+  return snapshot.data()
 }

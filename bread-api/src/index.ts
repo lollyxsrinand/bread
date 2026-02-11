@@ -6,6 +6,7 @@ import authRoutes from './routes/auth'
 import accountRoutes from './routes/accounts';
 import budgetRoutes from './routes/budget';
 import { getUserId } from './utils/auth';
+import idkRoutes from './routes/idk';
 
 const app = Fastify({ logger: false })
 
@@ -23,18 +24,13 @@ app.register(cookie, { hook: 'onRequest' })
 app.register(authRoutes)
 app.register(accountRoutes)
 app.register(budgetRoutes)
+app.register(idkRoutes)
 
 
 app.get('/ping', async (request, reply) => {
   return { message: 'pong 🏓' }
 })
 
-app.get('/auth-test', async (request, reply) => {
-  const uid = await getUserId(request)
-  if (!uid)
-    return reply.status(401).send({ error: "Not authenticated" })
-  return reply.send({ message: `Authenticated as user '${uid}'` })
-})
 
 const start = async () => {
   try {
