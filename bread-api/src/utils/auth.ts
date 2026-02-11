@@ -1,46 +1,17 @@
-import { FastifyReply, FastifyRequest } from "fastify";
+import { FastifyRequest } from "fastify";
 import { verify } from "jsonwebtoken";
 
-export async function getUserId(request: FastifyRequest, reply: FastifyReply) {
-  const token = request.headers.authorization?.split(' ')[1]
+export async function getUserId(request: FastifyRequest) {
+  const token = request.cookies.token
 
-  if(!token) {
-    return reply.code(401).send({ error: "Not authenticated" }); 
-  }
+  if (!token) 
+    return null
 
   try {
-    const { uid } = verify(token, process.env.JWT_SECRET as string) as { uid: string }
-    return  uid
+    const decoded = verify(token, process.env.JWT_SECRET as string) as { uid: string };
+    return decoded.uid
   } catch (error) {
-    return reply.code(401).send({ error: "Not authenticated" });
+    console.error('error verifying jwt token: ', error);
+    return null
   }
 }
-// export async function getUserId(request: FastifyRequest, reply: FastifyReply) {
-//   const token = request.cookies.token
-
-//   if (!token) return reply.code(401).send({ error: "Not authenticated" }); 
-
-//   try {
-//     const { uid } = verify(token, process.env.JWT_SECRET as string) as { uid: string }
-//     return uid
-//   } catch (error) {
-//     return reply.code(401).send({ error: "Not authenticated" });
-//   }
-// }
-
-// old
-// export async function checkAuth(req: FastifyRequest, reply: FastifyReply) {
-//   console.log('running?');
-//   const token = req.cookies.token
-  
-//   if(!token) {
-//     return reply.status(401).send({ message: 'Not authenticated' })
-//   }
-
-//   try {
-//     verify(token, process.env.JWT_SECRET as string) as { uid: string }
-//   } catch(error) {
-//     console.log(error);
-//     return reply.status(401).send({ message: 'Invalid token' })
-//   }
-// }

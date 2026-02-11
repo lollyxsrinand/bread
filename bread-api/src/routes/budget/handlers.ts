@@ -3,7 +3,10 @@ import { getBudgetMonth, getBudgets } from "../../services/budget-service";
 import { getUserId } from "../../utils/auth";
 
 export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
-    const uid = await getUserId(request, reply)
+    const uid = await getUserId(request)
+
+    if(!uid) 
+        return reply.status(401).send({ error: "Not authenticated" })
 
     try {
         const budgets = await getBudgets(uid)
@@ -13,13 +16,14 @@ export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyR
         reply.status(500).send({ error: 'failed to get budgets' })
     }
 }
+
 export async function getBudgetMonthHandler(request: FastifyRequest, reply: FastifyReply) {
-    const uid = await getUserId(request, reply)
+    const uid = await getUserId(request)
+
+    if(!uid) 
+        return reply.status(401).send({ error: "Not authenticated" })
+
     const { budgetId, month } = request.params as { budgetId: string, month: string }
-
-    if (!uid)
-        return reply.status(400).send({ error: "user id is required" })
-
 
     if (!budgetId)
         return reply.status(400).send({ error: "budget id is required" })

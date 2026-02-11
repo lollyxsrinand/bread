@@ -7,11 +7,12 @@ import accountRoutes from './routes/accounts';
 import budgetRoutes from './routes/budget';
 import { getUserId } from './utils/auth';
 
-const app = Fastify({logger : false})
+const app = Fastify({ logger: false })
+
 
 const registerCors = async () => {
   await app.register(cors, {
-    origin: ['http://localhost:3000', 'https://bread-webapp.vercel.app', 'http://localhost:3001' ],
+    origin: ['http://localhost:3000', 'https://bread-webapp.vercel.app', 'http://localhost:3001'],
     credentials: true,
   });
 }
@@ -23,13 +24,16 @@ app.register(authRoutes)
 app.register(accountRoutes)
 app.register(budgetRoutes)
 
+
 app.get('/ping', async (request, reply) => {
   return { message: 'pong 🏓' }
 })
 
 app.get('/auth-test', async (request, reply) => {
-  const userId = await getUserId(request, reply)
-  return reply.send({ message: `Authenticated as user '${userId}'` }) 
+  const uid = await getUserId(request)
+  if (!uid)
+    return reply.status(401).send({ error: "Not authenticated" })
+  return reply.send({ message: `Authenticated as user '${uid}'` })
 })
 
 const start = async () => {
