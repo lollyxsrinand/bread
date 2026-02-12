@@ -1,30 +1,15 @@
-import { getUser } from "@/utils/get-user"
-import { cookies } from "next/headers"
+import { getUser } from '@/lib/actions/user.actions'
+import { getcookielikewtfbro } from '@/utils/get-user'
+import React from 'react'
 
-const home = async () => {
-  const user = await getUser()
-  if(!user) return null
+const Home = async () => {
+  const token = await getcookielikewtfbro()
+  const user = await getUser(token)
 
-  const cookieStore = await cookies()
-  const token = cookieStore.get("token")?.value
-
-  const res = await fetch('http://localhost:3001/budgets', {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-  })
-
-  const budgets = await res.json()
-  console.log(budgets);
-
+  console.log(user)
   return (
-    <div>
-      {budgets.map((budget: any) => (
-        <h1 key={budget.id}>{budget.name}</h1>
-      ) )}
-    </div>
+    <div>Home</div>
   )
 }
 
-export default home
+export default Home

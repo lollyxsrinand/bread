@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
     try {
         const { payload } = await jose.jwtVerify(token, secret)
 
-        console.log('user authenticated with uid:', payload.uid);
+        // console.log('user authenticated with uid:', payload.uid);
         
         return NextResponse.next()
         // const response = NextResponse.next();
