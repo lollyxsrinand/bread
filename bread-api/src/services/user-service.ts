@@ -5,13 +5,14 @@ import { createCategory, createCategoryGroup, createCategoryMonth } from "./cate
 import { createTransaction } from "./transaction-service";
 
 // create user if the user doesn't exist
-export const createUser = async (userId: string, email: string) => {
-  const userRef = db.collection('users').doc(userId);
+export const createUser = async (uid: string, email: string) => {
+  const userRef = db.collection('users').doc(uid);
 
   const userDoc = await userRef.get();
 
   if (!userDoc.exists) {
     await userRef.set({
+      uid: uid,
       email: email,
       createdAt: Date.now(),
       currentBudgetId: null,

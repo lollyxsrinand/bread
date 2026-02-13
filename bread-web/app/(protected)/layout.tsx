@@ -4,7 +4,9 @@ export default function Layout({ children, }: Readonly<{ children: React.ReactNo
   return (
     <div className="flex h-screen w-full">
         <Sidebar />
-        {children}
+        <div className="h-full flex-1">
+            {children}
+        </div>
     </div>
   )
 }

@@ -19,7 +19,7 @@ const Login = () => {
       })
 
       if (res.ok) 
-        router.push("/home");
+        router.push("/plan");
       else 
         console.error("Login failed: ", await res.json());
 

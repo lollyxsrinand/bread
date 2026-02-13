@@ -4,7 +4,7 @@ import * as jose from 'jose';
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-const protectedPaths = ['/home', '/settings'];
+const protectedPaths = ['/plan', '/reports', '/transactions', '/settings'];
 
 export async function proxy(request: NextRequest) {
     if (!protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path))) {

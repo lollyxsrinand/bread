@@ -56,7 +56,7 @@ const Sidebar = () => {
             </div>
             <div className='flex flex-col gap-6'>
                 <div className='flex flex-col gap-2'>
-                    <SidebarLink href='/home' label="plan" />
+                    <SidebarLink href='/plan' label="plan" />
                     <SidebarLink href='/reports' label="reports" />
                     <SidebarLink href='/transactions' label="transactions" />
                 </div>
