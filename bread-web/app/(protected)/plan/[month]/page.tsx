@@ -1,18 +1,22 @@
 import { getUser } from '@/lib/actions/user.actions'
-import { getcookielikewtfbro } from '@/utils/get-user'
-import Idk from './Idk'
-import { redirect } from 'next/navigation'
-import { getBudgetMonth, getBudgets } from '@/lib/actions/budget.actions'
+import { getBudgetMonth } from '@/lib/actions/budget.actions'
+import { Topbar } from './Topbar'
+import { PlanSummary } from './PlanSummary'
+import { PlanView } from './PlanView'
 
 const Plan = async ({ params }: { params: Promise<{ month: string }> }) => {
     const { month } = await params
     const user = await getUser() 
-    console.log(user.currentBudgetId);
     const budgetMonth = await getBudgetMonth(user.currentBudgetId, month)
     console.log(budgetMonth)
-
     return (
-        <Idk />
+        <div className="h-full w-full flex flex-col">
+            <Topbar />
+            <div className="h-full w-full flex flex-1">
+                <PlanView categoryGroups={budgetMonth} month={month} />
+                <PlanSummary />
+            </div>
+        </div>
     )
 }
 
