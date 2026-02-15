@@ -1,4 +1,5 @@
 import { getcookielikewtfbro } from "@/utils/get-user"
+import { Budget } from "bread-core/src"
 
 export const getBudgets = async () => {
     const token = await getcookielikewtfbro()
@@ -21,9 +22,8 @@ export const getBudget = async (budgetId: string) => {
         },
     })
 
-    const budget = await res.json()
+    return await res.json() as Budget
 
-    return budget
 }
 
 export const getBudgetMonth = async (budgetId: string, month: string) => {

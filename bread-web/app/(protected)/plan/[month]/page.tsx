@@ -1,9 +1,9 @@
 import { getUser } from '@/lib/actions/user.actions'
-import { getBudgetMonth, getBudgets } from '@/lib/actions/budget.actions'
 import { Topbar } from './Topbar'
 import { PlanSummary } from './PlanSummary'
 import { PlanView } from './PlanView'
 import { redirect } from 'next/navigation'
+import { getBudget } from '@/lib/actions/budget.actions'
 const budgetMonth = [{
     id: 'QyvmilxAv6NdOemFxCMq',
     name: 'savings',
@@ -101,6 +101,10 @@ const Plan = async ({ params }: { params: Promise<{ month: string }> }) => {
     if(!user) 
         redirect('/login')
     console.log(user)
+    const budget = await getBudget(user.currentBudgetId ?? '')
+
+    console.log(budget)
+
     // const budgets = await getBudgets()
     // console.log(budgets)
     // const budgetMonth = await getBudgetMonth(user.currentBudgetId, month)

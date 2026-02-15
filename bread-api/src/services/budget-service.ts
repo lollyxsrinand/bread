@@ -50,7 +50,23 @@ export const getBudget = async (userId: string, budgetId: string) => {
         return null
     }
 
-    return budgetSnapshot.data()
+    const data = budgetSnapshot.data()
+
+    if (!data) {
+        return null
+    }
+
+    const budget: Budget = {
+        id: data.id,
+        name: data.name,
+        createdAt: data.createdAt,
+        currency: data.currency,
+        minMonth: data.minMonth,
+        maxMonth: data.maxMonth
+    }
+    console.log(budget)
+
+    return budget
 }
 
 export const getBudgetMonth = async (userId: string, budgetId: string, month: string) => {
