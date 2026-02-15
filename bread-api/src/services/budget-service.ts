@@ -1,5 +1,7 @@
+import { getCurrentMonthId } from "../utils/date-id-format"
 import { db } from "../firebase/server"
 import { getCategories, getCategoriesMonth, getCategoryGroups } from "./category-service"
+import { Budget } from "bread-core/src"
 
 /**
  * @returns `id` of the created budget
@@ -7,12 +9,16 @@ import { getCategories, getCategoriesMonth, getCategoryGroups } from "./category
 export const createBudget = async (userId: string, budgetName: string) => {
     const budgetRef = db.collection('users').doc(userId).collection('budgets').doc()
 
-    await budgetRef.set({
+    const budgetData: Budget = {
         id: budgetRef.id,
         name: budgetName,
-        createdAt: new Date(),
-        currency: 'INR'
-    })
+        createdAt: Date.now(),
+        currency: 'INR',
+        minMonth: getCurrentMonthId(),
+        maxMonth: getCurrentMonthId(),
+    }
+
+    await budgetRef.set(budgetData)
 
     // when a budget is created, we also need to update the user's currentBudgetId field to this newly created budget
     await db.collection('users').doc(userId).update({
@@ -35,6 +41,16 @@ export const getBudgets = async (userId: string) => {
     })
 
     return budgets
+}
+
+export const getBudget = async (userId: string, budgetId: string) => {
+    const budgetSnapshot = await db.collection('users').doc(userId).collection('budgets').doc(budgetId).get()
+
+    if (!budgetSnapshot.exists) {
+        return null
+    }
+
+    return budgetSnapshot.data()
 }
 
 export const getBudgetMonth = async (userId: string, budgetId: string, month: string) => {

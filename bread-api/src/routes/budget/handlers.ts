@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getBudgetMonth, getBudgets } from "../../services/budget-service";
+import { getBudget, getBudgetMonth, getBudgets } from "../../services/budget-service";
 import { getUserId } from "../../utils/auth";
 
 export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -14,6 +14,30 @@ export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyR
     } catch (err) {
         console.error(err)
         reply.status(500).send({ error: 'failed to get budgets' })
+    }
+}
+
+export const getBudgetHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const uid = await getUserId(request)
+
+    if(!uid) 
+        return reply.status(401).send({ error: "Not authenticated" })
+
+    const { budgetId } = request.params as { budgetId: string }
+
+    if (!budgetId)
+        return reply.status(400).send({ error: "budget id is required" })
+
+    try {
+        const budget = await getBudget(uid, budgetId)
+
+        if (!budget)
+            return reply.status(404).send({ error: "budget not found" })
+
+        return reply.status(200).send(budget)
+    } catch (err) {
+        console.error(err)
+        reply.status(500).send({ error: 'failed to get budget' })
     }
 }
 

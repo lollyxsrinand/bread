@@ -1,4 +1,5 @@
 import { getcookielikewtfbro } from "@/utils/get-user"
+import { User } from "bread-core/src"
 
 export const getUser = async () => {
     const token = await getcookielikewtfbro()
@@ -10,7 +11,5 @@ export const getUser = async () => {
 
     if (!res.ok) return null
 
-    const { user } = await res.json()
-
-    return user
+    return await res.json() as User
 }

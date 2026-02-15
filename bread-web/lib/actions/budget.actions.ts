@@ -13,6 +13,19 @@ export const getBudgets = async () => {
     return budgets
 }
 
+export const getBudget = async (budgetId: string) => {
+    const token = await getcookielikewtfbro()
+    const res = await fetch(`http://localhost:3001/budget/${budgetId}`, {
+        headers: {
+            'authorization': `Bearer ${token}`
+        },
+    })
+
+    const budget = await res.json()
+
+    return budget
+}
+
 export const getBudgetMonth = async (budgetId: string, month: string) => {
     const token = await getcookielikewtfbro()
     const res = await fetch(`http://localhost:3001/budgetMonth/${budgetId}/${month}`, {

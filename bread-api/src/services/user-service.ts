@@ -3,6 +3,7 @@ import { db } from "../firebase/server";
 import { createBudget } from "./budget-service";
 import { createCategory, createCategoryGroup, createCategoryMonth } from "./category-service";
 import { createTransaction } from "./transaction-service";
+import { User } from "bread-core/src/"
 
 // create user if the user doesn't exist
 export const createUser = async (uid: string, email: string) => {
@@ -10,14 +11,18 @@ export const createUser = async (uid: string, email: string) => {
 
   const userDoc = await userRef.get();
 
+
   if (!userDoc.exists) {
-    await userRef.set({
-      uid: uid,
+    const userData: User = {
+      id: uid,
       email: email,
       createdAt: Date.now(),
       currentBudgetId: null,
-    });
+    }
+    await userRef.set(userData);
   }
+
+  return userRef.id
 }
 
 /**
@@ -56,5 +61,17 @@ export const getUser = async (userId: string) => {
   if(!snapshot.exists)
     return null
 
-  return snapshot.data()
+  const data = snapshot.data()
+
+  if (!data) {
+    return null
+  }
+  const user: User = {
+    id: data.id || snapshot.id,
+    email: data.email,
+    createdAt: data.createdAt,
+    currentBudgetId: data.currentBudgetId ?? null
+  }
+
+  return user
 }
