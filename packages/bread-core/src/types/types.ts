@@ -16,3 +16,11 @@ export interface Budget {
   minMonth: string
   maxMonth: string
 }
+
+export interface Account {
+  id: string
+  name: string
+  type: string
+  balance: number
+  createdAt: number
+}

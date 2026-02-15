@@ -5,7 +5,7 @@ import { getUserId } from "../../utils/auth";
 export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const uid = await getUserId(request)
 
-    if(!uid) 
+    if (!uid)
         return reply.status(401).send({ error: "Not authenticated" })
 
     try {
@@ -20,7 +20,7 @@ export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyR
 export const getBudgetHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const uid = await getUserId(request)
 
-    if(!uid) 
+    if (!uid)
         return reply.status(401).send({ error: "Not authenticated" })
 
     const { budgetId } = request.params as { budgetId: string }
@@ -44,7 +44,7 @@ export const getBudgetHandler = async (request: FastifyRequest, reply: FastifyRe
 export async function getBudgetMonthHandler(request: FastifyRequest, reply: FastifyReply) {
     const uid = await getUserId(request)
 
-    if(!uid) 
+    if (!uid)
         return reply.status(401).send({ error: "Not authenticated" })
 
     const { budgetId, month } = request.params as { budgetId: string, month: string }
