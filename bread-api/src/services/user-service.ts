@@ -2,7 +2,6 @@ import { getCurrentMonthId } from "../utils/date-id-format";
 import { db } from "../firebase/server";
 import { createBudget } from "./budget-service";
 import { createCategory, createCategoryGroup, createCategoryMonth } from "./category-service";
-import { createTransaction } from "./transaction-service";
 import { User } from "bread-core/src/"
 
 // create user if the user doesn't exist
@@ -17,7 +16,7 @@ export const createUser = async (uid: string, email: string) => {
       id: uid,
       email: email,
       createdAt: Date.now(),
-      currentBudgetId: null,
+      currentBudgetId: null
     }
     await userRef.set(userData);
   }

@@ -20,6 +20,7 @@ const CategoryRow = ({ category }: { category: any }) => {
         </div>
     )
 }
+
 const CategoryGroupRow = ({ categoryGroup }: { categoryGroup: any }) => {
     const { value: open, toggle } = useToggle(true)
     return (
@@ -41,19 +42,27 @@ const CategoryGroupRow = ({ categoryGroup }: { categoryGroup: any }) => {
     )
 }
 
-export const PlanView = ({ categoryGroups, month }: { categoryGroups: any, month: string }) => {
+export const PlanView = ({ categoryGroups, month, minMonth, maxMonth }: { categoryGroups: any, month: string, minMonth: string, maxMonth: string }) => {
     const router = useRouter()
     const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
     const monthNum = parseInt(month.slice(4, 6), 10) - 1
+
+    // TODO: navigation between months
     const incrementMonth = () => {
-        const nextMonth = new Date(parseInt(month.slice(0, 4), 10), monthNum, 1)
-        nextMonth.setMonth(nextMonth.getMonth() + 1)
-        router.replace(`/plan/${nextMonth.getFullYear()}${(nextMonth.getMonth() + 1).toString().padStart(2, '0')}`) 
+        // const nextMonth = new Date(parseInt(month.slice(0, 4), 10), monthNum, 1)
+        if(parseInt(maxMonth) === parseInt(month)) {
+            console.log('we create next month?');
+        }
+        // nextMonth.setMonth(nextMonth.getMonth() + 1)
+        // router.replace(`/plan/${nextMonth.getFullYear()}${(nextMonth.getMonth() + 1).toString().padStart(2, '0')}`) 
     }
     const decrementMonth = () => {
-        const previousMonth = new Date(parseInt(month.slice(0, 4), 10), monthNum, 1)
-        previousMonth.setMonth(previousMonth .getMonth() - 1)
-        router.replace(`/plan/${previousMonth.getFullYear()}${(previousMonth .getMonth() + 1).toString().padStart(2, '0')}`) 
+        // const previousMonth = new Date(parseInt(month.slice(0, 4), 10), monthNum, 1)
+        if(parseInt(minMonth) === parseInt(month)) {
+            console.log("we cant go back any further :(");
+        }
+        // previousMonth.setMonth(previousMonth .getMonth() - 1)
+        // router.replace(`/plan/${previousMonth.getFullYear()}${(previousMonth .getMonth() + 1).toString().padStart(2, '0')}`) 
     }
 
     return (
