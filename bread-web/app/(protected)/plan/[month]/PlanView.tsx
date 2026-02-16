@@ -27,17 +27,24 @@ const CategoryGroupRow = ({ categoryGroup }: { categoryGroup: any }) => {
         <div>
             <div className="w-full flex justify-between px-2.5">
                 <div className="flex items-center">
-                    <button onClick={toggle}>
+                    <button onClick={toggle} className="p-2">
                         {open
-                            ? <LucideChevronDown size={18} className="cursor-pointer m-2" />
-                            : <LucideChevronRight size={18} className="cursor-pointer m-2" />}
+                            ? <LucideChevronDown size={18} />
+                            : <LucideChevronRight size={18} />}
                     </button>
                     <span className="font-bold select-none">{categoryGroup.name}</span>
                 </div>
+                <div className="flex gap-2.5 items-center">
+                    <span className="w-24 text-right tabular-nums">0</span>
+                    <span className="w-24 text-right tabular-nums">0</span>
+                    <span className="w-24 text-right tabular-nums">0</span>
+                </div>
             </div>
-            {open && categoryGroup.categories.map((category: any, idx: number) => (
-                <CategoryRow key={idx} category={category} />
-            ))}
+            <div>
+                {open && categoryGroup.categories.map((category: any, idx: number) => (
+                    <CategoryRow key={idx} category={category} />
+                ))}
+            </div>
         </div>
     )
 }
@@ -50,7 +57,7 @@ export const PlanView = ({ categoryGroups, month, minMonth, maxMonth }: { catego
     // TODO: navigation between months
     const incrementMonth = () => {
         // const nextMonth = new Date(parseInt(month.slice(0, 4), 10), monthNum, 1)
-        if(parseInt(maxMonth) === parseInt(month)) {
+        if (parseInt(maxMonth) === parseInt(month)) {
             console.log('we create next month?');
         }
         // nextMonth.setMonth(nextMonth.getMonth() + 1)
@@ -58,7 +65,7 @@ export const PlanView = ({ categoryGroups, month, minMonth, maxMonth }: { catego
     }
     const decrementMonth = () => {
         // const previousMonth = new Date(parseInt(month.slice(0, 4), 10), monthNum, 1)
-        if(parseInt(minMonth) === parseInt(month)) {
+        if (parseInt(minMonth) === parseInt(month)) {
             console.log("we cant go back any further :(");
         }
         // previousMonth.setMonth(previousMonth .getMonth() - 1)
@@ -67,18 +74,25 @@ export const PlanView = ({ categoryGroups, month, minMonth, maxMonth }: { catego
 
     return (
         <div className="h-full flex-1 flex flex-col items-center  p-2.5">
-            <div className="w-full p-2.5">
+            <div className="w-full p-2.5 flex items-center">
                 <div className="inline-flex items-center">
-                    <ArrowLeftCircle onClick={decrementMonth} size={18} className="cursor-pointer m-2" />
+                    <button onClick={decrementMonth} className="p-2">
+                        <ArrowLeftCircle size={18} />
+                    </button>
                     <span className="font-bold select-none w-12 text-center">{monthNames[monthNum]}</span>
-                    <ArrowRightCircle onClick={incrementMonth} size={18} className="cursor-pointer m-2" />
+                    <button onClick={incrementMonth} className="p-2">
+                        <ArrowRightCircle size={18} />
+                    </button>
                 </div>
             </div>
 
             <div className="w-full flex flex-col">
                 <div className="w-full flex justify-between p-2.5">
                     <div className="flex items-center">
-                        <LucidePlusCircle size={18} className="cursor-pointer m-2" />
+                        <button className="p-2">
+                            <LucidePlusCircle size={18} />
+
+                        </button>
                         <span className="font-bold select-none">categories</span>
                     </div>
                     <div className="flex gap-2.5 items-center">

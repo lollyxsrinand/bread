@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify"
 import { getUserId } from "../../utils/auth"
 import { getUser } from "../../services/user-service"
-import { User } from "bread-core/src"
 
 export const authTestHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const uid = await getUserId(request)
@@ -16,8 +15,7 @@ export const meHandler = async (request: FastifyRequest, reply: FastifyReply) =>
     if (!uid)
         return reply.status(401).send({ error: "Not authenticated" })
 
-    const user: User | null = await getUser(uid)
-    console.log(user);
+    const user = await getUser(uid)
 
     if (!user)
         return reply.status(404).send({ error: "User not found" })
