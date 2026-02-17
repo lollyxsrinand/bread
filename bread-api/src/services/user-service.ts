@@ -52,6 +52,10 @@ export const setupUser = async (userId: string, email: string) => {
       await createCategoryMonth(userId, budgetId, categoryId, getCurrentMonthId())
     }
   }
+
+  const inflowGroupId = await createCategoryGroup(userId, budgetId, 'inflow')
+  const readyToAssignId = await createCategory(userId, budgetId, inflowGroupId, 'ready to assign', false)
+  await createCategoryMonth(userId, budgetId, readyToAssignId, getCurrentMonthId())
 }
 
 export const getUser = async (userId: string) => {

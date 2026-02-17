@@ -22,7 +22,7 @@ export const createCategoryGroup = async (userId: string, budgetId: string, cate
 /** 
  * @returns `categoryId` of the created category
  */
-export const createCategory = async (userId: string, budgetId: string, categoryGroupId: string, categoryName: string) => {
+export const createCategory = async (userId: string, budgetId: string, categoryGroupId: string, categoryName: string, isUserCategory: boolean=true) => {
     const categoryRef = db
         .collection('users').doc(userId) // users/{userId}
         .collection('budgets').doc(budgetId) // users/{userId}/budgets/{budgetId}
@@ -32,6 +32,7 @@ export const createCategory = async (userId: string, budgetId: string, categoryG
         id: categoryRef.id,
         name: categoryName,
         categoryGroupId: categoryGroupId,
+        isUserCategory, 
         createdAt: new Date(),
     })
 
