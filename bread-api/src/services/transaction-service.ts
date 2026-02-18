@@ -91,7 +91,8 @@ export const getTransactions = async (userId: string, budgetId: string) => {
 }
 
 export const deleteTransaction = async (userId: string, budgetId: string, transactionId: string) => {
-    const ref = db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('transactions').doc(transactionId)
+    const budgetRef = getBudgetRef(userId, budgetId)
+    const ref = budgetRef.collection('transactions').doc(transactionId)
     const snapshot = await ref.get()
 
     if (!snapshot.exists) {
@@ -99,19 +100,22 @@ export const deleteTransaction = async (userId: string, budgetId: string, transa
     }
 
     const { id, accountId, toAccountId, categoryId, amount, date, createdAt } = snapshot.data() as any
-    console.log(id);
-    console.log(accountId);
-    console.log(toAccountId);
-    console.log(categoryId);
-    console.log(amount);
-    console.log(date);
 
     const batch = db.batch()
 
     if (toAccountId) {
-        // later do me this
+        const fromAccountRef = budgetRef.collection('accounts').doc(accountId)
+        const toAccountRef = budgetRef.collection('accounts').doc(toAccountId)
+
+        batch.update(fromAccountRef, {
+            balance: FieldValue.increment(amount),
+        })
+
+        batch.update(toAccountRef, {
+            balance: FieldValue.increment(-amount),
+        })
     } else if (categoryId) {
-        const accountRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('accounts').doc(accountId)
+        const accountRef = budgetRef.collection('accounts').doc(accountId)
         const categoryMonthRef = getCategoryMonthRef(userId, budgetId, categoryId, new Date(date))
 
         batch.set(accountRef, {
@@ -125,7 +129,8 @@ export const deleteTransaction = async (userId: string, budgetId: string, transa
 
     }
 
-    await ref.delete()
+    batch.delete(ref)
+
     await batch.commit()
 
 }
