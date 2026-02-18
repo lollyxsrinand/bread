@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getBudget, getBudgetMonth, getBudgets } from "../../services/budget-service";
+import { assignToCategoryMonth, getBudget, getBudgetMonth, getBudgets } from "../../services/budget-service";
 import { getUserId } from "../../utils/auth";
 
 export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -67,5 +67,34 @@ export async function getBudgetMonthHandler(request: FastifyRequest, reply: Fast
     } catch (error) {
         return reply.status(500).send({ error: `internal error: ${error}` })
     }
+}
 
+export const assignToCategoryHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = await getUserId(request)
+
+    if (!userId)
+        return reply.status(401).send({ error: "Not authenticated" })
+
+    const { budgetId, month, categoryId } = request.params as { budgetId: string, month: string, categoryId: string }
+    const { amount } = request.body as { amount: number }
+
+    if (!budgetId)
+        return reply.status(400).send({ error: "budget id is required" })
+
+    if (!month)
+        return reply.status(400).send({ error: "month is required" })
+
+    if (!categoryId)
+        return reply.status(400).send({ error: "category id is required" })
+
+    if (amount === undefined)
+        return reply.status(400).send({ error: "amount is required" })
+
+    try {
+        await assignToCategoryMonth(userId, budgetId, month, categoryId, amount)
+        return reply.status(200).send({ success: true })
+    } catch (error) {
+        console.error(error)
+        return reply.status(500).send({ error: `internal error: ${error}` })
+    }
 }
