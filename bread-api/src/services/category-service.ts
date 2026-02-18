@@ -22,17 +22,19 @@ export const createCategoryGroup = async (userId: string, budgetId: string, cate
 /** 
  * @returns `categoryId` of the created category
  */
-export const createCategory = async (userId: string, budgetId: string, categoryGroupId: string, categoryName: string, isUserCategory: boolean=true) => {
-    const categoryRef = db
+export const createCategory = async (userId: string, budgetId: string, categoryGroupId: string, categoryName: string, isSystem: boolean=false, id?: string) => {
+    const categoriesRef = db
         .collection('users').doc(userId) // users/{userId}
         .collection('budgets').doc(budgetId) // users/{userId}/budgets/{budgetId}
-        .collection('categories').doc() // users/{userId}/budgets/{budgetId}/categories/{categoryId} holy.
+        .collection('categories') // users/{userId}/budgets/{budgetId}/categories/{categoryId} holy.
+    
+    const categoryRef = id ? categoriesRef.doc(id) : categoriesRef.doc()
 
     await categoryRef.set({
         id: categoryRef.id,
         name: categoryName,
         categoryGroupId: categoryGroupId,
-        isUserCategory, 
+        isSystem, 
         createdAt: new Date(),
     })
 
