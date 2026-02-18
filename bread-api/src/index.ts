@@ -5,6 +5,7 @@ import cookie from '@fastify/cookie';
 import authRoutes from './routes/auth'
 import accountRoutes from './routes/accounts';
 import budgetRoutes from './routes/budget';
+import transactionRoutes from './routes/transactions';
 import { getUserId } from './utils/auth';
 import idkRoutes from './routes/idk';
 
@@ -25,7 +26,7 @@ app.register(authRoutes)
 app.register(accountRoutes)
 app.register(budgetRoutes)
 app.register(idkRoutes)
-
+app.register(transactionRoutes)
 
 app.get('/ping', async (request, reply) => {
   return { message: 'pong 🏓' }
