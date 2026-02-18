@@ -12,6 +12,12 @@ export const createTransaction = async (
     date: Date
 ) => {
     const budgetRef = getBudgetRef(userId, budgetId)
+    const budgetSnapshot = await budgetRef.get()
+
+    if (!budgetSnapshot.exists) {
+        throw Error('budget not found')
+    }
+
     const txnRef = budgetRef.collection('transactions').doc()
 
     const batch = db.batch()
