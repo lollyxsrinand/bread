@@ -1,9 +1,10 @@
 'use client'
-import { Banknote, Calendar, ChartColumnIcon, ChartNoAxesColumn, LucideChevronDown, LucideChevronRight, LucideIceCreamCone, Settings } from 'lucide-react'
+import { Banknote, Calendar, ChartNoAxesColumn, LucideChevronDown, LucideChevronRight, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useToggle } from '../hooks/useToggle'
 import { Account } from 'bread-core/src'
+import { useAccountStore } from '@/store/account-store'
 
 const AccountLink = ({ account }: { account: Account }) => {
     return (
@@ -17,7 +18,7 @@ const AccountLink = ({ account }: { account: Account }) => {
     )
 }
 
-const AccountGroupRow = ({ name, accounts}: { name: string, accounts: Account[] }) => {
+const AccountGroupRow = ({ name, accounts }: { name: string, accounts: Account[] }) => {
     const { value: open, toggle: toggle } = useToggle(true)
     return (
         <div className='flex flex-col'>
@@ -46,9 +47,13 @@ const SidebarLink = ({ href, label, icon }: { href: string, label: string, icon:
     )
 }
 
-const Sidebar = ({ accounts }: { accounts: Account[] }) => {
+const Sidebar = () => {
+    const accounts = useAccountStore(s => s.accounts)
     const pathname = usePathname()
-    if (pathname === '/settings') return null
+
+    if (pathname === '/settings') {
+        return null
+    }
 
     const accountsGrouped = accounts.reduce((acc, account) => {
         if (!acc[account.type]) acc[account.type] = []
