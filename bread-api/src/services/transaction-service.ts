@@ -1,4 +1,5 @@
 import { db, FieldValue } from "../firebase/server"
+import { getAccount } from "./account-service"
 import { getBudgetRef } from "./budget-service"
 import { getCategoryMonthRef } from "./category-service"
 
@@ -82,7 +83,16 @@ export const createTransaction = async (
     })
 
     await batch.commit()
-    return txnRef.id
+
+    const account = await getAccount(userId, budgetId, accountId)
+    const toAccount = toAccountId ? await getAccount(userId, budgetId, toAccountId) : null
+    return { 
+        id: txnRef.id,
+        updatedAccounts: [
+            ...(account ? [{ id: account.id, balance: account.balance }] : []),
+            ...(toAccount ? [{ id: toAccount.id, balance: toAccount.balance }] : [])
+        ]
+    }
 }
 
 export const getTransactions = async (userId: string, budgetId: string) => {
