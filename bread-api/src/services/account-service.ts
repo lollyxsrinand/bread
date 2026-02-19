@@ -30,3 +30,27 @@ export const getAccounts = async (uid: string, budgetId: string) => {
 
     return accounts
 }
+
+export const getAccount = async (userId: string, budgetId: string, accountId: string) => {
+    const accountSnapshot = await db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('accounts').doc(accountId).get()
+
+    if (!accountSnapshot.exists) {
+        return null
+    }
+
+    const data = accountSnapshot.data()
+
+    if (!data) {
+        return null
+    }
+
+    const account: Account = {
+        id: data.id,
+        name: data.name,
+        type: data.type,
+        balance: data.balance,
+        createdAt: data.createdAt,
+    }
+
+    return account
+}
