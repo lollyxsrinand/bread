@@ -1,5 +1,6 @@
 import { formatDateId } from "../utils/date-id-format"
-import { db } from "../firebase/server"
+import { db, FieldValue } from "../firebase/server"
+import { getBudgetRef } from "./budget-service"
 
 /**
  * @returns `categoryGroupRef.id` of the created category group
@@ -110,3 +111,41 @@ export const getCategoryGroups = async (userId: string, budgetId: string) => {
 
     return categoryGroups
 }
+
+export const assignToCategoryMonth = async ( userId: string, budgetId: string, month: string, categoryId: string, amount: number) => {
+    if (categoryId === "readytoassign") {
+      throw new Error("cannot assign to readytoassign")
+    }
+  
+    const budgetRef = getBudgetRef(userId, budgetId)
+  
+    const readyToAssignMonthRef = budgetRef.collection("categoryMonths").doc(`readytoassign${month}`)
+  
+    const categoryMonthRef = budgetRef.collection("categoryMonths").doc(`${categoryId}${month}`)
+  
+    const [rtaSnap, categorySnap] = await Promise.all([
+      readyToAssignMonthRef.get(),
+      categoryMonthRef.get(),
+    ])
+  
+    if (!rtaSnap.exists) {
+      throw new Error("readytoassign month not found")
+    }
+  
+    if (!categorySnap.exists) {
+      throw new Error("category month not found")
+    }
+  
+    const batch = db.batch()
+  
+    batch.update(readyToAssignMonthRef, {
+      available: FieldValue.increment(-amount),
+    })
+  
+    batch.update(categoryMonthRef, {
+      available: FieldValue.increment(amount),
+      budgeted: FieldValue.increment(amount),
+    })
+  
+    await batch.commit()
+  }
