@@ -8,6 +8,7 @@ import budgetRoutes from './routes/budget';
 import transactionRoutes from './routes/transactions';
 import { getUserId } from './utils/auth';
 import idkRoutes from './routes/idk';
+import categoryRoutes from './routes/category';
 
 const app = Fastify({ logger: false })
 
@@ -27,6 +28,7 @@ app.register(accountRoutes)
 app.register(budgetRoutes)
 app.register(idkRoutes)
 app.register(transactionRoutes)
+app.register(categoryRoutes)
 
 app.get('/ping', async (request, reply) => {
   return { message: 'pong 🏓' }
