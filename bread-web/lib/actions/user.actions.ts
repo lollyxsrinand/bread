@@ -1,3 +1,4 @@
+'use server'
 import { getcookielikewtfbro } from "@/utils/get-user"
 import { User } from "bread-core/src"
 
