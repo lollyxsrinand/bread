@@ -3,7 +3,7 @@ import { Banknote, Calendar, ChartNoAxesColumn, LucideChevronDown, LucideChevron
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useToggle } from '../hooks/useToggle'
-import { Account } from 'bread-core/src'
+import { Account } from 'bread-core'
 import { useBudgetStore } from '@/store/budget-store'
 
 const AccountLink = ({ account }: { account: Account }) => {
@@ -81,7 +81,7 @@ const Sidebar = () => {
             <div className='flex flex-col gap-1'>
                 <span className='font-bold px-4 py-2'>accounts</span>
                 {Object.entries(accountsGrouped).map(([accountGroupName, accounts]) => (
-                    <AccountGroupRow key={accountGroupName} name={accountGroupName} accounts={accounts} />
+                    <AccountGroupRow key={accountGroupName} name={accountGroupName} accounts={accounts as Account[]} />
                 ))}
             </div>
         </div>

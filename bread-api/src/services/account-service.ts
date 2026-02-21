@@ -1,4 +1,4 @@
-import { Account } from "bread-core/src"
+import { Account } from "bread-core"
 import { db } from "../firebase/server"
 import { createTransaction } from "./transaction-service"
 

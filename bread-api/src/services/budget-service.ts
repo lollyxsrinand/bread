@@ -1,7 +1,7 @@
 import { getCurrentMonthId } from "../utils/date-id-format"
 import { db, FieldValue } from "../firebase/server"
 import { getCategories, getCategoriesMonth, getCategoryGroups } from "./category-service"
-import { Budget } from "bread-core/src"
+import { Budget } from "bread-core"
 
 /**
  * @returns `id` of the created budget

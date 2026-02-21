@@ -1,4 +1,4 @@
-import { Account } from 'bread-core/src'
+import { Account } from 'bread-core'
 import { create } from 'zustand'
 
 interface BudgetState {
