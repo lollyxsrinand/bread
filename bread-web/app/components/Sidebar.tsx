@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useToggle } from '../hooks/useToggle'
 import { Account } from 'bread-core/src'
-import { useAccountStore } from '@/store/account-store'
+import { useBudgetStore } from '@/store/budget-store'
 
 const AccountLink = ({ account }: { account: Account }) => {
     return (
@@ -48,7 +48,7 @@ const SidebarLink = ({ href, label, icon }: { href: string, label: string, icon:
 }
 
 const Sidebar = () => {
-    const accounts = useAccountStore(s => s.accounts)
+    const accounts = useBudgetStore(s => s.accounts)
     const pathname = usePathname()
 
     if (pathname === '/settings') {

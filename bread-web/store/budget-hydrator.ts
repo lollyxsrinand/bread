@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect } from "react"
-import { useAccountStore } from "./account-store"
+import { useBudgetStore } from "./budget-store"
 import { Account } from "bread-core/src"
 
-export const AccountHydrator = ({accounts}: {accounts: Account[]}) => {
-    const setAccounts = useAccountStore((s) => s.setAccounts)
+export const BudgetHydrator = ({accounts }: {accounts: Account[]}) => {
+    const setAccounts = useBudgetStore((s) => s.setAccounts)
 
     useEffect(() => {
       setAccounts(accounts)

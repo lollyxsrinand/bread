@@ -1,7 +1,7 @@
 import { getAccounts } from "@/lib/actions/account.actions";
 import Sidebar from "../components/Sidebar";
 import { getUser } from "@/lib/actions/user.actions";
-import { AccountHydrator } from "@/store/account-hydrator";
+import { BudgetHydrator } from "@/store/budget-hydrator";
 
 export default async function Layout({ children, }: Readonly<{ children: React.ReactNode; }>) {
   const user = await getUser()
@@ -15,10 +15,9 @@ export default async function Layout({ children, }: Readonly<{ children: React.R
 
   const accounts = await getAccounts(user.currentBudgetId)
 
-
   return (
     <div className="flex h-screen w-full">
-      <AccountHydrator accounts={accounts} />
+      <BudgetHydrator accounts={accounts} />
         <Sidebar />
         <div className="h-full flex-1">
             {children}
