@@ -2,11 +2,12 @@ import { getAccounts } from '@/lib/actions/account.actions'
 import { TransactionsView } from './TransactionsView'
 import { getTransactions } from '@/lib/actions/transaction.actions'
 import { getUser } from '@/lib/actions/user.actions'
+import { getGroupedCategories } from '@/lib/actions/category.actions'
 
 const Transactions = async () => {
   const user = await getUser()
-  
-  if(!user) {
+
+  if (!user) {
     return <div>yo pls</div>
   }
 
@@ -14,16 +15,15 @@ const Transactions = async () => {
     return <div>YO PLSSSS</div>
   }
 
-  const [transactions, accounts] = await Promise.all([
+  const [transactions, accounts, groupedCategories] = await Promise.all([
     getTransactions(user.currentBudgetId),
     getAccounts(user.currentBudgetId),
+    getGroupedCategories(user.currentBudgetId)
   ])
 
 
   return (
-    <>
-    <TransactionsView transactions={transactions} accounts={accounts} />
-    </>
+      <TransactionsView transactions={transactions} groupedCategories={groupedCategories} />
   )
 }
 
