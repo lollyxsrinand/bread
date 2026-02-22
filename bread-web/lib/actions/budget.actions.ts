@@ -1,5 +1,5 @@
 import { getcookielikewtfbro } from "@/utils/get-user"
-import { Budget } from "bread-core/src"
+import { Budget } from "bread-core"
 
 export const getBudgets = async () => {
     const token = await getcookielikewtfbro()
