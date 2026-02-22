@@ -7,7 +7,6 @@ import { db } from "../../firebase/server";
 
 export async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
     const { idToken } = request.body as { idToken: string };
-    const expiresIn = 2 * 60 * 60; // 1 day
 
     let decodedIdToken;
 
@@ -28,7 +27,7 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
 
     const jwtToken = sign({ uid: uid },
         process.env.JWT_SECRET as string,
-        { expiresIn: "2h", algorithm: "HS256" }
+        { expiresIn: "7d", algorithm: "HS256" }
     )
 
     return reply.status(200).send({ jwtToken: jwtToken });
