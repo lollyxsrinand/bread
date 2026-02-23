@@ -1,7 +1,7 @@
 import { getCurrentMonthId } from "../utils/date-id-format"
 import { db, FieldValue } from "../firebase/server"
 import { getCategories, getCategoriesMonth, getCategoryGroups } from "./category-service"
-import { Budget } from "bread-core"
+import { Budget, Category, CategoryGroupView, CategoryMonth, CategoryView, MonthlyBudgetView } from "bread-core"
 
 /**
  * @returns `id` of the created budget
@@ -69,29 +69,42 @@ export const getBudget = async (userId: string, budgetId: string) => {
     return budget
 }
 
-export const getBudgetMonth = async (userId: string, budgetId: string, month: string) => {
+export const getMonthlyBudget = async (userId: string, budgetId: string, month: string) => {
     const categories = await getCategories(userId, budgetId)
     const categoryGroups = await getCategoryGroups(userId, budgetId)
     const categoriesMonth = await getCategoriesMonth(userId, budgetId, month)
 
-    const budgetMonth: Record<string, any> = {}
+    const categoriesView: CategoryView[] = []
+    for(const categoryId in categories) {
+        const category = categories[categoryId] as Category
+        const categoryMonth = categoriesMonth[`${categoryId}${month}`] as CategoryMonth
 
-    for (const categoryId in categories) {
-        categories[categoryId] = {
-            ...categories[categoryId],
-            available: categoriesMonth[`${categoryId}${month}`].available,
-            budgeted: categoriesMonth[`${categoryId}${month}`].budgeted,
-            activity: categoriesMonth[`${categoryId}${month}`].activity,
-        }
+        categoriesView.push({
+            id: category.id,
+            name: category.name,
+            isSystem: category.isSystem,
+            activity: categoryMonth.activity ?? 0,
+            available: categoryMonth.available ?? 0,
+            budgeted: categoryMonth.budgeted ?? 0,
+        })
     }
 
-    for (const categoryGroupId in categoryGroups) {
-        budgetMonth[categoryGroupId] = {
-            ...categoryGroups[categoryGroupId],
-            categories: Object.values(categories).filter((category: any) => category.categoryGroupId === categoryGroupId)
-        }
+    const categoryGroupsView: CategoryGroupView[] = []
+    for(const categoryGroupId in categoryGroups) {
+        const categoryGroup = categoryGroups[categoryGroupId] as CategoryGroupView
+
+        categoryGroupsView.push({
+            id: categoryGroup.id,
+            name: categoryGroup.name,
+            categories: categoriesView.filter(category => (categories[category.id] as Category).categoryGroupId === categoryGroupId)
+        })
     }
 
-    return Object.values(budgetMonth)
+    const monthlyBudgetView: MonthlyBudgetView = {
+        month,
+        toBeAssigned: categoriesMonth['readytoassign' + month]?.available || 0,
+        categoryGroups: categoryGroupsView
+    }
+
+    return monthlyBudgetView
 }
-

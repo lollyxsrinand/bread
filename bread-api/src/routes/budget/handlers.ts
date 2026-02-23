@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getBudget, getBudgetMonth, getBudgets } from "../../services/budget-service";
+import { getBudget, getMonthlyBudget, getBudgets } from "../../services/budget-service";
 import { getUserId } from "../../utils/auth";
+import { MonthlyBudgetView } from "bread-core";
 
 export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const uid = await getUserId(request)
@@ -55,15 +56,14 @@ export async function getBudgetMonthHandler(request: FastifyRequest, reply: Fast
 
     if (!month)
         return reply.status(400).send({ error: "month is required" })
-
-
-    if (!/^\d{4}\d{2}$/.test(month))
-        return reply.status(400).send({ error: "month must be in YYYYMM format" })
+    
+    if (!/^(19|20)\d{2}(0[1-9]|1[0-2])$/.test(month))
+        return reply.status(400).send({ error: "month must be in YYYYMM format and an actual date" })
 
 
     try {
-        const budgetMonth = await getBudgetMonth(uid, budgetId, month)
-        return reply.status(200).send(budgetMonth)
+        const monthlyBudget: MonthlyBudgetView = await getMonthlyBudget(uid, budgetId, month)
+        return reply.status(200).send(monthlyBudget)
     } catch (error) {
         return reply.status(500).send({ error: `internal error: ${error}` })
     }
