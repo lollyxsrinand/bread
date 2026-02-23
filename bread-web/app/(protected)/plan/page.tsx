@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation'
-import React from 'react'
 
 const Plan = () => {
-    redirect('/plan/202602')
+    const date = new Date()
+    const month = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}`
+    
+    redirect(`/plan/${month}`)
 }
 
 export default Plan

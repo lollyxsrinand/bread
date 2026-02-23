@@ -1,7 +1,5 @@
 'use server'
-
 import { getcookielikewtfbro } from "@/utils/get-user"
-import { Account } from "bread-core"
 
 export const getAccounts = async (budgetId: string) => {
     const token = await getcookielikewtfbro()
@@ -15,5 +13,5 @@ export const getAccounts = async (budgetId: string) => {
         throw new Error('Failed to fetch accounts')
     }
 
-    return await res.json() as Account[]
+    return await res.json() 
 }

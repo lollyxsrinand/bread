@@ -1,5 +1,5 @@
 import { getcookielikewtfbro } from "@/utils/get-user"
-import { Budget } from "bread-core"
+import { Budget, MonthlyBudgetView } from "bread-core"
 
 export const getBudgets = async () => {
     const token = await getcookielikewtfbro()
@@ -28,7 +28,7 @@ export const getBudget = async (budgetId: string) => {
 
 }
 
-export const getBudgetMonth = async (budgetId: string, month: string) => {
+export const getMonthlyBudget = async (budgetId: string, month: string) => {
     const token = await getcookielikewtfbro()
 
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/months/${month}`, {
@@ -36,8 +36,10 @@ export const getBudgetMonth = async (budgetId: string, month: string) => {
             'authorization': `Bearer ${token}`
         },
     })
+    
+    if (!res.ok) {
+        throw new Error(`failed to fetch monthly budget: ${res.status}`)
+    }
 
-    const budgetMonth = await res.json()
-
-    return budgetMonth
+    return await res.json()
 }
