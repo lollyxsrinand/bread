@@ -23,19 +23,19 @@ export const createCategoryGroup = async (userId: string, budgetId: string, cate
 /** 
  * @returns `categoryId` of the created category
  */
-export const createCategory = async (userId: string, budgetId: string, categoryGroupId: string, categoryName: string, isSystem: boolean=false, id?: string) => {
+export const createCategory = async (userId: string, budgetId: string, categoryGroupId: string, categoryName: string, isSystem: boolean = false, id?: string) => {
     const categoriesRef = db
         .collection('users').doc(userId) // users/{userId}
         .collection('budgets').doc(budgetId) // users/{userId}/budgets/{budgetId}
         .collection('categories') // users/{userId}/budgets/{budgetId}/categories/{categoryId} holy.
-    
+
     const categoryRef = id ? categoriesRef.doc(id) : categoriesRef.doc()
 
     await categoryRef.set({
         id: categoryRef.id,
         name: categoryName,
         categoryGroupId: categoryGroupId,
-        isSystem, 
+        isSystem,
         createdAt: new Date(),
     })
 
@@ -112,40 +112,43 @@ export const getCategoryGroups = async (userId: string, budgetId: string) => {
     return categoryGroups
 }
 
-export const assignToCategoryMonth = async ( userId: string, budgetId: string, month: string, categoryId: string, amount: number) => {
+// TODO: apparently this should be done using db.runTransaction() to avoid "race conditions"
+export const assignToCategoryMonth = async (userId: string, budgetId: string, month: string, categoryId: string, amount: number) => {
     if (categoryId === "readytoassign") {
-      throw new Error("cannot assign to readytoassign")
+        throw new Error("cannot assign to readytoassign")
     }
-  
+
     const budgetRef = getBudgetRef(userId, budgetId)
-  
+
     const readyToAssignMonthRef = budgetRef.collection("categoryMonths").doc(`readytoassign${month}`)
-  
+
     const categoryMonthRef = budgetRef.collection("categoryMonths").doc(`${categoryId}${month}`)
-  
+
     const [rtaSnap, categorySnap] = await Promise.all([
-      readyToAssignMonthRef.get(),
-      categoryMonthRef.get(),
+        readyToAssignMonthRef.get(),
+        categoryMonthRef.get(),
     ])
-  
+
     if (!rtaSnap.exists) {
-      throw new Error("readytoassign month not found")
+        throw new Error("readytoassign month not found")
     }
-  
-    if (!categorySnap.exists) {
-      throw new Error("category month not found")
+
+    if (!categorySnap.exists || !categorySnap.data()) {
+        throw new Error("category month not found")
     }
-  
+
     const batch = db.batch()
-  
+
+    const delta = amount - categorySnap.data()!.budgeted
+
     batch.update(readyToAssignMonthRef, {
-      available: FieldValue.increment(-amount),
+        available: FieldValue.increment(-delta),
     })
-  
+
     batch.update(categoryMonthRef, {
-      available: FieldValue.increment(amount),
-      budgeted: FieldValue.increment(amount),
+        available: FieldValue.increment(delta),
+        budgeted: FieldValue.increment(delta),
     })
-  
+
     await batch.commit()
-  }
+}
