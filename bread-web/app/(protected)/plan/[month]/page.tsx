@@ -1,7 +1,7 @@
 import { getUser } from '@/lib/actions/user.actions'
-import { Topbar } from './Topbar'
-import { PlanSummary } from './PlanSummary'
-import { PlanView } from './PlanView'
+import PlanSummary from './PlanSummary'
+import Topbar from './Topbar'
+import PlanView from './PlanView'
 import { redirect } from 'next/navigation'
 
 const Plan = async ({ params }: { params: Promise<{ month: string }> }) => {
@@ -13,10 +13,12 @@ const Plan = async ({ params }: { params: Promise<{ month: string }> }) => {
   const { month } = await params
 
   return (
-    <div className="h-full w-full flex flex-col">
-      <Topbar />
-      <div className="h-full w-full flex flex-1">
+    <div className='h-full w-full flex'>
+      <div className='w-full h-full flex flex-col'>
+        <Topbar month={month} />
         <PlanView month={month} />
+      </div>
+      <div className='w-64'>
         <PlanSummary />
       </div>
     </div>

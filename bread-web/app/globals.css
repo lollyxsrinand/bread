@@ -35,6 +35,13 @@ h1 { @apply text-4xl; }
 h2 { @apply text-3xl; }
 h3 { @apply text-2xl; }
 h4 { @apply text-xl; }
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* 
 form {
   input {

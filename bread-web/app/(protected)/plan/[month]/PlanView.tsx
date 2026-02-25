@@ -1,127 +1,130 @@
 'use client'
-
-import { useToggle } from "@/app/hooks/useToggle"
-import { assignToCategory } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
-import { ArrowLeftCircle, ArrowRightCircle, LucideChevronDown, LucideChevronRight, LucidePlusCircle } from "lucide-react"
+import { CategoryGroupView, CategoryView } from "bread-core"
+import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, PlusCircle } from "lucide-react"
+import { useEffect, useState } from "react"
 
-const CategoryRow = ({ category }: { category: any }) => {
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        const formData = new FormData(e.currentTarget)
-        const budgeted = formData.get('budgeted')
-        const amount = parseInt(budgeted as string)
-
-        const res = await assignToCategory('V1P1gGXgk5EixClmmI1d',category.id, '202602', amount)
-        console.log(res);
-    }
+const PlanToolBar = ({ month }: { month: string }) => {
+    const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+    
     return (
-        <div className="w-full flex justify-between px-2.5">
-            <div className="flex items-center">
-                <LucideChevronDown size={18} className="cursor-pointer m-2 opacity-0" />
-                <span className="select-none">{category.name}</span>
+        <div className="w-full h-fit flex px-3 ">
+            <div className="flex px-3 py-2 items-center gap-1">
+                <button className="p-1">
+                    <ChevronLeftCircle size={18} />
+                </button>
+                <span>{monthNames[parseInt(month.slice(5, 7)) - 1]}</span>
+                <button className="p-1">
+                    <ChevronRightCircle size={18} />
+                </button>
             </div>
-
-            <form onSubmit={handleSubmit} className="flex gap-2.5 items-center">
-                <input name="budgeted" className="w-24 text-right placeholder:text-white" type="text" placeholder={category.budgeted} />
-                <span className="w-24 text-right tabular-nums" >{category.activity}</span>
-                <span className="w-24 text-right tabular-nums" >{category.available}</span>
-            </form>
         </div>
     )
 }
 
-const CategoryGroupRow = ({ categoryGroup }: { categoryGroup: any }) => {
-    const { value: open, toggle } = useToggle(true)
+const PlanHeader = () => {
+    
+    return (
+        <div className="w-full px-3 flex gap-2.5">
+            <div className="px-3 py-2 w-full flex items-center gap-1">
+                <button className="p-1">
+                    <PlusCircle size={18} />
+                </button>
+                <span>category</span>
+            </div>
+            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
+                <span>assigned</span>
+            </div>
+            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
+                <span>activity</span>
+            </div>
+            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
+                <span>available</span>
+            </div>
+        </div>
+    )
+}
+
+const CategoryGroupRow = ({ categoryGroup }: { categoryGroup: CategoryGroupView }) => {
+
     return (
         <div>
-            <div className="w-full flex justify-between px-2.5">
-                <div className="flex items-center">
-                    <button onClick={toggle} className="p-2">
-                        {open
-                            ? <LucideChevronDown size={18} />
-                            : <LucideChevronRight size={18} />}
+            <div className="w-full px-3 flex gap-2.5">
+                <div className="px-3 py-2 w-full flex items-center gap-1">
+                    <button className="p-1">
+                        <ChevronDown size={18} />
                     </button>
-                    <span className="font-bold select-none">{categoryGroup.name}</span>
+                    <span>{categoryGroup.name}</span>
+                    <button className="p-1">
+                        <PlusCircle size={18} />
+                    </button>
                 </div>
-                <div className="flex gap-2.5 items-center">
-                    <span className="w-24 text-right tabular-nums">0</span>
-                    <span className="w-24 text-right tabular-nums">0</span>
-                    <span className="w-24 text-right tabular-nums">0</span>
+                <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
+                    <span>0</span>
+                </div>
+                <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
+                    <span>0</span>
+                </div>
+                <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
+                    <span>0</span>
                 </div>
             </div>
-            <div>
-                {open && categoryGroup.categories.map((category: any, idx: number) => (
-                    <CategoryRow key={idx} category={category} />
-                ))}
+            {categoryGroup.categories.map(category => (
+                <CategoryRow category={category} key={category.id} />
+            ))}
+        </div>
+    )
+}
+
+const CategoryRow = ({ category }: { category: CategoryView }) => {
+    const [assigned, setAssigned] = useState(category.budgeted.toString())  
+    const assignToCategory = useBudgetStore(s => s.assignToCategory)
+
+    useEffect(() => {
+        setAssigned(category.budgeted.toString())
+    }, [category.budgeted])
+
+    return (
+        <div className="w-full px-3 gap-2.5 flex">
+            <div className="px-3 py-2 w-full flex items-center gap-1">
+                <button className="p-1 opacity-0">
+                    <ChevronDown size={18} />
+                </button>
+                <span>{category.name}</span>
+            </div>
+            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
+                <input className="text-right bg-transparent w-full" 
+                type="number" 
+                onChange={(e) => setAssigned(e.target.value)} 
+                value={assigned} 
+                onBlur={() => assignToCategory('202602', category.id, parseInt(assigned) || 0)}
+                />
+            </div>
+            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
+                <span>{category.activity}</span>
+            </div>
+            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
+                <span>{category.available}</span>
             </div>
         </div>
     )
 }
 
-export const PlanView = ({ month }: { month: string }) => {
+const PlanView = ({ month }: { month: string }) => {
     const monthlyBudget = useBudgetStore(s => s.monthlyBudgets[month])
     if (!monthlyBudget) {
         return null
     }
-    const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-    const monthNum = parseInt(month.slice(4, 6), 10) - 1
-
-    // TODO: navigation between months
-    const incrementMonth = () => {
-        // const nextMonth = new Date(parseInt(month.slice(0, 4), 10), monthNum, 1)
-        // if (parseInt(maxMonth) === parseInt(month)) {
-        //     console.log('we create next month?');
-        // }
-        // nextMonth.setMonth(nextMonth.getMonth() + 1)
-        // router.replace(`/plan/${nextMonth.getFullYear()}${(nextMonth.getMonth() + 1).toString().padStart(2, '0')}`) 
-    }
-    const decrementMonth = () => {
-        // const previousMonth = new Date(parseInt(month.slice(0, 4), 10), monthNum, 1)
-        // if (parseInt(minMonth) === parseInt(month)) {
-        //     console.log("we cant go back any further :(");
-        // }
-        // previousMonth.setMonth(previousMonth .getMonth() - 1)
-        // router.replace(`/plan/${previousMonth.getFullYear()}${(previousMonth .getMonth() + 1).toString().padStart(2, '0')}`) 
-    }
 
     return (
-        <div className="h-full flex-1 flex flex-col items-center  p-2.5">
-            <div className="w-full p-2.5 flex items-center">
-                <div className="inline-flex items-center">
-                    <button onClick={decrementMonth} className="p-2">
-                        <ArrowLeftCircle size={18} />
-                    </button>
-                    <span className="font-bold select-none w-12 text-center">{monthNames[monthNum]}</span>
-                    <button onClick={incrementMonth} className="p-2">
-                        <ArrowRightCircle size={18} />
-                    </button>
-                </div>
-            </div>
-
-            <div className="w-full flex flex-col">
-                <div className="w-full flex justify-between p-2.5">
-                    <div className="flex items-center">
-                        <button className="p-2">
-                            <LucidePlusCircle size={18} />
-
-                        </button>
-                        <span className="font-bold select-none">categories</span>
-                    </div>
-                    <div className="flex gap-2.5 items-center">
-                        <span className="w-24 text-right font-bold select-none">assigned</span>
-                        <span className="w-24 text-right font-bold select-none">activity</span>
-                        <span className="w-24 text-right font-bold select-none">available</span>
-                    </div>
-                </div>
-
-                {monthlyBudget.categoryGroups.map((categoryGroup: any, idx: number) => (
-                    <CategoryGroupRow key={idx} categoryGroup={categoryGroup} />
-                ))}
-            </div>
-
+        <div className="h-full w-full flex flex-col">
+            <PlanToolBar month={month} />
+            <PlanHeader />
+            {monthlyBudget.categoryGroups.map(categoryGroup => (
+                <CategoryGroupRow categoryGroup={categoryGroup} key={categoryGroup.id} />
+            ))}
         </div>
     )
 }
 
-
+export default PlanView
