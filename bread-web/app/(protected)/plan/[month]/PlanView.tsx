@@ -49,13 +49,13 @@ const CategoryGroupRow = ({ categoryGroup }: { categoryGroup: CategoryGroupView 
 
     return (
         <div>
-            <div className="w-full px-3 flex gap-2.5">
+            <div className="w-full px-3 flex gap-2.5 group">
                 <div className="px-3 py-2 w-full flex items-center gap-1">
                     <button className="p-1">
                         <ChevronDown size={18} />
                     </button>
                     <span>{categoryGroup.name}</span>
-                    <button className="p-1">
+                    <button className="p-1 group-hover:opacity-100 opacity-0 pointer-events-none group-hover:pointer-events-auto">
                         <PlusCircle size={18} />
                     </button>
                 </div>
