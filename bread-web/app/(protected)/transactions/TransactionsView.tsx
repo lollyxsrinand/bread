@@ -187,6 +187,7 @@ export const TransactionsView = ({ transactions }: { transactions: Transaction[]
             console.log(id, updatedAccounts);
             setDraftTransaction(null)
             router.refresh()
+            toast.success(':) good luck: transaction saved')
 
         } catch (error) {
             console.error('failed to save transaction:', error)
