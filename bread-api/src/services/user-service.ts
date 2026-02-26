@@ -1,8 +1,7 @@
-import { getCurrentMonthId } from "../utils/date-id-format";
 import { db } from "../firebase/server";
 import { createBudget } from "./budget-service";
 import { createCategory, createCategoryGroup, createCategoryMonth } from "./category-service";
-import { User } from "bread-core"
+import { User, getCurrentMonthId } from "bread-core"
 
 // create user if the user doesn't exist
 export const createUser = async (uid: string, email: string) => {

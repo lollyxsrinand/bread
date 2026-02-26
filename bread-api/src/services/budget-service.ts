@@ -1,4 +1,4 @@
-import { getCurrentMonthId } from "../utils/date-id-format"
+import { getCurrentMonthId } from "bread-core"
 import { db, FieldValue } from "../firebase/server"
 import { getCategories, getCategoriesMonth, getCategoryGroups } from "./category-service"
 import { Budget, Category, CategoryGroupView, CategoryMonth, CategoryView, MonthlyBudgetView } from "bread-core"

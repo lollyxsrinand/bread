@@ -1,4 +1,4 @@
-import { formatDateId } from "../utils/date-id-format"
+import { toMonthId } from "bread-core"
 import { db, FieldValue } from "../firebase/server"
 import { getBudgetRef } from "./budget-service"
 
@@ -67,7 +67,7 @@ export const getCategoryMonthRef = (userId: string, budgetId: string, categoryId
     return db
         .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
-        .collection('categoryMonths').doc(`${categoryId}${formatDateId(date)}`)
+        .collection('categoryMonths').doc(`${categoryId}${toMonthId(date)}`)
 }
 
 export const getCategories = async (userId: string, budgetId: string) => {
