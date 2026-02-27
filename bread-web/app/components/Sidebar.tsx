@@ -3,7 +3,7 @@ import { Banknote, Calendar, ChartNoAxesColumn, LucideChevronDown, LucideChevron
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useToggle } from '../hooks/useToggle'
-import { Account } from 'bread-core'
+import { Account } from 'bread-core/src'
 import { useBudgetStore } from '@/store/budget-store'
 
 const AccountLink = ({ account }: { account: Account }) => {

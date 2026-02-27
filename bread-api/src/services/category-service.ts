@@ -1,4 +1,4 @@
-import { toMonthId } from "bread-core"
+import { toMonthId } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
 import { getBudgetRef } from "./budget-service"
 

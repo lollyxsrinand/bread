@@ -1,6 +1,6 @@
 'use client'
 import { useBudgetStore } from "@/store/budget-store"
-import { CategoryGroupView, CategoryView } from "bread-core"
+import { CategoryGroupView, CategoryView } from "bread-core/src"
 import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, PlusCircle } from "lucide-react"
 import { useEffect, useState } from "react"
 

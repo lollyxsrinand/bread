@@ -1,6 +1,6 @@
 'use server'
 import { getcookielikewtfbro } from "@/utils/get-user"
-import { User } from "bread-core"
+import { User } from "bread-core/src"
 
 export const getUser = async () => {
     const token = await getcookielikewtfbro()

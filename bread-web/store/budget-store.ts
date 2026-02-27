@@ -1,5 +1,5 @@
 import { assignToCategory as _assignToCategory } from '@/lib/actions/category.actions'
-import { Account, CategoryGroupView, MonthlyBudgetView } from 'bread-core'
+import { Account, CategoryGroupView, MonthlyBudgetView } from 'bread-core/src'
 import { toast } from 'react-toastify'
 import { create } from 'zustand'
 

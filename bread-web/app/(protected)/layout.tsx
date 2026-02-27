@@ -4,7 +4,7 @@ import { getUser } from "@/lib/actions/user.actions";
 import { BudgetHydrator } from "@/store/budget-hydrator";
 import { getMonthlyBudget } from "@/lib/actions/budget.actions";
 import { redirect } from "next/navigation";
-import { Account, MonthlyBudgetView } from "bread-core";
+import { Account, MonthlyBudgetView } from "bread-core/src";
 
 export default async function Layout({ children, }: Readonly<{ children: React.ReactNode; }>) {
   const user = await getUser()

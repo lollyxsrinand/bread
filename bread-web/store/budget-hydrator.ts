@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useBudgetStore } from "./budget-store"
-import { Account, MonthlyBudgetView } from "bread-core"
+import { Account, MonthlyBudgetView } from "bread-core/src"
 
 export const BudgetHydrator = ({accounts, monthlyBudget }: {accounts: Account[], monthlyBudget: MonthlyBudgetView}) => {
     const setAccounts = useBudgetStore((s) => s.setAccounts)

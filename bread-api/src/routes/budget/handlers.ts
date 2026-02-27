@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { getBudget, getMonthlyBudget, getBudgets } from "../../services/budget-service";
 import { getUserId } from "../../utils/auth";
-import { MonthlyBudgetView } from "bread-core";
+import { MonthlyBudgetView } from "bread-core/src";
 
 export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const uid = await getUserId(request)

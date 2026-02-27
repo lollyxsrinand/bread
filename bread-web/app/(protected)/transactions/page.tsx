@@ -4,7 +4,7 @@ import { getTransactions } from '@/lib/actions/transaction.actions'
 import { getUser } from '@/lib/actions/user.actions'
 import { getGroupedCategories } from '@/lib/actions/category.actions'
 import { redirect } from 'next/navigation'
-import { Account, Transaction } from 'bread-core'
+import { Account, Transaction } from 'bread-core/src'
 
 const Transactions = async () => {
   const user = await getUser()

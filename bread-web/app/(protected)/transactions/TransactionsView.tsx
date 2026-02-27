@@ -2,7 +2,7 @@
 
 import { useBudgetStore } from "@/store/budget-store"
 import { PlusCircle, Trash } from "lucide-react"
-import { Transaction, Category, Account, CategoryView } from "bread-core"
+import { Transaction, Category, Account, CategoryView } from "bread-core/src"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
