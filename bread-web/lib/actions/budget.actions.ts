@@ -28,7 +28,7 @@ export const getBudget = async (budgetId: string) => {
 
 }
 
-export const getMonthlyBudget = async (budgetId: string, month: string) => {
+export const getMonthlyBudgetView = async (budgetId: string, month: string) => {
     const token = await getcookielikewtfbro()
 
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/months/${month}`, {
@@ -41,5 +41,5 @@ export const getMonthlyBudget = async (budgetId: string, month: string) => {
         throw new Error(`failed to fetch monthly budget: ${res.status}`)
     }
 
-    return await res.json()
+    return await res.json() as MonthlyBudgetView
 }

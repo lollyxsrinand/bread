@@ -4,7 +4,7 @@ import { CategoryGroupView, CategoryView } from "bread-core/src"
 import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, PlusCircle } from "lucide-react"
 import { useEffect, useState } from "react"
 
-const PlanToolBar = ({ month }: { month: string }) => {
+const Toolbar = ({ month }: { month: string }) => {
     const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
     
     return (
@@ -22,7 +22,7 @@ const PlanToolBar = ({ month }: { month: string }) => {
     )
 }
 
-const PlanHeader = () => {
+const Header = () => {
     
     return (
         <div className="w-full px-3 flex gap-2.5">
@@ -118,8 +118,8 @@ const PlanView = ({ month }: { month: string }) => {
 
     return (
         <div className="h-full w-full flex flex-col">
-            <PlanToolBar month={month} />
-            <PlanHeader />
+            <Toolbar month={month} />
+            <Header />
             {monthlyBudget.categoryGroups.map(categoryGroup => (
                 <CategoryGroupRow categoryGroup={categoryGroup} key={categoryGroup.id} month={month} />
             ))}

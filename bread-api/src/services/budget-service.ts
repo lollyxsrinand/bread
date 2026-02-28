@@ -84,7 +84,8 @@ export const getMonthlyBudgetView = async (userId: string, budgetId: string, mon
         })
     }
 
-    const monthlyBudgetView: MonthlyBudgetView = {
+    const monthlyBudget: MonthlyBudgetView = {
+        id: budget.id,
         month,
         minMonth: budget.minMonth,
         maxMonth: budget.maxMonth, 
@@ -92,5 +93,5 @@ export const getMonthlyBudgetView = async (userId: string, budgetId: string, mon
         categoryGroups: categoryGroupsView
     }
 
-    return monthlyBudgetView
+    return monthlyBudget
 }

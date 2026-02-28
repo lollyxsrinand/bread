@@ -80,8 +80,8 @@ const Sidebar = () => {
 
             <div className='flex flex-col gap-1'>
                 <span className='font-bold px-4 py-2'>accounts</span>
-                {Object.entries(accountsGrouped).map(([accountGroupName, accounts]) => (
-                    <AccountGroupRow key={accountGroupName} name={accountGroupName} accounts={accounts as Account[]} />
+                {Object.entries(accountsGrouped).map(([name, accounts]) => (
+                    <AccountGroupRow key={name} name={name} accounts={accounts} />
                 ))}
             </div>
         </div>

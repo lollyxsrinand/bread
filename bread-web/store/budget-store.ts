@@ -11,7 +11,6 @@ interface BudgetState {
     monthlyBudgets: Record<string, MonthlyBudgetView>
     setMonthlyBudget: (month: string, budget: MonthlyBudgetView) => void
     assignToCategory: (month: string, categoryId: string, amount: number) => void
-
 }
 
 export const useBudgetStore = create<BudgetState>((set, get) => ({
@@ -91,7 +90,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
             }
         })
         try {
-            const data = await _assignToCategory('V1P1gGXgk5EixClmmI1d', categoryId, month, amount)
+            const data = await _assignToCategory(monthlyBudget.id, categoryId, month, amount)
             const newMonthlyBudget = data.monthlyBudget
             toast.success(`assigned ${amount} to category successfully!`)
             set((state) => {
