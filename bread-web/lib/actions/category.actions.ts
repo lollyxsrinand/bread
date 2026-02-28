@@ -1,5 +1,5 @@
 'use server'
-import { getcookielikewtfbro } from "@/utils/get-user"
+import { getcookielikewtfbro } from "@/utils/get-cookie"
 
 export const getGroupedCategories = async (budgetId: string) => {
     const token = await getcookielikewtfbro()

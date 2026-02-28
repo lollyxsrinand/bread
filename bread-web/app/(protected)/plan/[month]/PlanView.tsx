@@ -45,7 +45,7 @@ const PlanHeader = () => {
     )
 }
 
-const CategoryGroupRow = ({ categoryGroup }: { categoryGroup: CategoryGroupView }) => {
+const CategoryGroupRow = ({ categoryGroup, month }: { categoryGroup: CategoryGroupView, month: string }) => {
 
     return (
         <div>
@@ -70,13 +70,13 @@ const CategoryGroupRow = ({ categoryGroup }: { categoryGroup: CategoryGroupView 
                 </div>
             </div>
             {categoryGroup.categories.map(category => (
-                <CategoryRow category={category} key={category.id} />
+                <CategoryRow category={category} key={category.id} month={month}/>
             ))}
         </div>
     )
 }
 
-const CategoryRow = ({ category }: { category: CategoryView }) => {
+const CategoryRow = ({ category, month }: { category: CategoryView, month:string }) => {
     const [assigned, setAssigned] = useState(category.budgeted.toString())  
     const assignToCategory = useBudgetStore(s => s.assignToCategory)
 
@@ -97,7 +97,7 @@ const CategoryRow = ({ category }: { category: CategoryView }) => {
                 type="number" 
                 onChange={(e) => setAssigned(e.target.value)} 
                 value={assigned} 
-                onBlur={() => assignToCategory('202602', category.id, parseInt(assigned) || 0)}
+                onBlur={() => assignToCategory(month, category.id, parseInt(assigned) || 0)}
                 />
             </div>
             <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
@@ -121,7 +121,7 @@ const PlanView = ({ month }: { month: string }) => {
             <PlanToolBar month={month} />
             <PlanHeader />
             {monthlyBudget.categoryGroups.map(categoryGroup => (
-                <CategoryGroupRow categoryGroup={categoryGroup} key={categoryGroup.id} />
+                <CategoryGroupRow categoryGroup={categoryGroup} key={categoryGroup.id} month={month} />
             ))}
         </div>
     )

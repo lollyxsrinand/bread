@@ -1,5 +1,5 @@
 'use server'
-import { getcookielikewtfbro } from "@/utils/get-user"
+import { getcookielikewtfbro } from "@/utils/get-cookie"
 import { User } from "bread-core/src"
 
 export const getUser = async () => {
@@ -13,5 +13,5 @@ export const getUser = async () => {
 
     if (!res.ok) return null
 
-    return await res.json() as User
+    return await res.json() as Promise<User>
 }

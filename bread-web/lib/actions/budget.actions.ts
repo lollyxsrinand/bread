@@ -1,4 +1,4 @@
-import { getcookielikewtfbro } from "@/utils/get-user"
+import { getcookielikewtfbro } from "@/utils/get-cookie"
 import { Budget, MonthlyBudgetView } from "bread-core/src"
 
 export const getBudgets = async () => {
