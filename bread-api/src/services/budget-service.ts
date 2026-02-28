@@ -1,16 +1,13 @@
-import { getCurrentMonthId } from "bread-core/src"
+import { CategoryGroup, getCurrentMonthId } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
 import { getCategories, getCategoriesMonth, getCategoryGroups } from "./category-service"
 import { Budget, Category, CategoryGroupView, CategoryMonth, CategoryView, MonthlyBudgetView } from "bread-core/src"
 
-/**
- * @returns `id` of the created budget
- */
 export const createBudget = async (userId: string, budgetName: string) => {
-    const budgetRef = db.collection('users').doc(userId).collection('budgets').doc()
+    const ref = db.collection('users').doc(userId).collection('budgets').doc()
 
-    const budgetData: Budget = {
-        id: budgetRef.id,
+    const budget: Budget = {
+        id: ref.id,
         name: budgetName,
         createdAt: Date.now(),
         currency: 'INR',
@@ -18,14 +15,14 @@ export const createBudget = async (userId: string, budgetName: string) => {
         maxMonth: getCurrentMonthId(),
     }
 
-    await budgetRef.set(budgetData)
+    await ref.set(budget)
 
     // when a budget is created, we also need to update the user's currentBudgetId field to this newly created budget
     await db.collection('users').doc(userId).update({
-        currentBudgetId: budgetRef.id,
+        currentBudgetId: ref.id,
     })
 
-    return budgetRef.id
+    return budget
 }
 
 export const getBudgetRef = (userId: string, budgetId: string) => {
@@ -33,51 +30,38 @@ export const getBudgetRef = (userId: string, budgetId: string) => {
 }
 
 export const getBudgets = async (userId: string) => {
-    const budgetsSnapshot = await db.collection('users').doc(userId).collection('budgets').get()
-    const budgets = [] as any
+    const snapshot = await db.collection('users').doc(userId).collection('budgets').get()
+    const budgets: Budget[] = [] 
 
-    budgetsSnapshot.forEach((doc) => {
-        budgets.push(doc.data())
+    snapshot.forEach((doc) => {
+        budgets.push(doc.data() as Budget)
     })
 
     return budgets
 }
 
 export const getBudget = async (userId: string, budgetId: string) => {
-    const budgetSnapshot = await db.collection('users').doc(userId).collection('budgets').doc(budgetId).get()
+    const snapshot = await db.collection('users').doc(userId).collection('budgets').doc(budgetId).get()
 
-    if (!budgetSnapshot.exists) {
-        return null
-    }
-
-    const data = budgetSnapshot.data()
-
+    const data = snapshot.data()
     if (!data) {
-        return null
+        throw new Error(`budget with id ${budgetId} not found for user ${userId}`)
     }
-
-    const budget: Budget = {
-        id: data.id,
-        name: data.name,
-        createdAt: data.createdAt,
-        currency: data.currency,
-        minMonth: data.minMonth,
-        maxMonth: data.maxMonth
-    }
-    console.log(budget)
-
-    return budget
+    return data as Budget
 }
 
-export const getMonthlyBudget = async (userId: string, budgetId: string, month: string) => {
-    const categories = await getCategories(userId, budgetId)
-    const categoryGroups = await getCategoryGroups(userId, budgetId)
-    const categoriesMonth = await getCategoriesMonth(userId, budgetId, month)
+export const getMonthlyBudgetView = async (userId: string, budgetId: string, month: string) => {
+    const [budget, categories, categoryGroups, categoriesMonth] = await Promise.all([
+        getBudget(userId, budgetId),
+        getCategories(userId, budgetId),
+        getCategoryGroups(userId, budgetId),
+        getCategoriesMonth(userId, budgetId, month)
+    ])
 
     const categoriesView: CategoryView[] = []
     for(const categoryId in categories) {
-        const category = categories[categoryId] as Category
-        const categoryMonth = categoriesMonth[`${categoryId}${month}`] as CategoryMonth
+        const category = categories[categoryId]
+        const categoryMonth = categoriesMonth[`${categoryId}${month}`] 
 
         categoriesView.push({
             id: category.id,
@@ -91,7 +75,7 @@ export const getMonthlyBudget = async (userId: string, budgetId: string, month: 
 
     const categoryGroupsView: CategoryGroupView[] = []
     for(const categoryGroupId in categoryGroups) {
-        const categoryGroup = categoryGroups[categoryGroupId] as CategoryGroupView
+        const categoryGroup = categoryGroups[categoryGroupId] 
 
         categoryGroupsView.push({
             id: categoryGroup.id,
@@ -102,7 +86,9 @@ export const getMonthlyBudget = async (userId: string, budgetId: string, month: 
 
     const monthlyBudgetView: MonthlyBudgetView = {
         month,
-        toBeAssigned: categoriesMonth['readytoassign' + month]?.available || 0,
+        minMonth: budget.minMonth,
+        maxMonth: budget.maxMonth, 
+        toBeAssigned: categoriesMonth['readytoassign' + month]?.available || 0, // sketchy
         categoryGroups: categoryGroupsView
     }
 

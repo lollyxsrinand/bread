@@ -3,77 +3,52 @@ import { createBudget } from "./budget-service";
 import { createCategory, createCategoryGroup, createCategoryMonth } from "./category-service";
 import { User, getCurrentMonthId } from "bread-core/src"
 
-// create user if the user doesn't exist
-export const createUser = async (uid: string, email: string) => {
-  const userRef = db.collection('users').doc(uid);
+export const createUser = async (userId: string, email: string) => {
+  const ref = db.collection('users').doc(userId);
 
-  const userDoc = await userRef.get();
-
-
-  if (!userDoc.exists) {
-    const userData: User = {
-      id: uid,
-      email: email,
-      createdAt: Date.now(),
-      currentBudgetId: null
-    }
-    await userRef.set(userData);
+  const user: User = {
+    id: userId,
+    email: email,
+    createdAt: Date.now(),
+    currentBudgetId: null
   }
 
-  return userRef.id
+  await ref.create(user);
+  return user
 }
 
-/**
- * 1. creates a user doc
- * 2. creates a budgets collection
- * 3. creates categoryGroups collection, categories collection, categoryMonths collection
- * - all collections are populated with default data
- */
 export const setupUser = async (userId: string, email: string) => {
-  // create user
   await createUser(userId, email)
 
-  // create a defualt user budget
-  const budgetId = await createBudget(userId, 'My Budget')
+  const { id: budgetId } = await createBudget(userId, 'My Budget')
 
-  // create default categories for the user budget
   const categories = {
     'wants': ['food', 'subscription', 'clothes'],
     'needs': ['rent', 'utilities', 'groceries'],
     'savings': ['emergency fund', 'investments'],
-  } as any // fuck it.
+  } as any
+  const currentMonth = getCurrentMonthId()
 
-  for(const categoryGroupName in categories) {
-    const categoryGroupId = await createCategoryGroup(userId, budgetId, categoryGroupName)
+  for (const categoryGroupName in categories) {
+    const { id: categoryGroupId } = await createCategoryGroup(userId, budgetId, categoryGroupName)
 
-    for(const categoryName of categories[categoryGroupName]) {
-      const categoryId = await createCategory(userId, budgetId, categoryGroupId, categoryName)
-      await createCategoryMonth(userId, budgetId, categoryId, getCurrentMonthId())
+    for (const categoryName of categories[categoryGroupName]) {
+      const { id: categoryId } = await createCategory(userId, budgetId, categoryGroupId, categoryName)
+      await createCategoryMonth(userId, budgetId, categoryId, currentMonth)
     }
   }
 
-  const inflowGroupId = await createCategoryGroup(userId, budgetId, 'inflow')
-  const readyToAssignId = await createCategory(userId, budgetId, inflowGroupId, 'ready to assign', true, 'readytoassign')
-  await createCategoryMonth(userId, budgetId, readyToAssignId, getCurrentMonthId())
+  const { id: inflowGroupId } = await createCategoryGroup(userId, budgetId, 'inflow')
+  const { id: readyToAssignId } = await createCategory( userId, budgetId, inflowGroupId, 'ready to assign', true, 'readytoassign')
+  await createCategoryMonth(userId, budgetId, readyToAssignId, currentMonth)
 }
 
 export const getUser = async (userId: string) => {
   const snapshot = await db.collection('users').doc(userId).get()
-
-  if(!snapshot.exists)
-    return null
-
   const data = snapshot.data()
 
-  if (!data) {
+  if (!data)
     return null
-  }
-  const user: User = {
-    id: data.id || snapshot.id,
-    email: data.email,
-    createdAt: data.createdAt,
-    currentBudgetId: data.currentBudgetId ?? null
-  }
 
-  return user
+  return data as User
 }

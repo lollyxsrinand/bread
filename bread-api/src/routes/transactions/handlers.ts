@@ -16,8 +16,8 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
     }
     const { accountId, toAccountId = null, categoryId = null, amount, date } = request.body as { accountId: string, toAccountId?: string, categoryId?: string, amount: number, date: string }
     try {
-        const { id, updatedAccounts } = await createTransaction(userId, budgetId, accountId, toAccountId, categoryId, amount, new Date(date))
-        return reply.status(201).send({ id, updatedAccounts })
+        const { transaction, updatedAccounts } = await createTransaction(userId, budgetId, accountId, toAccountId, categoryId, amount, new Date(date))
+        return reply.status(201).send({ transaction, updatedAccounts })
     } catch (error) {
         console.error(error)
         return reply.status(500).send({ error: "failed to create transaction" })

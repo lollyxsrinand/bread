@@ -1,45 +1,49 @@
-import { toMonthId } from "bread-core/src"
+import { Category, CategoryGroup, CategoryMonth, toMonthId } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
 import { getBudgetRef } from "./budget-service"
 
-/**
- * @returns `categoryGroupRef.id` of the created category group
- */
-export const createCategoryGroup = async (userId: string, budgetId: string, categoryGroupName: string) => {
+export const createCategoryGroup = async ( userId: string, budgetId: string, name: string ) => {
     const categoryGroupRef = db
-        .collection('users').doc(userId) // users/{userId}
-        .collection('budgets').doc(budgetId) // users/{userId}/budgets/{budgetId}
-        .collection('categoryGroups').doc() // users/{userId}/budgets/{budgetId}/categoryGroups/{categoryGroupId} holy.
+        .collection('users').doc(userId) 
+        .collection('budgets').doc(budgetId) 
+        .collection('categoryGroups').doc()
 
-    await categoryGroupRef.set({
+    const categoryGroup: CategoryGroup = {
         id: categoryGroupRef.id,
-        name: categoryGroupName,
-        createdAt: new Date(),
-    })
+        name: name,
+        createdAt: Date.now(),
+    }
 
-    return categoryGroupRef.id
+    await categoryGroupRef.set(categoryGroup)
+    return categoryGroup
 }
 
-/** 
- * @returns `categoryId` of the created category
- */
-export const createCategory = async (userId: string, budgetId: string, categoryGroupId: string, categoryName: string, isSystem: boolean = false, id?: string) => {
+export const createCategory = async (
+    userId: string, 
+    budgetId: string, 
+    categoryGroupId: string, 
+    categoryName: string, 
+    isSystem: boolean = false, 
+    id?: string
+) => {
     const categoriesRef = db
-        .collection('users').doc(userId) // users/{userId}
-        .collection('budgets').doc(budgetId) // users/{userId}/budgets/{budgetId}
-        .collection('categories') // users/{userId}/budgets/{budgetId}/categories/{categoryId} holy.
+        .collection('users').doc(userId) 
+        .collection('budgets').doc(budgetId)
+        .collection('categories') 
 
     const categoryRef = id ? categoriesRef.doc(id) : categoriesRef.doc()
 
-    await categoryRef.set({
+    const category: Category = {
         id: categoryRef.id,
         name: categoryName,
         categoryGroupId: categoryGroupId,
         isSystem,
-        createdAt: new Date(),
-    })
+        createdAt: Date.now(),
+    }
 
-    return categoryRef.id
+    await categoryRef.set(category)
+
+    return category
 }
 
 export const createCategoryMonth = async (userId: string, budgetId: string, categoryId: string, month: string) => {
@@ -49,18 +53,20 @@ export const createCategoryMonth = async (userId: string, budgetId: string, cate
         .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
         .collection('categoryMonths').doc(categoryMonthId)
-
-    await ref.set({
+    
+    const categoryMonth: CategoryMonth = {
         id: categoryMonthId,
         categoryId,
         month,
         budgeted: 0,
         activity: 0,
         available: 0,
-        createdAt: new Date(),
-    })
+        createdAt: Date.now(),
+    }
 
-    return ref.id
+    await ref.set(categoryMonth)
+
+    return categoryMonth
 }
 
 export const getCategoryMonthRef = (userId: string, budgetId: string, categoryId: string, date: Date) => {
@@ -76,8 +82,8 @@ export const getCategories = async (userId: string, budgetId: string) => {
         .collection('budgets').doc(budgetId)
         .collection('categories').get()
 
-    const categories: Record<string, any> = Object.fromEntries(
-        snapshot.docs.map(doc => [doc.id, doc.data()])
+    const categories: Record<string, Category> = Object.fromEntries(
+        snapshot.docs.map(doc => [doc.id, doc.data() as Category])
     )
 
     return categories
@@ -91,8 +97,8 @@ export const getCategoriesMonth = async (userId: string, budgetId: string, month
         .where('month', '==', month)
         .get()
 
-    const categoriesMonth: Record<string, any> = Object.fromEntries(
-        snapshot.docs.map(doc => [doc.id, doc.data()])
+    const categoriesMonth: Record<string, CategoryMonth> = Object.fromEntries(
+        snapshot.docs.map(doc => [doc.id, doc.data() as CategoryMonth])
     )
 
     return categoriesMonth
@@ -105,23 +111,27 @@ export const getCategoryGroups = async (userId: string, budgetId: string) => {
         .collection('categoryGroups')
         .get()
 
-    const categoryGroups: Record<string, any> = Object.fromEntries(
-        snapshot.docs.map(doc => [doc.id, doc.data()])
+    const categoryGroups: Record<string, CategoryGroup> = Object.fromEntries(
+        snapshot.docs.map(doc => [doc.id, doc.data() as CategoryGroup])
     )
 
     return categoryGroups
 }
 
-// TODO: apparently this should be done using db.runTransaction() to avoid "race conditions"
-export const assignToCategoryMonth = async (userId: string, budgetId: string, month: string, categoryId: string, amount: number) => {
+// apparently this should be done using db.runTransaction() to avoid any race conditions
+export const assignToCategoryMonth = async (
+    userId: string, 
+    budgetId: string, 
+    month: string, 
+    categoryId: string, 
+    amount: number
+) => {
     if (categoryId === "readytoassign") {
         throw new Error("cannot assign to readytoassign")
     }
 
-    const budgetRef = getBudgetRef(userId, budgetId)
-
+    const budgetRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId)
     const readyToAssignMonthRef = budgetRef.collection("categoryMonths").doc(`readytoassign${month}`)
-
     const categoryMonthRef = budgetRef.collection("categoryMonths").doc(`${categoryId}${month}`)
 
     const [rtaSnap, categorySnap] = await Promise.all([
@@ -138,7 +148,6 @@ export const assignToCategoryMonth = async (userId: string, budgetId: string, mo
     }
 
     const batch = db.batch()
-
     const delta = amount - categorySnap.data()!.budgeted
 
     batch.update(readyToAssignMonthRef, {
@@ -151,4 +160,5 @@ export const assignToCategoryMonth = async (userId: string, budgetId: string, mo
     })
 
     await batch.commit()
+    // probably return something useful
 }

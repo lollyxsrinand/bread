@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify"
 import { getUserId } from "../../utils/auth"
 import { assignToCategoryMonth, getCategories, getCategoryGroups } from "../../services/category-service"
-import { getMonthlyBudget } from "../../services/budget-service"
+import { getMonthlyBudgetView } from "../../services/budget-service"
 
 export const getCategoriesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = await getUserId(request)
@@ -67,7 +67,7 @@ export const assignToCategoryHandler = async (request: FastifyRequest, reply: Fa
 
     try {
         await assignToCategoryMonth(userId, budgetId, month, categoryId, amount)
-        const monthlyBudgetView = await getMonthlyBudget(userId, budgetId, month)
+        const monthlyBudgetView = await getMonthlyBudgetView(userId, budgetId, month)
         return reply.status(200).send({ success: true, monthlyBudget: monthlyBudgetView })
     } catch (error) {
         console.error(error)

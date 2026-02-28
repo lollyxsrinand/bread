@@ -1,3 +1,4 @@
+import { Transaction } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
 import { getAccount } from "./account-service"
 import { getBudgetRef } from "./budget-service"
@@ -72,7 +73,7 @@ export const createTransaction = async (
         }, { merge: true })
     }
 
-    batch.set(txnRef, {
+    const transaction: Transaction = {
         id: txnRef.id,
         accountId,
         toAccountId,
@@ -80,14 +81,16 @@ export const createTransaction = async (
         amount,
         date: date.getTime(),
         createdAt: Date.now(),
-    })
+    }
+
+    batch.set(txnRef, transaction)
 
     await batch.commit()
 
     const account = await getAccount(userId, budgetId, accountId)
     const toAccount = toAccountId ? await getAccount(userId, budgetId, toAccountId) : null
     return { 
-        id: txnRef.id,
+        transaction,
         updatedAccounts: [
             ...(account ? [{ id: account.id, balance: account.balance }] : []),
             ...(toAccount ? [{ id: toAccount.id, balance: toAccount.balance }] : [])
@@ -98,9 +101,9 @@ export const createTransaction = async (
 export const getTransactions = async (userId: string, budgetId: string) => {
     const snapshot = await db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('transactions').get()
 
-    const transactions = [] as any
+    const transactions: Transaction[] = []
     snapshot.forEach((doc) => {
-        transactions.push(doc.data())
+        transactions.push(doc.data() as Transaction /* we need zod schema here */ )
     })
 
     return transactions
@@ -115,7 +118,7 @@ export const deleteTransaction = async (userId: string, budgetId: string, transa
         throw Error('transaction not found')
     }
 
-    const { id, accountId, toAccountId, categoryId, amount, date, createdAt } = snapshot.data() as any
+    const { accountId, toAccountId, categoryId, amount, date } = snapshot.data() as Transaction
 
     const batch = db.batch()
 
@@ -146,7 +149,6 @@ export const deleteTransaction = async (userId: string, budgetId: string, transa
     }
 
     batch.delete(ref)
-
     await batch.commit()
-
+    // TODO: return the updated accounts after deleting the transaction
 }
