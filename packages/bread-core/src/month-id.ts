@@ -12,21 +12,20 @@ export const getCurrentMonthId = (): string => {
     return toMonthId(new Date());
 }
 
-export const shiftMonth = (date: string, delta: number): string => {
-    if (!isValidMonthId(date)) {
-        throw new Error("date should be of the format YYYYMM");
+export const shiftMonth = (monthId: string, delta: number): string => {
+    if (!isValidMonthId(monthId)) {
+        throw new Error("monthId should be of the format YYYYMM");
     }
 
-    const year = parseInt(date.slice(0, 4), 10);
-    const month = parseInt(date.slice(4, 6), 10) - 1;
+    const year = parseInt(monthId.slice(0, 4), 10);
+    const month = parseInt(monthId.slice(4, 6), 10) - 1;
     return toMonthId(new Date(year, month + delta, 1));
 };
 
-export const getPreviousMonthId = (date: string = getCurrentMonthId()): string => {
-    return shiftMonth(date, -1);
+export const getPreviousMonthId = (monthId: string = getCurrentMonthId()): string => {
+    return shiftMonth(monthId, -1);
 }
 
-
-export const getNextMonthId = (date: string = getCurrentMonthId()): string => {
-    return shiftMonth(date, 1);
+export const getNextMonthId = (monthId: string = getCurrentMonthId()): string => {
+    return shiftMonth(monthId, 1);
 }

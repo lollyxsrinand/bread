@@ -2,6 +2,7 @@ import { getAccounts } from "@/lib/actions/account.actions";
 import { BudgetHydrator } from "@/store/budget-hydrator";
 import Sidebar from "../components/Sidebar";
 import { requireUser } from "@/utils/require-user";
+import { getBudget } from "@/lib/actions/budget.actions";
 
 export default async function Layout({ children, }: Readonly<{ children: React.ReactNode; }>) {
   const { currentBudgetId } = await requireUser()

@@ -33,3 +33,19 @@ export const assignToCategory = async (budgetId: string, categoryId: string, mon
 
     return await res.json()
 }
+
+export const rolloverToNextMonth = async (budgetId: string) => {
+    const token = await getcookielikewtfbro()
+    const res = await fetch(`http://localhost:3001/budgets/${budgetId}/rollover`, {
+        method: 'POST',
+        headers: {
+            'authorization': `Bearer ${token}`,
+        },
+    })
+
+    if (!res.ok) {
+        throw new Error('failed to rollover to next month')
+    }
+
+    return await res.json()
+}

@@ -14,10 +14,7 @@ export interface CategoryGroupView {
 }
 
 export interface MonthlyBudgetView {
-    id: string
     month: string
     toBeAssigned: number
-    minMonth: string
-    maxMonth: string
     categoryGroups: CategoryGroupView[]
 }

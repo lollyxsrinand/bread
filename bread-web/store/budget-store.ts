@@ -1,5 +1,5 @@
 import { assignToCategory as _assignToCategory } from '@/lib/actions/category.actions'
-import { Account, CategoryGroupView, MonthlyBudgetView } from 'bread-core/src'
+import { Account, Budget, CategoryGroupView, MonthlyBudgetView } from 'bread-core/src'
 import { toast } from 'react-toastify'
 import { create } from 'zustand'
 
@@ -8,14 +8,20 @@ interface BudgetState {
     setAccounts: (accounts: Account[]) => void
     updateAccountBalance: (accountId: string, delta: number) => void
 
+    budget: Budget
+    setBudget: (budget: Budget) => void
+
     monthlyBudgets: Record<string, MonthlyBudgetView>
     setMonthlyBudget: (month: string, budget: MonthlyBudgetView) => void
-    assignToCategory: (month: string, categoryId: string, amount: number) => void
+    assignToCategory: (budgetId: string, month: string, categoryId: string, amount: number) => void
 }
 
 export const useBudgetStore = create<BudgetState>((set, get) => ({
     accounts: [],
     setAccounts: (accounts: Account[]) => set({ accounts }),
+
+    budget: {} as Budget,
+    setBudget: (budget: Budget) => set({ budget }),
 
     monthlyBudgets: {},
     setMonthlyBudget: (month: string, budget: MonthlyBudgetView) =>
@@ -35,7 +41,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     })),
 
     // requires some refactoring 
-    assignToCategory: async (month: string, categoryId: string, amount: number) => {
+    assignToCategory: async (budgetId: string, month: string, categoryId: string, amount: number) => {
         const monthlyBudget = get().monthlyBudgets[month]
         if (!monthlyBudget) {
             console.log(`monthly budget for month ${month} not found`)
@@ -90,7 +96,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
             }
         })
         try {
-            const data = await _assignToCategory(monthlyBudget.id, categoryId, month, amount)
+            const data = await _assignToCategory(budgetId, categoryId, month, amount)
             const newMonthlyBudget = data.monthlyBudget
             toast.success(`assigned ${amount} to category successfully!`)
             set((state) => {
@@ -117,5 +123,5 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
                 }
             })
         }
-    }
+    },
 }))

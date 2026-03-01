@@ -2,22 +2,26 @@
 
 import { useEffect } from "react"
 import { useBudgetStore } from "./budget-store"
-import { Account, MonthlyBudgetView } from "bread-core/src"
+import { Account, Budget, MonthlyBudgetView } from "bread-core/src"
 
-export const BudgetHydrator = ({accounts, monthlyBudget }: {accounts?: Account[], monthlyBudget?: MonthlyBudgetView}) => {
-    const setAccounts = useBudgetStore((s) => s.setAccounts)
-    const setMonthlyBudget = useBudgetStore((s) => s.setMonthlyBudget)
+export const BudgetHydrator = ({ accounts, budget, monthlyBudget }: { accounts?: Account[], budget?: Budget, monthlyBudget?: MonthlyBudgetView }) => {
+  const setAccounts = useBudgetStore((s) => s.setAccounts)
+  const setMonthlyBudget = useBudgetStore((s) => s.setMonthlyBudget)
+  const setBudget = useBudgetStore((s) => s.setBudget)
 
-    useEffect(() => {
-      if (accounts) {
-        setAccounts(accounts)
-      }
+  useEffect(() => {
+    if (accounts) {
+      setAccounts(accounts)
+    }
 
-      if(monthlyBudget) {
-        setMonthlyBudget(monthlyBudget.month, monthlyBudget)
-      }
+    if (monthlyBudget) {
+      setMonthlyBudget(monthlyBudget.month, monthlyBudget)
+    }
 
-    }, [accounts, setAccounts, monthlyBudget, setMonthlyBudget])
-  
-    return null
+    if (budget) {
+      setBudget(budget)
+    }
+  }, [accounts, setAccounts, budget, setBudget, monthlyBudget, setMonthlyBudget])
+
+  return null
 }
