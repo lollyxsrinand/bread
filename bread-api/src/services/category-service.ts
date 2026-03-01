@@ -1,6 +1,6 @@
-import { Category, CategoryGroup, CategoryMonth, toMonthId } from "bread-core/src"
+import { Budget, Category, CategoryGroup, CategoryMonth, getNextMonthId, getPreviousMonthId, toMonthId } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
-import { getBudgetRef } from "./budget-service"
+import { getBudget, getBudgetRef } from "./budget-service"
 
 export const createCategoryGroup = async ( userId: string, budgetId: string, name: string ) => {
     const categoryGroupRef = db
@@ -96,6 +96,10 @@ export const getCategoriesMonth = async (userId: string, budgetId: string, month
         .collection('categoryMonths')
         .where('month', '==', month)
         .get()
+    
+    if (snapshot.empty) {
+        throw new Error(`no category months found for month ${month}`)
+    }
 
     const categoriesMonth: Record<string, CategoryMonth> = Object.fromEntries(
         snapshot.docs.map(doc => [doc.id, doc.data() as CategoryMonth])
@@ -161,4 +165,34 @@ export const assignToCategoryMonth = async (
 
     await batch.commit()
     // probably return something useful
+}
+
+export const rolloverToNextMonth = async (userId: string, budgetId: string) => {
+    const budget = await getBudget(userId, budgetId)
+    const currentMonthId = budget.maxMonth
+    const nextMonthId = getNextMonthId(currentMonthId)
+
+    const currentCategoriesMonth = await getCategoriesMonth(userId, budgetId, currentMonthId)
+    const rolloverCategoriesMonth: CategoryMonth[] = Object.values(currentCategoriesMonth).map((categoryMonth) => ({
+        id: `${categoryMonth.categoryId}${nextMonthId}`,
+        month: nextMonthId,
+        categoryId: categoryMonth.categoryId,
+        activity: 0,
+        budgeted: 0,
+        available: categoryMonth.available,
+        createdAt: Date.now()
+    }))
+
+    const batch = db.batch()
+    const budgetRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId)
+
+    rolloverCategoriesMonth.forEach((categoryMonth) => {
+        const ref = budgetRef.collection('categoryMonths').doc(categoryMonth.id)
+        batch.set(ref, categoryMonth)
+    })
+
+    batch.update(budgetRef, {maxMonth: nextMonthId})
+    await batch.commit()
+
+    return rolloverCategoriesMonth
 }

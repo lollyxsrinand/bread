@@ -85,10 +85,7 @@ export const getMonthlyBudgetView = async (userId: string, budgetId: string, mon
     }
 
     const monthlyBudget: MonthlyBudgetView = {
-        id: budget.id,
         month,
-        minMonth: budget.minMonth,
-        maxMonth: budget.maxMonth, 
         toBeAssigned: categoriesMonth['readytoassign' + month]?.available || 0, // sketchy
         categoryGroups: categoryGroupsView
     }
