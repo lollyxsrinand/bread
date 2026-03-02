@@ -34,7 +34,7 @@ const Toolbar = ({ month, budget }: { month: string, budget: Budget }) => {
                         <ChevronLeftCircle size={18} className="opacity-50" />
                     </button>
                 }
-                <span>{monthNames[parseInt(month.slice(5, 7)) - 1]}</span>
+                <span>{monthNames[parseInt(month.slice(4, 7)) - 1]}</span>
                 {budget.maxMonth > month ?
                     <button className="p-1" onClick={() => router.push(`/plan/${getNextMonthId(month)}`)}>
                         <ChevronRightCircle size={18} />

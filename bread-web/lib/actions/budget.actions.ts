@@ -1,8 +1,8 @@
-import { getcookielikewtfbro } from "@/utils/get-cookie"
+import { getToken } from "@/utils/get-cookie"
 import { Budget, MonthlyBudgetView } from "bread-core/src"
 
 export const getBudgets = async () => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
 
     const res = await fetch(`http://localhost:3001/budgets`, {
         headers: {
@@ -16,7 +16,7 @@ export const getBudgets = async () => {
 }
 
 export const getBudget = async (budgetId: string) => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
 
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}`, {
         headers: {
@@ -29,7 +29,7 @@ export const getBudget = async (budgetId: string) => {
 }
 
 export const getMonthlyBudgetView = async (budgetId: string, month: string) => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
 
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/months/${month}`, {
         headers: {

@@ -1,8 +1,8 @@
 'use server'
-import { getcookielikewtfbro } from "@/utils/get-cookie"
+import { getToken } from "@/utils/get-cookie"
 
 export const getGroupedCategories = async (budgetId: string) => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/categories`, {
         headers: {
             'authorization': `Bearer ${token}`
@@ -17,7 +17,7 @@ export const getGroupedCategories = async (budgetId: string) => {
 }
 
 export const assignToCategory = async (budgetId: string, categoryId: string, month: string, amount: number) => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/months/${month}/categories/${categoryId}/assign`, {
         method: 'POST',
         headers: {
@@ -35,7 +35,7 @@ export const assignToCategory = async (budgetId: string, categoryId: string, mon
 }
 
 export const rolloverToNextMonth = async (budgetId: string) => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/rollover`, {
         method: 'POST',
         headers: {

@@ -1,10 +1,10 @@
 'use server'
 
-import { getcookielikewtfbro } from "@/utils/get-cookie"
+import { getToken } from "@/utils/get-cookie"
 import { Transaction } from "bread-core/src"
 
 export const getTransactions = async (budgetId: string) => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
 
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/transactions`, {
         headers: {
@@ -16,7 +16,7 @@ export const getTransactions = async (budgetId: string) => {
 }
 
 export const createTransaction = async (budgetId: string, transaction: Partial<Transaction>) => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
 
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/transactions`, {
         method: 'POST',
@@ -31,7 +31,7 @@ export const createTransaction = async (budgetId: string, transaction: Partial<T
 }
 
 export const deleteTransaction = async (budgetId: string, transactionId: string) => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
 
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/transactions/${transactionId}`, {
         method: 'DELETE',

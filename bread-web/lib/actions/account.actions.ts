@@ -1,8 +1,8 @@
 'use server'
-import { getcookielikewtfbro } from "@/utils/get-cookie"
+import { getToken } from "@/utils/get-cookie"
 
 export const getAccounts = async (budgetId: string) => {
-    const token = await getcookielikewtfbro()
+    const token = await getToken()
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/accounts`, {
         headers: {
             'authorization': `Bearer ${token}`
