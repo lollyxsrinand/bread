@@ -153,7 +153,7 @@ const TransactionRow = ({ transaction, accountMap, categoryMap, onDelete }: { tr
 
 export const TransactionsView = ({ transactions }: { transactions: Transaction[] }) => {
     const accounts = useBudgetStore(s => s.accounts)
-    const categoryGroups = useBudgetStore(s => s.monthlyBudgets['202602']?.categoryGroups)
+    const categoryGroups = useBudgetStore(s => s.monthlyBudgets['202603']?.categoryGroups)
     const [draftTransaction, setDraftTransaction] = useState<Partial<Transaction> | null>(null)
     const router = useRouter()
 
