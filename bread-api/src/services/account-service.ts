@@ -4,12 +4,9 @@ import { createTransaction } from "./transaction-service"
 
 export const createAccount = async (userId: string, budgetId: string, data: { name: string, type: string, balance: number }) => {
     const ref = db
-        .collection('users')
-        .doc(userId)
-        .collection('budgets')
-        .doc(budgetId)
-        .collection('accounts')
-        .doc()
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('accounts').doc()
 
     const account: Account = {
         id: ref.id,

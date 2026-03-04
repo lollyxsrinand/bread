@@ -1,8 +1,8 @@
-import { Transaction } from "bread-core/src"
+import { toMonthId, Transaction } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
 import { getAccount } from "./account-service"
 import { getBudgetRef } from "./budget-service"
-import { getCategoryMonthRef } from "./category-service"
+import { getCategoriesMonthRef } from "./category-service"
 
 export const createTransaction = async (
     userId: string,
@@ -60,7 +60,8 @@ export const createTransaction = async (
     } else if (categoryId) {
         // amount < 0 ? money going out of the account : money coming into the account
         const accountRef = budgetRef.collection('accounts').doc(accountId)
-        const categoryMonthRef = getCategoryMonthRef(userId, budgetId, categoryId, date)
+        // const categoryMonthRef = getCategoryMonthRef(userId, budgetId, categoryId, date)
+        const categoryMonthRef = getCategoriesMonthRef(userId, budgetId, toMonthId(new Date(date))).doc(categoryId)
 
 
         batch.set(accountRef, {
@@ -135,7 +136,8 @@ export const deleteTransaction = async (userId: string, budgetId: string, transa
         })
     } else if (categoryId) {
         const accountRef = budgetRef.collection('accounts').doc(accountId)
-        const categoryMonthRef = getCategoryMonthRef(userId, budgetId, categoryId, new Date(date))
+        // const categoryMonthRef = getCategoriesMonthRef(userId, budgetId, categoryId)
+        const categoryMonthRef = getCategoriesMonthRef(userId, budgetId, toMonthId(new Date(date))).doc(categoryId)
 
         batch.set(accountRef, {
             balance: FieldValue.increment(-amount),
@@ -150,5 +152,4 @@ export const deleteTransaction = async (userId: string, budgetId: string, transa
 
     batch.delete(ref)
     await batch.commit()
-    // TODO: return the updated accounts after deleting the transaction
 }

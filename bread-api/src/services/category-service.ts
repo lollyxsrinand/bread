@@ -2,6 +2,10 @@ import { Budget, Category, CategoryGroup, CategoryMonth, getNextMonthId, getPrev
 import { db, FieldValue } from "../firebase/server"
 import { getBudget, getBudgetRef } from "./budget-service"
 
+/**
+ * - creates a new `CategoryGroup` doc under `budgets/{budgetId}/categoryGroups` collection
+ * @returns the created `CategoryGroup` 
+ */
 export const createCategoryGroup = async ( userId: string, budgetId: string, name: string ) => {
     const categoryGroupRef = db
         .collection('users').doc(userId) 
@@ -18,6 +22,10 @@ export const createCategoryGroup = async ( userId: string, budgetId: string, nam
     return categoryGroup
 }
 
+/**
+ * - creates a new `Category` doc under `budgets/{budgetId}/categories` collection
+ * @returns the created `Category`
+ */
 export const createCategory = async (
     userId: string, 
     budgetId: string, 
@@ -29,7 +37,7 @@ export const createCategory = async (
     const categoriesRef = db
         .collection('users').doc(userId) 
         .collection('budgets').doc(budgetId)
-        .collection('categories') 
+        .collection('categories')
 
     const categoryRef = id ? categoriesRef.doc(id) : categoriesRef.doc()
 
@@ -46,13 +54,19 @@ export const createCategory = async (
     return category
 }
 
+/**
+ * - creates a new `CategoryMonth` doc under `budgets/{budgetId}/categoryMonths/{month}/categories/{categoryId}` collection
+ * - this is used to track the budgeted, activity and possibly available amounts for a category in a given month
+ * @returns the created `CategoryMonth`
+ */
 export const createCategoryMonth = async (userId: string, budgetId: string, categoryId: string, month: string) => {
     const categoryMonthId = `${categoryId}${month}`
 
     const ref = db
         .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
-        .collection('categoryMonths').doc(categoryMonthId)
+        .collection('categoryMonths').doc(month)
+        .collection('categories').doc(categoryId)
     
     const categoryMonth: CategoryMonth = {
         id: categoryMonthId,
@@ -64,18 +78,25 @@ export const createCategoryMonth = async (userId: string, budgetId: string, cate
         createdAt: Date.now(),
     }
 
-    await ref.set(categoryMonth)
+    await ref.create(categoryMonth)
 
     return categoryMonth
 }
 
-export const getCategoryMonthRef = (userId: string, budgetId: string, categoryId: string, date: Date) => {
+/**
+ * @returns a reference to the all the category month docs for a given month under the path `budgets/{budgetId}/categoryMonths/{month}/categories`
+ */
+export const getCategoriesMonthRef = (userId: string, budgetId: string, month: string) => {
     return db
         .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
-        .collection('categoryMonths').doc(`${categoryId}${toMonthId(date)}`)
+        .collection('categoryMonths').doc(month)
+        .collection('categories')
 }
 
+/**
+ * @returns all categories mapped to their ids 
+ */
 export const getCategories = async (userId: string, budgetId: string) => {
     const snapshot = await db
         .collection('users').doc(userId)
@@ -89,13 +110,11 @@ export const getCategories = async (userId: string, budgetId: string) => {
     return categories
 }
 
+/**
+ * @returns all category months mapped to their ids for a given month 
+ */
 export const getCategoriesMonth = async (userId: string, budgetId: string, month: string) => {
-    const snapshot = await db
-        .collection('users').doc(userId)
-        .collection('budgets').doc(budgetId)
-        .collection('categoryMonths')
-        .where('month', '==', month)
-        .get()
+    const snapshot = await getCategoriesMonthRef(userId, budgetId, month).get()
     
     if (snapshot.empty) {
         throw new Error(`no category months found for month ${month}`)
@@ -108,6 +127,9 @@ export const getCategoriesMonth = async (userId: string, budgetId: string, month
     return categoriesMonth
 }
 
+/**
+ * @returns all category groups mapped to their ids 
+ */
 export const getCategoryGroups = async (userId: string, budgetId: string) => {
     const snapshot = await db
         .collection('users').doc(userId)
@@ -122,7 +144,7 @@ export const getCategoryGroups = async (userId: string, budgetId: string) => {
     return categoryGroups
 }
 
-// apparently this should be done using db.runTransaction() to avoid any race conditions
+/* rewrite this */
 export const assignToCategoryMonth = async (
     userId: string, 
     budgetId: string, 
@@ -130,69 +152,10 @@ export const assignToCategoryMonth = async (
     categoryId: string, 
     amount: number
 ) => {
-    if (categoryId === "readytoassign") {
-        throw new Error("cannot assign to readytoassign")
-    }
-
-    const budgetRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId)
-    const readyToAssignMonthRef = budgetRef.collection("categoryMonths").doc(`readytoassign${month}`)
-    const categoryMonthRef = budgetRef.collection("categoryMonths").doc(`${categoryId}${month}`)
-
-    const [rtaSnap, categorySnap] = await Promise.all([
-        readyToAssignMonthRef.get(),
-        categoryMonthRef.get(),
-    ])
-
-    if (!rtaSnap.exists) {
-        throw new Error("readytoassign month not found")
-    }
-
-    if (!categorySnap.exists || !categorySnap.data()) {
-        throw new Error("category month not found")
-    }
-
-    const batch = db.batch()
-    const delta = amount - categorySnap.data()!.budgeted
-
-    batch.update(readyToAssignMonthRef, {
-        available: FieldValue.increment(-delta),
-    })
-
-    batch.update(categoryMonthRef, {
-        available: FieldValue.increment(delta),
-        budgeted: FieldValue.increment(delta),
-    })
-
-    await batch.commit()
-    // probably return something useful
+    return null
 }
 
+/* rewrite this */
 export const rolloverToNextMonth = async (userId: string, budgetId: string) => {
-    const budget = await getBudget(userId, budgetId)
-    const currentMonthId = budget.maxMonth
-    const nextMonthId = getNextMonthId(currentMonthId)
-
-    const currentCategoriesMonth = await getCategoriesMonth(userId, budgetId, currentMonthId)
-    const rolloverCategoriesMonth: CategoryMonth[] = Object.values(currentCategoriesMonth).map((categoryMonth) => ({
-        id: `${categoryMonth.categoryId}${nextMonthId}`,
-        month: nextMonthId,
-        categoryId: categoryMonth.categoryId,
-        activity: 0,
-        budgeted: 0,
-        available: categoryMonth.available,
-        createdAt: Date.now()
-    }))
-
-    const batch = db.batch()
-    const budgetRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId)
-
-    rolloverCategoriesMonth.forEach((categoryMonth) => {
-        const ref = budgetRef.collection('categoryMonths').doc(categoryMonth.id)
-        batch.set(ref, categoryMonth)
-    })
-
-    batch.update(budgetRef, {maxMonth: nextMonthId})
-    await batch.commit()
-
-    return rolloverCategoriesMonth
+    return null
 }
