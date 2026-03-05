@@ -1,6 +1,6 @@
 import { db } from "../firebase/server";
 import { createBudget } from "./budget-service";
-import { createCategory, createCategoryGroup, createCategoryMonth } from "./category-service";
+import { createCategory, createCategoryGroup, createCategoryEntry } from "./category-service";
 import { User, getCurrentMonthId } from "bread-core/src"
 
 export const createUser = async (userId: string, email: string) => {
@@ -34,13 +34,13 @@ export const setupUser = async (userId: string, email: string) => {
 
     for (const categoryName of categories[categoryGroupName]) {
       const { id: categoryId } = await createCategory(userId, budgetId, categoryGroupId, categoryName)
-      await createCategoryMonth(userId, budgetId, categoryId, currentMonth)
+      await createCategoryEntry(userId, budgetId, categoryId, currentMonth)
     }
   }
 
   const { id: inflowGroupId } = await createCategoryGroup(userId, budgetId, 'inflow')
   const { id: readyToAssignId } = await createCategory( userId, budgetId, inflowGroupId, 'ready to assign', true, 'readytoassign')
-  await createCategoryMonth(userId, budgetId, readyToAssignId, currentMonth)
+  await createCategoryEntry(userId, budgetId, readyToAssignId, currentMonth)
 }
 
 export const getUser = async (userId: string) => {

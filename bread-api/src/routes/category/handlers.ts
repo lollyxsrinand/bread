@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify"
 import { getUserId } from "../../utils/auth"
-import { assignToCategoryMonth, getCategories, getCategoryGroups, rolloverToNextMonth } from "../../services/category-service"
+import { assignToCategoryMonth, getCategories, getCategoryEntries, getCategoryGroups, rolloverToNextMonth } from "../../services/category-service"
 import { getMonthlyBudgetView } from "../../services/budget-service"
 
 export const getCategoriesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -86,6 +86,23 @@ export const rolloverToNextMonthHandler = async (request: FastifyRequest, reply:
     try {
         const rolloverCategoriesMonth = await rolloverToNextMonth(userId, budgetId)
         return reply.status(200).send({ success: true, monthlyBudget: rolloverCategoriesMonth })
+    } catch (error) {
+        console.error(error)
+        return reply.status(500).send({ error: `internal error: ${error}` })
+    }
+}
+
+export const getCategoryEntriesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = await getUserId(request)
+    if (!userId) {
+        return reply.status(401).send({ error: "Not authenticated" })
+    }
+
+    const { budgetId, month } = request.params as { budgetId: string, month: string }
+
+    try {
+        const categoryEntries = await getCategoryEntries(userId, budgetId, month)
+        return reply.status(200).send(categoryEntries)
     } catch (error) {
         console.error(error)
         return reply.status(500).send({ error: `internal error: ${error}` })

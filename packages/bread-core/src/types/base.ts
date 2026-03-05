@@ -1,7 +1,7 @@
 export interface User {
   id: string
   email: string
-  createdAt: number
+  createdAt?: any 
   currentBudgetId: string | null
 }
 
@@ -19,7 +19,7 @@ export interface Account {
   name: string
   type: string
   balance: number
-  createdAt: number
+  createdAt?: any 
 }
 
 export interface Category {
@@ -27,31 +27,30 @@ export interface Category {
   categoryGroupId: string
   name: string
   isSystem: boolean
-  createdAt: number
+  createdAt?: any
 }
 
 export interface CategoryGroup {
   id: string
   name: string
-  createdAt: number
+  createdAt?: any 
 }
 
-export interface CategoryMonth {
+export interface CategoryEntry {
   id: string
-  month: string
-  categoryId: string
+  month?: string // not sure
   activity: number
+  assigned: number
   available: number
-  budgeted: number
-  createdAt: number
+  createdAt?:any 
 }
 
 export interface Transaction {
   id: string
   accountId: string
   categoryId: string | null
-  toAccountId: string | null
+  transferAccountId: string | null
   amount: number
   date: number
-  createdAt: number
+  createdAt?: any
 }

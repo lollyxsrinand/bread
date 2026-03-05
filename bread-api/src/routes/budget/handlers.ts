@@ -62,8 +62,8 @@ export async function getBudgetMonthHandler(request: FastifyRequest, reply: Fast
 
 
     try {
-        const monthlyBudget: MonthlyBudgetView = await getMonthlyBudgetView(uid, budgetId, month)
-        return reply.status(200).send(monthlyBudget)
+        // const monthlyBudget: MonthlyBudgetView = await getMonthlyBudgetView(uid, budgetId, month)
+        return reply.status(200).send({})
     } catch (error) {
         return reply.status(500).send({ error: `internal error: ${error}` })
     }

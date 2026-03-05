@@ -1,15 +1,19 @@
-import { Budget, Category, CategoryGroup, CategoryMonth, getNextMonthId, getPreviousMonthId, toMonthId } from "bread-core/src"
-import { db, FieldValue } from "../firebase/server"
-import { getBudget, getBudgetRef } from "./budget-service"
+import { Category, CategoryEntry, CategoryGroup } from "bread-core/src"
+import { db } from "../firebase/server"
+
+// path -> entity name as in dtype
+// monthly-category-entries -> MonthlyCategoryEntries
+// monthly-category-entries/{month}/category-entries -> CategoryEntries (CategoryEntry[])
+// monthly-category-entries/{month}/category-entries/{category-entry} -> CategoryEntry
 
 /**
  * - creates a new `CategoryGroup` doc under `budgets/{budgetId}/categoryGroups` collection
  * @returns the created `CategoryGroup` 
  */
-export const createCategoryGroup = async ( userId: string, budgetId: string, name: string ) => {
+export const createCategoryGroup = async (userId: string, budgetId: string, name: string) => {
     const categoryGroupRef = db
-        .collection('users').doc(userId) 
-        .collection('budgets').doc(budgetId) 
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
         .collection('categoryGroups').doc()
 
     const categoryGroup: CategoryGroup = {
@@ -27,15 +31,15 @@ export const createCategoryGroup = async ( userId: string, budgetId: string, nam
  * @returns the created `Category`
  */
 export const createCategory = async (
-    userId: string, 
-    budgetId: string, 
-    categoryGroupId: string, 
-    categoryName: string, 
-    isSystem: boolean = false, 
+    userId: string,
+    budgetId: string,
+    categoryGroupId: string,
+    categoryName: string,
+    isSystem: boolean = false,
     id?: string
 ) => {
     const categoriesRef = db
-        .collection('users').doc(userId) 
+        .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
         .collection('categories')
 
@@ -55,76 +59,29 @@ export const createCategory = async (
 }
 
 /**
- * - creates a new `CategoryMonth` doc under `budgets/{budgetId}/categoryMonths/{month}/categories/{categoryId}` collection
+ * - creates a new `CategoryEntry` doc under `budgets/{budgetId}/mothly-category-entries/{month}/category-entries/{categoryEntry}` collection
  * - this is used to track the budgeted, activity and possibly available amounts for a category in a given month
- * @returns the created `CategoryMonth`
+ * @returns the created `CategoryEntry`
  */
-export const createCategoryMonth = async (userId: string, budgetId: string, categoryId: string, month: string) => {
-    const categoryMonthId = `${categoryId}${month}`
-
+export const createCategoryEntry = async (userId: string, budgetId: string, categoryId: string, month: string) => {
     const ref = db
         .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
-        .collection('categoryMonths').doc(month)
-        .collection('categories').doc(categoryId)
-    
-    const categoryMonth: CategoryMonth = {
-        id: categoryMonthId,
-        categoryId,
-        month,
-        budgeted: 0,
+        .collection('monthly-category-entries').doc(month)
+        .collection('category-entries').doc(categoryId)
+
+    const categoryEntry: CategoryEntry = {
+        id: categoryId,
+        month: month,
+        assigned: 0,
         activity: 0,
         available: 0,
         createdAt: Date.now(),
     }
 
-    await ref.create(categoryMonth)
+    await ref.create(categoryEntry)
 
-    return categoryMonth
-}
-
-/**
- * @returns a reference to the all the category month docs for a given month under the path `budgets/{budgetId}/categoryMonths/{month}/categories`
- */
-export const getCategoriesMonthRef = (userId: string, budgetId: string, month: string) => {
-    return db
-        .collection('users').doc(userId)
-        .collection('budgets').doc(budgetId)
-        .collection('categoryMonths').doc(month)
-        .collection('categories')
-}
-
-/**
- * @returns all categories mapped to their ids 
- */
-export const getCategories = async (userId: string, budgetId: string) => {
-    const snapshot = await db
-        .collection('users').doc(userId)
-        .collection('budgets').doc(budgetId)
-        .collection('categories').get()
-
-    const categories: Record<string, Category> = Object.fromEntries(
-        snapshot.docs.map(doc => [doc.id, doc.data() as Category])
-    )
-
-    return categories
-}
-
-/**
- * @returns all category months mapped to their ids for a given month 
- */
-export const getCategoriesMonth = async (userId: string, budgetId: string, month: string) => {
-    const snapshot = await getCategoriesMonthRef(userId, budgetId, month).get()
-    
-    if (snapshot.empty) {
-        throw new Error(`no category months found for month ${month}`)
-    }
-
-    const categoriesMonth: Record<string, CategoryMonth> = Object.fromEntries(
-        snapshot.docs.map(doc => [doc.id, doc.data() as CategoryMonth])
-    )
-
-    return categoriesMonth
+    return categoryEntry
 }
 
 /**
@@ -144,12 +101,56 @@ export const getCategoryGroups = async (userId: string, budgetId: string) => {
     return categoryGroups
 }
 
+/**
+ * @returns all categories mapped to their ids 
+ */
+export const getCategories = async (userId: string, budgetId: string) => {
+    const snapshot = await db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categories')
+        .get()
+    
+    if (snapshot.empty || !snapshot.docs) {
+        return null
+    }
+
+    const categories: Record<string, Category> = Object.fromEntries(
+        snapshot.docs.map(doc => [doc.id, doc.data() as Category])
+    )
+
+    return categories
+}
+
+
+/**
+ * gets all the category entries in `month` as a map
+ * @returns 
+ */
+export const getCategoryEntries = async (userId: string, budgetId: string, month: string) => {
+    const categoryEntriesRef = db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('monthly-category-entries').doc(month)
+        .collection('category-entries')
+    
+    const categoryEntriesSnapshot = await categoryEntriesRef.get()
+    if (categoryEntriesSnapshot.empty || !categoryEntriesSnapshot.docs) {
+        return null
+    }
+
+    const categoryEntries: Record<string, CategoryEntry> = Object.fromEntries(
+        categoryEntriesSnapshot.docs.map(doc => [doc.id, doc.data() as CategoryEntry]) 
+    )
+
+    return categoryEntries
+}
 /* rewrite this */
 export const assignToCategoryMonth = async (
-    userId: string, 
-    budgetId: string, 
-    month: string, 
-    categoryId: string, 
+    userId: string,
+    budgetId: string,
+    month: string,
+    categoryId: string,
     amount: number
 ) => {
     return null

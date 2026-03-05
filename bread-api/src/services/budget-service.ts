@@ -1,7 +1,7 @@
 import { CategoryGroup, getCurrentMonthId } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
-import { getCategories, getCategoriesMonth, getCategoryGroups } from "./category-service"
-import { Budget, Category, CategoryGroupView, CategoryMonth, CategoryView, MonthlyBudgetView } from "bread-core/src"
+import { getCategories, getCategoryEntries, getCategoryGroups } from "./category-service"
+import { Budget, Category, CategoryGroupView, CategoryEntry, CategoryView, MonthlyBudgetView } from "bread-core/src"
 
 export const createBudget = async (userId: string, budgetName: string) => {
     const ref = db.collection('users').doc(userId).collection('budgets').doc()
@@ -51,44 +51,5 @@ export const getBudget = async (userId: string, budgetId: string) => {
 }
 
 export const getMonthlyBudgetView = async (userId: string, budgetId: string, month: string) => {
-    const [budget, categories, categoryGroups, categoriesMonth] = await Promise.all([
-        getBudget(userId, budgetId),
-        getCategories(userId, budgetId),
-        getCategoryGroups(userId, budgetId),
-        getCategoriesMonth(userId, budgetId, month)
-    ])
-
-    const categoriesView: CategoryView[] = []
-    for(const categoryId in categories) {
-        const category = categories[categoryId]
-        const categoryMonth = categoriesMonth[`${categoryId}${month}`] 
-
-        categoriesView.push({
-            id: category.id,
-            name: category.name,
-            isSystem: category.isSystem,
-            activity: categoryMonth.activity ?? 0,
-            available: categoryMonth.available ?? 0,
-            budgeted: categoryMonth.budgeted ?? 0,
-        })
-    }
-
-    const categoryGroupsView: CategoryGroupView[] = []
-    for(const categoryGroupId in categoryGroups) {
-        const categoryGroup = categoryGroups[categoryGroupId] 
-
-        categoryGroupsView.push({
-            id: categoryGroup.id,
-            name: categoryGroup.name,
-            categories: categoriesView.filter(category => (categories[category.id] as Category).categoryGroupId === categoryGroupId)
-        })
-    }
-
-    const monthlyBudget: MonthlyBudgetView = {
-        month,
-        toBeAssigned: categoriesMonth['readytoassign' + month]?.available || 0, // sketchy
-        categoryGroups: categoryGroupsView
-    }
-
-    return monthlyBudget
+    return null
 }
