@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import admin from 'firebase-admin'
-import { sign, verify } from "jsonwebtoken";
+import admin from 'firebase-admin';
+import { sign } from "jsonwebtoken";
 
 import { setupUser } from "../../services/user-service";
 import { db } from "../../firebase/server";
@@ -9,7 +9,6 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
     const { idToken } = request.body as { idToken: string };
 
     let decodedIdToken;
-
     try {
         decodedIdToken = await admin.auth().verifyIdToken(idToken);
     } catch (error) {

@@ -1,7 +1,6 @@
-import { CategoryGroup, getCurrentMonthId } from "bread-core/src"
-import { db, FieldValue } from "../firebase/server"
-import { getCategories, getCategoryEntries, getCategoryGroups } from "./category-service"
-import { Budget, Category, CategoryGroupView, CategoryEntry, CategoryView, MonthlyBudgetView } from "bread-core/src"
+import { getCurrentMonthId } from "bread-core/src"
+import { db } from "../firebase/server"
+import { Budget } from "bread-core/src"
 
 export const createBudget = async (userId: string, budgetName: string) => {
     const ref = db.collection('users').doc(userId).collection('budgets').doc()
@@ -51,5 +50,5 @@ export const getBudget = async (userId: string, budgetId: string) => {
 }
 
 export const getMonthlyBudgetView = async (userId: string, budgetId: string, month: string) => {
-    return null
-}
+
+} 
