@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getBudget, getBudgets, getMonthlyBudgetView } from "../../services/budget-service";
+import { getBudget, getBudgets, getBudgetView } from "../../services/budget-service";
 import { getUserId } from "../../utils/auth";
 
 export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -34,7 +34,7 @@ export const getBudgetHandler = async (request: FastifyRequest, reply: FastifyRe
     }
 }
 
-export const getMonthlyBudgetViewHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+export const getBudgetViewHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = await getUserId(request)
     if (!userId) {
         return reply.status(401).send({ error: "not authenticated"})
@@ -42,7 +42,7 @@ export const getMonthlyBudgetViewHandler = async (request: FastifyRequest, reply
 
     const { budgetId, month } = request.params as { budgetId: string, month: string }
     try {
-        const monthlyBudgetView = await getMonthlyBudgetView(userId, budgetId, month)
+        const monthlyBudgetView = await getBudgetView(userId, budgetId, month)
         return reply.status(200).send(monthlyBudgetView)
     } catch (error) {
         console.error(error)

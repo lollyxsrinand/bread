@@ -102,12 +102,12 @@ const CategoryGroupRow = ({ budget, categoryGroup, month }: { budget: Budget, ca
 }
 
 const CategoryRow = ({ budget, category, month }: { budget: Budget, category: CategoryView, month: string }) => {
-    const [assigned, setAssigned] = useState(category.budgeted.toString())
-    const assignToCategory = useBudgetStore(s => s.assignToCategory)
+    const [assigned, setAssigned] = useState(category.assigned.toString())
+    const assignToCategory = (a: any, b: any, c: any, d: any) => void
 
     useEffect(() => {
-        setAssigned(category.budgeted.toString())
-    }, [category.budgeted])
+        setAssigned(category.assigned.toString())
+    }, [category.assigned])
 
     return (
         <div className="w-full px-3 gap-2.5 flex">
@@ -135,9 +135,10 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
     )
 }
 
-const PlanView = ({ budget, month }: { budget: Budget, month: string }) => {
-    const monthlyBudget = useBudgetStore(s => s.monthlyBudgets[month])
-    if (!monthlyBudget) {
+const PlanView = ({ month }: { month: string }) => {
+    const budget = useBudgetStore(s => s.budget)
+    const budgetView = useBudgetStore(s => s.monthlyBudgetsView[month])
+    if (!budgetView) {
         return null
     }
 
@@ -145,7 +146,7 @@ const PlanView = ({ budget, month }: { budget: Budget, month: string }) => {
         <div className="h-full w-full flex flex-col">
             <Toolbar month={month} budget={budget}/>
             <Header />
-            {monthlyBudget.categoryGroups.map(categoryGroup => (
+            {budgetView.categoryGroups.map(categoryGroup => (
                 <CategoryGroupRow budget={budget} categoryGroup={categoryGroup} key={categoryGroup.id} month={month} />
             ))}
         </div>

@@ -2,7 +2,7 @@ import PlanSummary from './PlanSummary'
 import Topbar from './Topbar'
 import PlanView from './PlanView'
 import { BudgetHydrator } from '@/store/budget-hydrator'
-import { getBudget, getMonthlyBudgetView } from '@/lib/actions/budget.actions'
+import { getBudget, getBudgetView} from '@/lib/actions/budget.actions'
 import { requireUser } from '@/utils/require-user'
 import { redirect } from 'next/navigation'
 
@@ -11,19 +11,19 @@ const Plan = async ({ params }: { params: Promise<{ month: string }> }) => {
   const { month } = await params
 
   const budget = await getBudget(user.currentBudgetId)
-  if (month > budget.maxMonth) {
+  if (month > budget.maxMonth || month < budget.minMonth) {
     redirect(`/plan/${budget.maxMonth}`)
   }
 
   // does this cache?
-  const monthlyBudget = await getMonthlyBudgetView(user.currentBudgetId, month)
+  const budgetView = await getBudgetView(user.currentBudgetId, month)
   return (
     <>
-      <BudgetHydrator monthlyBudget={monthlyBudget} />
+      <BudgetHydrator budget={budget} budgetView={budgetView} />
       <div className='h-full w-full flex'>
         <div className='w-full h-full flex flex-col'>
           <Topbar month={month} />
-          <PlanView budget={budget} month={month} />
+          <PlanView month={month} />
         </div>
         <div className='w-64'>
           <PlanSummary />

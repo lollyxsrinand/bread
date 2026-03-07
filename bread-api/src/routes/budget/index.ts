@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { getBudgetsHandler, getBudgetHandler, getMonthlyBudgetViewHandler } from "./handlers";
+import { getBudgetsHandler, getBudgetHandler, getBudgetViewHandler } from "./handlers";
 
 async function budgetRoutes(fastify: FastifyInstance) {
     // get single budget
@@ -9,7 +9,7 @@ async function budgetRoutes(fastify: FastifyInstance) {
     fastify.get('/budgets', getBudgetsHandler)
 
     // list monthly budget view
-    fastify.get('/budgets/:budgetId/monthly-views/:month', getMonthlyBudgetViewHandler)
+    fastify.get('/budgets/:budgetId/months/:month', getBudgetViewHandler)
 }
 
 export default budgetRoutes
