@@ -71,8 +71,8 @@ const DraftTransactionRow = ({ transaction, setDraftTransaction, onSave, account
             </div>
             <div className={`${cell_padding} w-full`}>
                 <select
-                    value={transaction.toAccountId ?? ''}
-                    onChange={(e) => setDraftTransaction(prev => prev ? { ...prev, toAccountId: e.target.value || null } : prev)} >
+                    value={transaction.transferAccountId ?? ''}
+                    onChange={(e) => setDraftTransaction(prev => prev ? { ...prev, transferAccountId: e.target.value || null } : prev)} >
                     <option value="">no transfer</option>
                     {Object.values(accountMap).map(a => (
                         <option key={a.id} value={a.id}>{a.name}</option>
@@ -118,8 +118,8 @@ const TransactionRow = ({ transaction, accountMap, categoryMap, onDelete }: { tr
     const categoryName = transaction.categoryId
         ? categoryMap[transaction.categoryId]?.name ?? 'unknown category'
         : 'no category'
-    const transferAccountName = transaction.toAccountId
-        ? accountMap[transaction.toAccountId]?.name ?? 'unknown account'
+    const transferAccountName = transaction.transferAccountId
+        ? accountMap[transaction.transferAccountId]?.name ?? 'unknown account'
         : 'no transfer'
     const inflow = transaction.amount > 0 ? transaction.amount : 0
     const outflow = transaction.amount < 0 ? -transaction.amount : 0
@@ -153,7 +153,7 @@ const TransactionRow = ({ transaction, accountMap, categoryMap, onDelete }: { tr
 
 export const TransactionsView = ({ transactions }: { transactions: Transaction[] }) => {
     const accounts = useBudgetStore(s => s.accounts)
-    const categoryGroups = useBudgetStore(s => s.monthlyBudgets['202603']?.categoryGroups)
+    const categoryGroups = useBudgetStore(s => s.monthlyBudgetsView['202603']?.categoryGroups)
     const [draftTransaction, setDraftTransaction] = useState<Partial<Transaction> | null>(null)
     const router = useRouter()
 
@@ -177,7 +177,7 @@ export const TransactionsView = ({ transactions }: { transactions: Transaction[]
             return
         }
 
-        if (!draftTransaction.categoryId && !draftTransaction.toAccountId) {
+        if (!draftTransaction.categoryId && !draftTransaction.transferAccountId) {
             toast.error('ow man: please select a category or a transfer account')
             return
         }
@@ -224,7 +224,7 @@ export const TransactionsView = ({ transactions }: { transactions: Transaction[]
                         date: Date.now(),
                         accountId: '',
                         categoryId: '',
-                        toAccountId: null,
+                        transferAccountId: null,
                         amount: 0,
                     })}
                     className="flex px-3 py-2 gap-2.5 items-center hover:bg-neutral-100 hover:text-neutral-950">
