@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify"
 import { getUserId } from "../../utils/auth"
-import { assignToCategoryMonth, getCategories, getCategoryEntries, getCategoryGroups, rolloverToNextMonth } from "../../services/category-service"
+import { assignToCategory, getCategories, getAllCategoryEntriesForMonth, getCategoryGroups, rolloverToNextMonth } from "../../services/category-service"
 // import { getMonthlyBudgetView } from "../../services/budget-service"
 
 export const getCategoriesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -48,22 +48,13 @@ export const assignToCategoryHandler = async (request: FastifyRequest, reply: Fa
     const { budgetId, month, categoryId } = request.params as { budgetId: string, month: string, categoryId: string }
     const { amount } = request.body as { amount: number }
 
-    if (!budgetId)
-        return reply.status(400).send({ error: "budget id is required" })
-
-    if (!month)
-        return reply.status(400).send({ error: "month is required" })
-
-    if (!categoryId)
-        return reply.status(400).send({ error: "category id is required" })
-
     if (amount === undefined)
         return reply.status(400).send({ error: "amount is required" })
 
     try {
-        await assignToCategoryMonth(userId, budgetId, month, categoryId, amount)
+        const something = await assignToCategory(userId, budgetId, month, categoryId, amount)
         // const monthlyBudgetView = await getMonthlyBudgetView(userId, budgetId, month)
-        return reply.status(200).send({})
+        return reply.status(200).send(something)
     } catch (error) {
         console.error(error)
         return reply.status(500).send({ error: `internal error: ${error}` })
@@ -79,8 +70,8 @@ export const rolloverToNextMonthHandler = async (request: FastifyRequest, reply:
     const { budgetId } = request.params as { budgetId: string }
 
     try {
-        const rolloverCategoriesMonth = await rolloverToNextMonth(userId, budgetId)
-        return reply.status(200).send({ success: true, monthlyBudget: rolloverCategoriesMonth })
+        await rolloverToNextMonth(userId, budgetId)
+        return reply.status(200).send({ message: "YEEEHAWWWW"})
     } catch (error) {
         console.error(error)
         return reply.status(500).send({ error: `internal error: ${error}` })
@@ -96,7 +87,7 @@ export const getCategoryEntriesHandler = async (request: FastifyRequest, reply: 
     const { budgetId, month } = request.params as { budgetId: string, month: string }
 
     try {
-        const categoryEntries = await getCategoryEntries(userId, budgetId, month)
+        const categoryEntries = await getAllCategoryEntriesForMonth(userId, budgetId, month)
         return reply.status(200).send(categoryEntries)
     } catch (error) {
         console.error(error)

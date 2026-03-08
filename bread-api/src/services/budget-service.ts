@@ -1,11 +1,15 @@
-import { BudgetView, generateBudgetView, getCurrentMonthId } from "bread-core/src"
+import { BudgetView, generateBudgetView, getCurrentMonthId, GlobalReadyToAssign } from "bread-core/src"
 import { db } from "../firebase/server"
 import { Budget } from "bread-core/src"
-import { getCategories, getCategoryEntries, getCategoryGroups } from "./category-service"
+import { getCategories, getAllCategoryEntriesForMonth, getCategoryGroups } from "./category-service"
 import assert from "node:assert"
 
 export const createBudget = async (userId: string, budgetName: string) => {
     const ref = db.collection('users').doc(userId).collection('budgets').doc()
+    const globalReadyToAssign: GlobalReadyToAssign = {
+        income: 0,
+        assigned: 0,
+    }
     const budget: Budget = {
         id: ref.id,
         name: budgetName,
@@ -13,6 +17,7 @@ export const createBudget = async (userId: string, budgetName: string) => {
         currency: 'INR',
         minMonth: getCurrentMonthId(),
         maxMonth: getCurrentMonthId(),
+        globalReadyToAssign: globalReadyToAssign
     }
 
     await ref.set(budget)
@@ -45,7 +50,7 @@ export const getBudget = async (userId: string, budgetId: string) => {
 
     const data = snapshot.data()
     if (!data) {
-        throw new Error(`budget with id ${budgetId} not found for user ${userId}`)
+        return null 
     }
     return data as Budget
 }
@@ -54,7 +59,7 @@ export const getBudgetView = async (userId: string, budgetId: string, month: str
     const [categories, categoryGroups, categoryEntries] = await Promise.all([
         getCategories(userId, budgetId),
         getCategoryGroups(userId, budgetId),
-        getCategoryEntries(userId, budgetId, month),
+        getAllCategoryEntriesForMonth(userId, budgetId, month),
     ])
 
     assert(categories, "pls exist")

@@ -1,7 +1,9 @@
-import { toMonthId, Transaction } from "bread-core/src"
+import { Budget, CategoryEntry, getNextMonthId, toMonthId, Transaction } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
 import { getAccount } from "./account-service"
 import { getBudgetRef } from "./budget-service"
+import assert from "assert"
+import { getCategoryEntryForMonth } from "./category-service"
 
 export const createTransaction = async (
     userId: string,
@@ -14,22 +16,15 @@ export const createTransaction = async (
 ) => {
     const budgetRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId)
     const budgetSnapshot = await budgetRef.get()
-
-    if (!budgetSnapshot.exists) {
-        throw Error('budget not found')
-    }
+    assert(budgetSnapshot.exists && budgetSnapshot.data(), "budget doesn't exist")
+    const budget = budgetSnapshot.data() as Budget
 
     const txnRef = budgetRef.collection('transactions').doc()
 
     const batch = db.batch()
 
-    // can i xor this? 
-    if (transferAccountId && categoryId)
+    if (!!transferAccountId && !!categoryId)
         throw Error('transaction cannot have both transferAccountId and categoryId')
-
-    if (!transferAccountId && !categoryId)
-        throw Error('transaction must have either transferAccountId or categoryId')
-
 
     /**
      *  case: category transaction
@@ -75,8 +70,27 @@ export const createTransaction = async (
             balance: FieldValue.increment(-amount),
         })
     } else if (categoryId) {
+        const month = toMonthId(new Date(date))
         const accountRef = budgetRef.collection('accounts').doc(accountId)
-        const categoryEntryRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('monthly-category-entries').doc(toMonthId(new Date(date))).collection('category-entries').doc(categoryId)
+        const categoryEntryRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('monthly-category-entries').doc(month).collection('category-entries').doc(categoryId)
+
+        const months = []
+        for (let m = getNextMonthId(month); m <= budget.maxMonth; m = getNextMonthId(m)) {
+            months.push(m)
+        }
+        // write a function that helps you fetch all future months and call magic on it
+        const categoryEntriesForFutureMonths: Record<string, CategoryEntry> = Object.fromEntries(
+            await Promise.all(
+                months.map(async (m) => {
+                    const entry = await getCategoryEntryForMonth(userId, budgetId, categoryId, m)
+                    assert(entry, "category entry missing. required for assigning value")
+                    return [m, entry] as const
+                })
+            )
+        )
+
+        // man ykw god damn fuck this txn logic for now
+
 
         batch.set(accountRef, {
             balance: FieldValue.increment(amount),
@@ -86,6 +100,12 @@ export const createTransaction = async (
             activity: FieldValue.increment(amount),
             available: FieldValue.increment(amount),
         }, { merge: true })
+
+        if (categoryId === 'readytoassign') { // inflow 
+            batch.update(budgetRef, {
+                "globalReadyToAssign.income": FieldValue.increment(amount)
+            })
+        }
     }
 
     const transaction: Transaction = {
@@ -158,7 +178,7 @@ export const deleteTransaction = async (userId: string, budgetId: string, transa
             balance: FieldValue.increment(-amount),
         }, { merge: true })
 
-        batch.set(categoryEntryRef , {
+        batch.set(categoryEntryRef, {
             activity: FieldValue.increment(-amount),
             available: FieldValue.increment(-amount),
         }, { merge: true })
