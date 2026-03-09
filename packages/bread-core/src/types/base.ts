@@ -60,3 +60,8 @@ export interface Transaction {
   date: number
   createdAt?: any
 }
+
+export interface MonthSummary {
+  income: number,
+  assigned: number,
+}

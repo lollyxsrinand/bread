@@ -1,4 +1,4 @@
-import { Category, CategoryEntry, CategoryGroup, getNextMonthId, magic } from "bread-core/src"
+import { Category, CategoryEntry, CategoryGroup, getNextMonthId, magic, MonthSummary } from "bread-core/src"
 import { db } from "../firebase/server"
 import { getBudget } from "./budget-service"
 import assert from "assert"
@@ -86,6 +86,19 @@ export const createCategoryEntry = async (userId: string, budgetId: string, cate
     return categoryEntry
 }
 
+export const createEmptyMonthSummary = async (userId: string, budgetId: string, month: string) => {
+    const ref = db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('monthly-category-entries').doc(month)
+    
+    const monthSummary: MonthSummary = {
+        income: 0,
+        assigned: 0, 
+    }
+
+    await ref.create(monthSummary)
+}
 /**
  * @returns all category groups mapped to their ids 
  */
@@ -172,93 +185,139 @@ export const assignToCategory = async (
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget does not exist")
 
+    const categoryEntry = await getCategoryEntryForMonth(userId, budgetId, categoryId, month)
+    assert(categoryEntry, "category entry missing")
+
+    const delta = amount - categoryEntry.assigned
+
+    budget.globalReadyToAssign.assigned += delta
+
+    categoryEntry.assigned = amount
+    categoryEntry.available =
+        categoryEntry.assigned - categoryEntry.activity
+
+    await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry)
+
+    const budgetRef = db
+        .collection("users")
+        .doc(userId)
+        .collection("budgets")
+        .doc(budgetId)
+
+    await budgetRef.set(budget, { merge: true })
+
+    return { changed_entities: [categoryEntry, budget] }
+}
+
+export const cascadeComputeCategoryEntries = async (
+    userId: string,
+    budgetId: string,
+    categoryEntry: CategoryEntry
+) => {
+    const budget = await getBudget(userId, budgetId)
+    assert(budget, "budget must exist for cascade computing entries")
+
+    const categoryId = categoryEntry.id
+    const month = categoryEntry.month
     const maxMonth = budget.maxMonth
 
-    const categoryEntryForCurrMonth = await getCategoryEntryForMonth(userId, budgetId, categoryId, month)
-    // const RTAEntryForCurrMonth = await getCategoryEntryForMonth(userId, budgetId, 'readytoassign', month)
-    assert(categoryEntryForCurrMonth, "category entry missing. required for assigning value")
-    // assert(RTAEntryForCurrMonth, "ready to assign entry for current month is missing. can't assign value")
-
-    const months: string[] = []
+    const months = []
     for (let m = getNextMonthId(month); m <= maxMonth; m = getNextMonthId(m)) {
         months.push(m)
     }
 
-    const categoryEntriesForFutureMonths: Record<string, CategoryEntry> = Object.fromEntries(
-        await Promise.all(
-            months.map(async (m) => {
-                const entry = await getCategoryEntryForMonth(userId, budgetId, categoryId, m)
-                assert(entry, "category entry missing. required for assigning value")
-                return [m, entry] as const
-            })
+    const categoryEntriesForFutureMonths: Record<string, CategoryEntry> =
+        Object.fromEntries(
+            await Promise.all(
+                months.map(async (m) => {
+                    const entry = await getCategoryEntryForMonth(
+                        userId,
+                        budgetId,
+                        categoryId,
+                        m
+                    )
+                    assert(entry, "category entry missing")
+                    return [m, entry] as const
+                })
+            )
         )
-    )
 
-    // const rtaEntriesForFutureMonths: Record<string, CategoryEntry> = Object.fromEntries(
-    //     await Promise.all(
-    //         months.map(async (m) => {
-    //             const entry = await getCategoryEntryForMonth(userId, budgetId, 'readytoassign', m)
-    //             assert(entry, "ready to assign entry missing. required for assigning value")
-    //             return [m, entry] as const
-    //         })
-    //     )
-    // )
+    const updatedCategoryEntries = magic(categoryEntry, categoryEntriesForFutureMonths)
 
-    // RTAEntryForCurrMonth.available = RTAEntryForCurrMonth.available + categoryEntryForCurrMonth.assigned
-    // RTAEntryForCurrMonth.available = RTAEntryForCurrMonth.available - amount
-
-    const globalReadyToAssign = budget.globalReadyToAssign
-    const delta = amount - categoryEntryForCurrMonth.assigned
-    globalReadyToAssign.assigned += delta
-
-    categoryEntryForCurrMonth.assigned = amount
-    categoryEntryForCurrMonth.available = categoryEntryForCurrMonth.assigned - categoryEntryForCurrMonth.activity
-
-    const updatedCategoryEntries = magic(categoryEntryForCurrMonth, categoryEntriesForFutureMonths)
-    const allUpdatedCategoryEntries = { [month]: categoryEntryForCurrMonth, ...updatedCategoryEntries }
-
-    // const updatedRTAEntries = magic(RTAEntryForCurrMonth, rtaEntriesForFutureMonths)
-    // const allUpdatedRTAEntries = { [month]: RTAEntryForCurrMonth, ...updatedRTAEntries}
+    const allUpdatedCategoryEntries = {
+        [month]: categoryEntry,
+        ...updatedCategoryEntries
+    }
 
     const batch = db.batch()
+    const monthlyRef = getMonthlyCategoryEntriesRef(userId, budgetId)
 
-    for (const m in allUpdatedCategoryEntries) {
-        const entry = allUpdatedCategoryEntries[m]
-        const ref = getMonthlyCategoryEntriesRef(userId, budgetId).doc(m).collection('category-entries').doc(categoryId)
+    for (const entry of Object.values(allUpdatedCategoryEntries)) {
+        const ref = monthlyRef
+            .doc(entry.month)
+            .collection("category-entries")
+            .doc(entry.id)
 
         batch.set(ref, entry)
     }
 
-    // for (const m in allUpdatedRTAEntries) {
-    //     const entry = allUpdatedRTAEntries[m]
-    //     const ref = getMonthlyCategoryEntriesRef(userId, budgetId).doc(m).collection('category-entries').doc('readytoassign')
-
-    //     batch.set(ref, entry)
-    // }
-
-    batch.set(db.collection('users').doc(userId).collection('budgets').doc(budgetId), budget, { merge: true})
-
     await batch.commit()
-
-    return { changed_entities: [categoryEntryForCurrMonth, updatedCategoryEntries, budget] }
 }
 
-/* rewrite this */
-export const rolloverToNextMonth = async (userId: string, budgetId: string) => {
-    const budget = await getBudget(userId, budgetId)
+export const rolloverToNextMonth = async (
+    userId: string,
+    budgetId: string
+) => {
+    const [budget, categories] = await Promise.all([
+        getBudget(userId, budgetId),
+        getCategories(userId, budgetId)
+    ])
+
     assert(budget, "budget doesn't exist")
+    assert(categories, "categories must exist for rollover")
 
-    const maxMonth = budget.maxMonth
-    const nextMonth = getNextMonthId(maxMonth)
+    const currentMonth = budget.maxMonth
+    const nextMonth = getNextMonthId(currentMonth)
 
-    const categories = await getCategories(userId, budgetId)
-    assert(categories, "no categories available to rollover")
+    const currentEntries = await getAllCategoryEntriesForMonth(
+        userId,
+        budgetId,
+        currentMonth
+    )
 
-    for (const categoryId in categories) {
-        await createCategoryEntry(userId, budgetId, categoryId, nextMonth)
+    assert(currentEntries, "category entries must exist")
+
+    const batch = db.batch()
+    const monthlyRef = getMonthlyCategoryEntriesRef(userId, budgetId)
+
+    for (const entry of Object.values(currentEntries)) {
+        const nextEntry: CategoryEntry = {
+            id: entry.id,
+            month: nextMonth,
+            assigned: 0,
+            activity: 0,
+            available: entry.available
+        }
+
+        const ref = monthlyRef
+            .doc(nextMonth)
+            .collection("category-entries")
+            .doc(entry.id)
+
+        batch.set(ref, nextEntry)
     }
 
-    budget.maxMonth = nextMonth
-    const budgetRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId)
-    await budgetRef.set(budget, { merge: true })
+    const budgetRef = db
+        .collection("users")
+        .doc(userId)
+        .collection("budgets")
+        .doc(budgetId)
+
+    batch.set(
+        budgetRef,
+        { maxMonth: nextMonth },
+        { merge: true }
+    )
+
+    await batch.commit()
 }

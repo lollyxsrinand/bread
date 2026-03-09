@@ -10,6 +10,7 @@ export const magic = (
     }
 
     const updatedCategoryEntries: Record<string, CategoryEntry> = {}
+
     let previousUpdatedCategoryEntry = updatedCategoryEntry
     const months = Object.keys(toBeUpdatedCategoryEntries).sort()
     for (const month of months) {
