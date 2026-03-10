@@ -7,6 +7,10 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 const protectedPaths = ['/plan', '/reports', '/transactions', '/settings'];
 
 export async function proxy(request: NextRequest) {
+    if (process.env.NODE_ENV === "production" && request.nextUrl.pathname === '/login') {
+        return NextResponse.redirect(new URL('/', request.url))
+    }
+
     if (!protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path))) {
         return NextResponse.next();
     }
