@@ -5,11 +5,6 @@ export interface User {
   currentBudgetId: string | null
 }
 
-export interface GlobalReadyToAssign {
-  income: number,
-  assigned: number,
-}
-
 export interface Budget {
   id: string
   name: string
@@ -17,7 +12,8 @@ export interface Budget {
   currency: string
   minMonth: string
   maxMonth: string
-  globalReadyToAssign: GlobalReadyToAssign
+  totalIncome: number
+  totalAssigned: number
 }
 
 export interface Account {

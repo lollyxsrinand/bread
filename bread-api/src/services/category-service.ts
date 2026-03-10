@@ -190,11 +190,10 @@ export const assignToCategory = async (
 
     const delta = amount - categoryEntry.assigned
 
-    budget.globalReadyToAssign.assigned += delta
+    budget.totalAssigned += delta
 
     categoryEntry.assigned = amount
-    categoryEntry.available =
-        categoryEntry.assigned - categoryEntry.activity
+    categoryEntry.available = categoryEntry.assigned - categoryEntry.activity
 
     await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry)
 
@@ -237,7 +236,7 @@ export const cascadeComputeCategoryEntries = async (
                         m
                     )
                     assert(entry, "category entry missing")
-                    return [m, entry] as const
+                    return [m, entry]
                 })
             )
         )
@@ -320,4 +319,5 @@ export const rolloverToNextMonth = async (
     )
 
     await batch.commit()
+    await createEmptyMonthSummary(userId, budgetId, nextMonth)
 }

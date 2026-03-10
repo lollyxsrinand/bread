@@ -1,15 +1,11 @@
-import { BudgetView, generateBudgetView, getCurrentMonthId, GlobalReadyToAssign } from "bread-core/src"
+import { BudgetView, generateBudgetView, getCurrentMonthId } from "bread-core/src"
 import { db } from "../firebase/server"
 import { Budget } from "bread-core/src"
 import { getCategories, getAllCategoryEntriesForMonth, getCategoryGroups } from "./category-service"
-import assert from "node:assert"
+import assert from "assert"
 
 export const createBudget = async (userId: string, budgetName: string) => {
     const ref = db.collection('users').doc(userId).collection('budgets').doc()
-    const globalReadyToAssign: GlobalReadyToAssign = {
-        income: 0,
-        assigned: 0,
-    }
     const budget: Budget = {
         id: ref.id,
         name: budgetName,
@@ -17,7 +13,8 @@ export const createBudget = async (userId: string, budgetName: string) => {
         currency: 'INR',
         minMonth: getCurrentMonthId(),
         maxMonth: getCurrentMonthId(),
-        globalReadyToAssign: globalReadyToAssign
+        totalAssigned: 0,
+        totalIncome: 0, 
     }
 
     await ref.set(budget)
