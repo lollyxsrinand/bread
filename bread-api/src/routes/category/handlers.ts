@@ -10,28 +10,7 @@ export const getCategoriesHandler = async (request: FastifyRequest, reply: Fasti
 
     const { budgetId } = request.params as { budgetId: string }
     try {
-        const [categories /*, groups */] = await Promise.all([
-            getCategories(userId, budgetId),
-            // getCategoryGroups(userId, budgetId)
-        ])
-
-        // const merged: any = {}
-        // for (const groupId in groups) {
-            // merged[groupId] = {
-                // ...groups[groupId],
-                // categories: {}
-            // }
-        // }
-
-        // for (const categoryId in categories) {
-            // const category = categories[categoryId]
-            // const groupId = category.categoryGroupId
-
-            // if (merged[groupId]) {
-            //     merged[groupId].categories[categoryId] = category
-            // }
-        // }
-
+        const categories = await getCategories(userId, budgetId)
         return reply.status(200).send(categories /* merged */)
     } catch (err) {
         console.error(err)
@@ -63,7 +42,6 @@ export const assignToCategoryHandler = async (request: FastifyRequest, reply: Fa
 
 export const rolloverToNextMonthHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = await getUserId(request)
-
     if (!userId)
         return reply.status(401).send({ error: "Not authenticated" })
 

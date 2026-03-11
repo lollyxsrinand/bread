@@ -2,21 +2,21 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { createAccount, getAccount, getAccounts } from "../../services/account-service";
 import { getUserId } from "../../utils/auth";
 
-export async function createAccountHandler(request: FastifyRequest, reply: FastifyReply) {
-    const uid = await getUserId(request)
-    if (!uid) {
+export const createAccountHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = await getUserId(request)
+    if (!userId) {
         return reply.status(401).send({ error: "not authenticated" })
     }
 
     const { budgetId } = request.params as { budgetId: string }
 
     const { name, type, balance } = request.body as { name: string, type: string, balance: number }
-    if (!name || !type || balance === undefined) {
+    if (name === undefined || type === undefined || balance === undefined) {
         return reply.status(400).send({ error: "name, type, balance are all required" })
     }
 
     try {
-        const account = await createAccount(uid, budgetId, { name, type, balance })
+        const account = await createAccount(userId, budgetId, { name, type, balance })
         return reply.status(201).send(account)
     } catch (error) {
         console.error(error)
@@ -24,15 +24,16 @@ export async function createAccountHandler(request: FastifyRequest, reply: Fasti
     }
 }
 
-export async function getAccountsHandler(request: FastifyRequest, reply: FastifyReply) {
-    const uid = await getUserId(request)
-    if (!uid) {
+export const getAccountsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = await getUserId(request)
+    if (!userId) {
         return reply.status(401).send({ error: "not authenticated" })
     }
 
     const { budgetId } = request.params as { budgetId: string }
+
     try {
-        const accounts = await getAccounts(uid, budgetId)
+        const accounts = await getAccounts(userId, budgetId)
         return reply.status(200).send(accounts)
     } catch (error) {
         console.error(error)
@@ -40,13 +41,14 @@ export async function getAccountsHandler(request: FastifyRequest, reply: Fastify
     }
 }
 
-export async function getAccountHandler(request: FastifyRequest, reply: FastifyReply) {
+export const getAccountHandler= async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = await getUserId(request)
     if (!userId) {
         return reply.status(401).send({ error: "not authenticated" })
     }
 
     const { budgetId, accountId } = request.params as { budgetId: string, accountId: string }
+
     try {
         const account = await getAccount(userId, budgetId, accountId)
 
@@ -61,8 +63,3 @@ export async function getAccountHandler(request: FastifyRequest, reply: FastifyR
     }
 }
 
-export async function updateAccountHandler(request: FastifyRequest, reply: FastifyReply) {
-}
-
-export async function deleteAccountHandler(request: FastifyRequest, reply: FastifyReply) {
-}

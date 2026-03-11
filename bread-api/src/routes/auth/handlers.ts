@@ -5,7 +5,7 @@ import { sign } from "jsonwebtoken";
 import { setupUser } from "../../services/user-service";
 import { db } from "../../firebase/server";
 
-export async function loginHandler(request: FastifyRequest, reply: FastifyReply) {
+export const loginHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const { idToken } = request.body as { idToken: string };
 
     let decodedIdToken;
@@ -34,7 +34,7 @@ export async function loginHandler(request: FastifyRequest, reply: FastifyReply)
 
 
 // or simply delete token bleh??>?D
-export async function logoutHandler(request: FastifyRequest, reply: FastifyReply) {
+export const logoutHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const sessionCookie = request.cookies.session;
     if (sessionCookie) {
         const user = await admin.auth().verifySessionCookie(sessionCookie);

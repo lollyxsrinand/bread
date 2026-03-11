@@ -3,12 +3,12 @@ import { getBudget, getBudgets, getBudgetView } from "../../services/budget-serv
 import { getUserId } from "../../utils/auth";
 
 export const getBudgetsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
-    const uid = await getUserId(request)
-    if (!uid)
+    const userId = await getUserId(request)
+    if (!userId)
         return reply.status(401).send({ error: "Not authenticated" })
 
     try {
-        const budgets = await getBudgets(uid)
+        const budgets = await getBudgets(userId)
         return reply.status(200).send(budgets)
     } catch (err) {
         console.error(err)

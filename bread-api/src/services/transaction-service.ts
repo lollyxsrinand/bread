@@ -1,9 +1,9 @@
-import { Budget, CategoryEntry, getNextMonthId, toMonthId, Transaction } from "bread-core/src"
+import { toMonthId, Transaction } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
 import { getAccount } from "./account-service"
-import { getBudgetRef } from "./budget-service"
+import { getBudget, getBudgetRef } from "./budget-service"
+import { cascadeComputeCategoryEntries, getCategoryEntryForMonth, getMonthlyCategoryEntriesRef } from "./category-service"
 import assert from "assert"
-import { getCategoryEntryForMonth } from "./category-service"
 
 export const createTransaction = async (
     userId: string,
@@ -14,98 +14,74 @@ export const createTransaction = async (
     amount: number,
     date: Date
 ) => {
+    if (!!transferAccountId === !!categoryId)
+        throw Error('txn should either be a category txn or a transfer txn. can\t be both or none')
+
     const budgetRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId)
-    const budgetSnapshot = await budgetRef.get()
-    assert(budgetSnapshot.exists && budgetSnapshot.data(), "budget doesn't exist")
-    const budget = budgetSnapshot.data() as Budget
+    const budget = await getBudget(userId, budgetId)
+    assert(budget, "budget doesn't exist")
 
     const txnRef = budgetRef.collection('transactions').doc()
 
+    const account = await getAccount(userId, budgetId, accountId)
+    assert(account, "account needs to exist for any txn")
+    
+    const toAccount = transferAccountId ? await getAccount(userId, budgetId, transferAccountId) : null
+    
     const batch = db.batch()
 
-    if (!!transferAccountId && !!categoryId)
-        throw Error('transaction cannot have both transferAccountId and categoryId')
-
-    /**
-     *  case: category transaction
-     *  inflow/outflow is relative to both the account and the category
-     *      an inflow -> +ve amount. means money comes into both account and category entry
-     *      an outflow -> -ve amount, means money goes out of both account and category entry
-     *  in case of ready to assign category it gets weird when there is an outflow -> -ve amount. because ready to assign is basically an inflow category. used for income
-     *  can't have a -ve income, straight up weird. but we'll allow that
-     *  inflow/outflow: 
-     *      account.bal = account.bal + amount
-     *      categoryEntry.activity = categoryEntry.activity + amount
-     *      categoryEntry.available = categoryEntry.available + amount
-     * 
-     *  case: transfer(account, transferAccount)
-     *  inflow/outflow is relative to only from account for a transaction
-     *      an inflow -> +ve amount means money comes into the account and flows out of the transfer account so amount is tranferred "from" the transfer account
-     *      so if amount is +ve, effectively swap to and from accounts and proceed normally
-     *      an outflow (makes the mose sense) -> -ve amount means money goes out of the account and flows into the transfer account
-     *  so for inflow: swap to and from
-     *  then proceed with an outflow
-     *  intflow: transfer Account becomes `fromAccount`, account passed in args becomes `toAccount`
-     *  inflow is stupidly weird, so we'll go with only outflow for a transfer
-     *  outflow:
-     *      fromAccount.bal = fromAccount.bal + amount (value decrements as amount is -ve)
-     *      toAccount.bal = toAccount.bal - amount (value increments as amount is -ve)
-     */
-
     if (transferAccountId) {
-        if (amount > 0) {
-            throw Error("amount should be negative")
+        if (amount < 0) {
+            throw Error("amount should be positive")
         }
+
         if (accountId === transferAccountId) {
             throw Error('can\'t make a transfer between the same accounts')
         }
+
         const fromAccountRef = budgetRef.collection('accounts').doc(accountId)
+        const fromAccount = account
+
         const toAccountRef = budgetRef.collection('accounts').doc(transferAccountId)
+        assert(toAccount , "transfer account must exist for transfer")
+
+        fromAccount.balance -= amount
+        toAccount.balance += amount
 
         batch.update(fromAccountRef, {
-            balance: FieldValue.increment(amount),
+            ...fromAccount
         })
 
         batch.update(toAccountRef, {
-            balance: FieldValue.increment(-amount),
+            ...toAccount
         })
     } else if (categoryId) {
         const month = toMonthId(new Date(date))
+
         const accountRef = budgetRef.collection('accounts').doc(accountId)
-        const categoryEntryRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('monthly-category-entries').doc(month).collection('category-entries').doc(categoryId)
+        const account = await getAccount(userId, budgetId, accountId)
+        assert(account, "account must exist for a transaction")
 
-        const months = []
-        for (let m = getNextMonthId(month); m <= budget.maxMonth; m = getNextMonthId(m)) {
-            months.push(m)
-        }
-        // write a function that helps you fetch all future months and call magic on it
-        const categoryEntriesForFutureMonths: Record<string, CategoryEntry> = Object.fromEntries(
-            await Promise.all(
-                months.map(async (m) => {
-                    const entry = await getCategoryEntryForMonth(userId, budgetId, categoryId, m)
-                    assert(entry, "category entry missing. required for assigning value")
-                    return [m, entry] as const
-                })
-            )
-        )
+        const categoryEntryRef = getMonthlyCategoryEntriesRef(userId, budgetId).doc(month).collection('category-entries').doc(categoryId)
+        const categoryEntry = await getCategoryEntryForMonth(userId, budgetId, categoryId, month)
+        assert(categoryEntry, "category entry must exxist for a trannsaction")
 
-        // man ykw god damn fuck this txn logic for now
-
+        account.balance += amount
+        
+        categoryEntry.activity += amount
+        categoryEntry.available += amount
 
         batch.set(accountRef, {
-            balance: FieldValue.increment(amount),
+            ...account
         }, { merge: true })
 
         batch.set(categoryEntryRef, {
-            activity: FieldValue.increment(amount),
-            available: FieldValue.increment(amount),
+            ...categoryEntry
         }, { merge: true })
 
-        if (categoryId === 'readytoassign') { // inflow 
-            batch.update(budgetRef, {
-                "globalReadyToAssign.income": FieldValue.increment(amount)
-            })
-        }
+        // practically cascade computing entries should be cheap. who gonna add a txn for two months ago
+        // 2month is long and cheap for computation. 
+        await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, batch)
     }
 
     const transaction: Transaction = {
@@ -122,8 +98,6 @@ export const createTransaction = async (
 
     await batch.commit()
 
-    const account = await getAccount(userId, budgetId, accountId)
-    const toAccount = transferAccountId ? await getAccount(userId, budgetId, transferAccountId) : null
     return {
         transaction,
         updatedAccounts: [

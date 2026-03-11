@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { getBudgetsHandler, getBudgetHandler, getBudgetViewHandler } from "./handlers";
 
-async function budgetRoutes(fastify: FastifyInstance) {
+const budgetRoutes = async (fastify: FastifyInstance) => {
     // get single budget
     fastify.get('/budgets/:budgetId', getBudgetHandler)
 

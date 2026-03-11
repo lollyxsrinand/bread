@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
 import { verify } from "jsonwebtoken";
 
-export async function getUserId(request: FastifyRequest) {
+export const getUserId = async (request: FastifyRequest) => {
   const token = request.headers.authorization?.split(' ')[1]
 
   if (!token) 

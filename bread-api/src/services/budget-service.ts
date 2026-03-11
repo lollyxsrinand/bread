@@ -15,6 +15,7 @@ export const createBudget = async (userId: string, budgetName: string) => {
         maxMonth: getCurrentMonthId(),
         totalAssigned: 0,
         totalIncome: 0, 
+        totalOverspent: 0,
     }
 
     await ref.set(budget)

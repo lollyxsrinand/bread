@@ -21,7 +21,7 @@ const registerCors = async () => {
 }
 registerCors()
 
-app.register(cookie, { hook: 'onRequest' })
+// app.register(cookie, { hook: 'onRequest' })
 
 app.register(authRoutes)
 app.register(accountRoutes)

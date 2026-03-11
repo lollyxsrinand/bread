@@ -1,4 +1,4 @@
-import { Category, CategoryEntry, CategoryGroup, getNextMonthId, magic, MonthSummary } from "bread-core/src"
+import { Category, CategoryEntry, CategoryGroup, getNextMonthId, MonthSummary, magic } from "bread-core/src"
 import { db } from "../firebase/server"
 import { getBudget } from "./budget-service"
 import assert from "assert"
@@ -91,10 +91,12 @@ export const createEmptyMonthSummary = async (userId: string, budgetId: string, 
         .collection('users').doc(userId)
         .collection('budgets').doc(budgetId)
         .collection('monthly-category-entries').doc(month)
-    
+
     const monthSummary: MonthSummary = {
         income: 0,
-        assigned: 0, 
+        assigned: 0,
+        available: 0,
+        overspent: 0
     }
 
     await ref.create(monthSummary)
@@ -182,18 +184,24 @@ export const assignToCategory = async (
     categoryId: string,
     amount: number
 ) => {
+    // const [budget, categoryEntry,...] = promise.all...bblahaj
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget does not exist")
 
     const categoryEntry = await getCategoryEntryForMonth(userId, budgetId, categoryId, month)
     assert(categoryEntry, "category entry missing")
 
+    const monthSummary = await getMonthSummary(userId, budgetId, month)
+    assert(monthSummary, "month summary must exist")
+
     const delta = amount - categoryEntry.assigned
 
     budget.totalAssigned += delta
+    monthSummary.assigned += delta
+    monthSummary.available += delta
 
-    categoryEntry.assigned = amount
-    categoryEntry.available = categoryEntry.assigned - categoryEntry.activity
+    categoryEntry.assigned += delta
+    categoryEntry.available += delta
 
     await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry)
 
@@ -204,14 +212,34 @@ export const assignToCategory = async (
         .doc(budgetId)
 
     await budgetRef.set(budget, { merge: true })
+    await budgetRef.collection('monthly-category-entries').doc(month).update({ ...monthSummary })
 
     return { changed_entities: [categoryEntry, budget] }
 }
 
+export const getMonthSummary = async (userId: string, budgetId: string, month: string) => {
+    const snapshot = await db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('monthly-category-entries').doc(month)
+        .get()
+
+    if (!snapshot.exists || !snapshot.data()) {
+        return null
+    }
+
+    return snapshot.data() as MonthSummary
+}
+
+/**
+ * carries forward the `available` for that entry
+ * if available turns -ve we make it 0. overspent += this new amount
+ */
 export const cascadeComputeCategoryEntries = async (
     userId: string,
     budgetId: string,
-    categoryEntry: CategoryEntry
+    categoryEntry: CategoryEntry,
+    batch: FirebaseFirestore.WriteBatch 
 ) => {
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget must exist for cascade computing entries")
@@ -220,47 +248,60 @@ export const cascadeComputeCategoryEntries = async (
     const month = categoryEntry.month
     const maxMonth = budget.maxMonth
 
+    // list of months after current month entry
     const months = []
     for (let m = getNextMonthId(month); m <= maxMonth; m = getNextMonthId(m)) {
         months.push(m)
     }
 
-    const categoryEntriesForFutureMonths: Record<string, CategoryEntry> =
-        Object.fromEntries(
-            await Promise.all(
-                months.map(async (m) => {
-                    const entry = await getCategoryEntryForMonth(
-                        userId,
-                        budgetId,
-                        categoryId,
-                        m
-                    )
-                    assert(entry, "category entry missing")
-                    return [m, entry]
-                })
-            )
+    // better way of fetching ;-; ?
+    const categoryEntries: Record<string, CategoryEntry> = Object.fromEntries(
+        await Promise.all(
+            months.map(async (m) => {
+                const entry = await getCategoryEntryForMonth(
+                    userId,
+                    budgetId,
+                    categoryId,
+                    m
+                )
+                assert(entry, "category entry missing")
+                return [m, entry] as const
+            })
         )
+    )
+    categoryEntries[month] = categoryEntry
 
-    const updatedCategoryEntries = magic(categoryEntry, categoryEntriesForFutureMonths)
+    const { updatedEntries, overspent } = magic(categoryEntries)
 
-    const allUpdatedCategoryEntries = {
-        [month]: categoryEntry,
-        ...updatedCategoryEntries
+    // const batch = db.batch()
+
+    for (const entryId in updatedEntries) {
+        const entry = updatedEntries[entryId]
+        const entryRef = db
+            .collection('users').doc(userId)
+            .collection('budgets').doc(budgetId)
+            .collection('monthly-category-entries').doc(entry.month)
+            .collection('category-entries').doc(entryId)
+
+        batch.update(entryRef, { ...entry })
+        // batch.update(entryRef, { available: entry.available }) ????
     }
 
-    const batch = db.batch()
-    const monthlyRef = getMonthlyCategoryEntriesRef(userId, budgetId)
+    if (overspent) {
+        const monthSummaryRef = db
+            .collection('users').doc(userId)
+            .collection('budgets').doc(budgetId)
+            .collection('monthly-category-entries').doc(overspent.month)
+        const monthSummary = await getMonthSummary(userId, budgetId, overspent.month)
+        assert(monthSummary, 'month summary must exist')
+        monthSummary.overspent += Math.abs(overspent.amount)
+        budget.totalOverspent += Math.abs(overspent.amount)
 
-    for (const entry of Object.values(allUpdatedCategoryEntries)) {
-        const ref = monthlyRef
-            .doc(entry.month)
-            .collection("category-entries")
-            .doc(entry.id)
-
-        batch.set(ref, entry)
+        batch.update(monthSummaryRef, { ...monthSummary })
+        batch.update(db.collection('users').doc(userId).collection('budgets').doc(budgetId), { ...budget })
     }
 
-    await batch.commit()
+    // await batch.commit()
 }
 
 export const rolloverToNextMonth = async (
