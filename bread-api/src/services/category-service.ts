@@ -169,8 +169,10 @@ export const getCategoryEntryForMonth = async (userId: string, budgetId: string,
     const snapshot = await monthlyCategoryEntriesRef.doc(month)
         .collection('category-entries').doc(categoryId)
         .get()
-
-    if (!snapshot.exists || !snapshot.data) {
+    
+    // console.log(snapshot.data())
+    
+    if (!snapshot.exists || !snapshot.data()) {
         return null
     }
 
@@ -198,12 +200,14 @@ export const assignToCategory = async (
 
     budget.totalAssigned += delta
     monthSummary.assigned += delta
-    monthSummary.available += delta
+    monthSummary.available += delta // cascade compute this aswell
 
     categoryEntry.assigned += delta
     categoryEntry.available += delta
 
-    await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry)
+    const batch = db.batch()
+
+    await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, batch)
 
     const budgetRef = db
         .collection("users")
@@ -213,6 +217,8 @@ export const assignToCategory = async (
 
     await budgetRef.set(budget, { merge: true })
     await budgetRef.collection('monthly-category-entries').doc(month).update({ ...monthSummary })
+
+    await batch.commit()
 
     return { changed_entities: [categoryEntry, budget] }
 }
@@ -239,7 +245,7 @@ export const cascadeComputeCategoryEntries = async (
     userId: string,
     budgetId: string,
     categoryEntry: CategoryEntry,
-    batch: FirebaseFirestore.WriteBatch 
+    batch: FirebaseFirestore.WriteBatch
 ) => {
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget must exist for cascade computing entries")
@@ -273,33 +279,31 @@ export const cascadeComputeCategoryEntries = async (
 
     const { updatedEntries, overspent } = magic(categoryEntries)
 
-    // const batch = db.batch()
-
     for (const entryId in updatedEntries) {
         const entry = updatedEntries[entryId]
         const entryRef = db
             .collection('users').doc(userId)
             .collection('budgets').doc(budgetId)
             .collection('monthly-category-entries').doc(entry.month)
-            .collection('category-entries').doc(entryId)
+            .collection('category-entries').doc(entry.id)
 
         batch.update(entryRef, { ...entry })
         // batch.update(entryRef, { available: entry.available }) ????
     }
 
-    if (overspent) {
-        const monthSummaryRef = db
-            .collection('users').doc(userId)
-            .collection('budgets').doc(budgetId)
-            .collection('monthly-category-entries').doc(overspent.month)
-        const monthSummary = await getMonthSummary(userId, budgetId, overspent.month)
-        assert(monthSummary, 'month summary must exist')
-        monthSummary.overspent += Math.abs(overspent.amount)
-        budget.totalOverspent += Math.abs(overspent.amount)
+    // if (overspent) {
+    //     const monthSummaryRef = db
+    //         .collection('users').doc(userId)
+    //         .collection('budgets').doc(budgetId)
+    //         .collection('monthly-category-entries').doc(overspent.month)
+    //     const monthSummary = await getMonthSummary(userId, budgetId, overspent.month)
+    //     assert(monthSummary, 'month summary must exist')
+    //     monthSummary.overspent += Math.abs(overspent.amount)
+    //     budget.totalOverspent += Math.abs(overspent.amount)
 
-        batch.update(monthSummaryRef, { ...monthSummary })
-        batch.update(db.collection('users').doc(userId).collection('budgets').doc(budgetId), { ...budget })
-    }
+    //     batch.update(monthSummaryRef, { ...monthSummary })
+    //     batch.update(db.collection('users').doc(userId).collection('budgets').doc(budgetId), { ...budget })
+    // }
 
     // await batch.commit()
 }
@@ -359,6 +363,18 @@ export const rolloverToNextMonth = async (
         { merge: true }
     )
 
+    batch.set(db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('monthly-category-entries').doc(nextMonth),
+        {
+            income: 0,
+            assigned: 0,
+            available: 0,
+            overspent: 0
+        }
+
+    )
+
     await batch.commit()
-    await createEmptyMonthSummary(userId, budgetId, nextMonth)
 }

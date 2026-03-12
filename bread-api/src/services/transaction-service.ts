@@ -79,6 +79,16 @@ export const createTransaction = async (
             ...categoryEntry
         }, { merge: true })
 
+        if (categoryId === 'readytoassign') {
+            batch.update(budgetRef, {
+                totalIncome: FieldValue.increment(amount) 
+            })
+
+            batch.update(budgetRef.collection('monthly-category-entries').doc(month), {
+                income: FieldValue.increment(amount)
+            })
+        }
+
         // practically cascade computing entries should be cheap. who gonna add a txn for two months ago
         // 2month is long and cheap for computation. 
         await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, batch)

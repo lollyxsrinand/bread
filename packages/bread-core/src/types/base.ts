@@ -14,6 +14,7 @@ export interface Budget {
   maxMonth: string
   totalIncome: number
   totalAssigned: number
+  totalOverspent: number
 }
 
 export interface Account {
@@ -60,4 +61,6 @@ export interface Transaction {
 export interface MonthSummary {
   income: number,
   assigned: number,
+  available: number,
+  overspent: number
 }
