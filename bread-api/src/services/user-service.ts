@@ -27,6 +27,7 @@ export const setupUser = async (userId: string, email: string) => {
     'needs': ['rent', 'utilities', 'groceries'],
     'savings': ['emergency fund', 'investments'],
   } as any
+  
   const currentMonth = getCurrentMonthId()
 
   for (const categoryGroupName in categories) {

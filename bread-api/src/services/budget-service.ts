@@ -4,11 +4,17 @@ import { Budget } from "bread-core/src"
 import { getCategories, getAllCategoryEntriesForMonth, getCategoryGroups } from "./category-service"
 import assert from "assert"
 
-export const createBudget = async (userId: string, budgetName: string) => {
+/**
+ * 
+ * @param userId 
+ * @param name name of the budget
+ * @returns 
+ */
+export const createBudget = async (userId: string, name: string) => {
     const ref = db.collection('users').doc(userId).collection('budgets').doc()
     const budget: Budget = {
         id: ref.id,
-        name: budgetName,
+        name: name,
         createdAt: Date.now(),
         currency: 'INR',
         minMonth: getCurrentMonthId(),
@@ -18,12 +24,15 @@ export const createBudget = async (userId: string, budgetName: string) => {
         totalOverspent: 0,
     }
 
-    await ref.set(budget)
+    const batch = db.batch()
+    batch.set(ref, budget)
 
     // when a budget is created, we also need to update the user's currentBudgetId field to this newly created budget
-    await db.collection('users').doc(userId).update({
+    batch.update(db.collection('users').doc(userId), {
         currentBudgetId: ref.id,
     })
+
+    await batch.commit()
 
     return budget
 }
@@ -64,7 +73,5 @@ export const getBudgetView = async (userId: string, budgetId: string, month: str
     assert(categoryGroups, "pls exist")
     assert(categoryEntries, "pls exist")
 
-    const budgetView: BudgetView = generateBudgetView(categories, categoryGroups, categoryEntries, month)
-
-    return budgetView
+    return {} 
 } 

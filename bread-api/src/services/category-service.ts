@@ -111,11 +111,15 @@ export const getCategoryGroups = async (userId: string, budgetId: string) => {
         .collection('categoryGroups')
         .get()
 
-    const categoryGroups: Record<string, CategoryGroup> = Object.fromEntries(
-        snapshot.docs.map(doc => [doc.id, doc.data() as CategoryGroup])
+    if (snapshot.empty || !snapshot.docs) {
+        return null
+    }
+
+    const categories: Record<string, Category> = Object.fromEntries(
+        snapshot.docs.map(doc => [doc.id, doc.data() as Category])
     )
 
-    return categoryGroups
+    return categories
 }
 
 /**
@@ -169,8 +173,6 @@ export const getCategoryEntryForMonth = async (userId: string, budgetId: string,
     const snapshot = await monthlyCategoryEntriesRef.doc(month)
         .collection('category-entries').doc(categoryId)
         .get()
-    
-    // console.log(snapshot.data())
     
     if (!snapshot.exists || !snapshot.data()) {
         return null

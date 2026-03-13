@@ -1,12 +1,11 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
-import cookie from '@fastify/cookie';
+import cookie from '@fastify/cookie'
 
 import authRoutes from './routes/auth'
 import accountRoutes from './routes/accounts';
 import budgetRoutes from './routes/budget';
 import transactionRoutes from './routes/transactions';
-import { getUserId } from './utils/auth';
 import idkRoutes from './routes/idk';
 import categoryRoutes from './routes/category';
 
@@ -21,7 +20,7 @@ const registerCors = async () => {
 }
 registerCors()
 
-// app.register(cookie, { hook: 'onRequest' })
+app.register(cookie)
 
 app.register(authRoutes)
 app.register(accountRoutes)
@@ -31,14 +30,13 @@ app.register(transactionRoutes)
 app.register(categoryRoutes)
 
 app.get('/ping', async (request, reply) => {
-  return { message: 'pong 🏓' }
+  return reply.status(200).send({ message: 'pong 🏓' })
 })
-
 
 const start = async () => {
   try {
     await app.listen({ port: parseInt(process.env.PORT || '3001'), host: '0.0.0.0' })
-    console.log('👧 app running on http://localhost:3001')
+    console.log('running on http://localhost:3001')
   } catch (err) {
     console.error(err)
     process.exit(1)

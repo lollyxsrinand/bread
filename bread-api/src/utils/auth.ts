@@ -8,8 +8,8 @@ export const getUserId = async (request: FastifyRequest) => {
     return null
 
   try {
-    const decoded = verify(token, process.env.JWT_SECRET as string) as { uid: string };
-    return decoded.uid
+    const decoded = verify(token, process.env.JWT_SECRET as string) as { userId: string };
+    return decoded.userId
   } catch (error) {
     console.error('error verifying jwt token: ', error);
     return null

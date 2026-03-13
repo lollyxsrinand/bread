@@ -1,7 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import admin from 'firebase-admin';
 import { sign } from "jsonwebtoken";
-
 import { setupUser } from "../../services/user-service";
 import { db } from "../../firebase/server";
 
@@ -16,15 +15,19 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
         return reply.status(401).send({ message: 'unauthorized' });
     }
 
-    const uid = decodedIdToken.uid
-    const userRef = db.collection('users').doc(uid)
+    const userId = decodedIdToken.uid
+    const userRef = db.collection('users').doc(userId)
     const userSnap = await userRef.get()
 
     if (!userSnap.exists) {
-        await setupUser(uid, decodedIdToken.email ?? '') // creates user, default budget and default categories
+        try {
+            await setupUser(userId, decodedIdToken.email ?? '') // creates user, default budget and default categories
+        } catch (error) {
+            reply.status(500).send({ error: `internal error: ${error}`})
+        }
     }
 
-    const jwtToken = sign({ uid: uid },
+    const jwtToken = sign({ userId: userId },
         process.env.JWT_SECRET as string,
         { expiresIn: "7d", algorithm: "HS256" }
     )
