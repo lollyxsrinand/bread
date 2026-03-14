@@ -1,11 +1,19 @@
 'use client'
 import { rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
-import { Budget, CategoryGroupView, CategoryView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
+import { Budget, BudgetView, CategoryGroupView, CategoryView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
 import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
+
+const Topbar = ({ budgetView }: { budgetView: BudgetView }) => {
+    return (
+        <div className="h-24 w-full flex items-center justify-center">
+            <span className="text-2xl">available to assign { budgetView.readytoassign }</span>
+        </div>
+    )
+}
 
 const Toolbar = ({ month, budget }: { month: string, budget: Budget }) => {
     const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
@@ -15,7 +23,7 @@ const Toolbar = ({ month, budget }: { month: string, budget: Budget }) => {
         try {
             const res = await rolloverToNextMonth(budget.id)
             console.log(res);
-            router.push(`/plan/${getNextMonthId(month)}`)   
+            router.push(`/plan/${getNextMonthId(month)}`)
         } catch (error) {
             console.log(error);
             toast.error('Failed to create next month')
@@ -85,13 +93,13 @@ const CategoryGroupRow = ({ budget, categoryGroup, month }: { budget: Budget, ca
                     </button>
                 </div>
                 <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                    <span>0</span>
+                    <span>{categoryGroup.assigned}</span>
                 </div>
                 <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                    <span>0</span>
+                    <span>{categoryGroup.activity}</span>
                 </div>
                 <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                    <span>0</span>
+                    <span>{categoryGroup.available}</span>
                 </div>
             </div>
             {categoryGroup.categories.map(category => (
@@ -105,9 +113,9 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
     const [assigned, setAssigned] = useState(category.assigned.toString())
     const assignToCategory = (a: any, b: any, c: any, d: any) => void
 
-    useEffect(() => {
-        setAssigned(category.assigned.toString())
-    }, [category.assigned])
+        useEffect(() => {
+            setAssigned(category.assigned.toString())
+        }, [category.assigned])
 
     return (
         <div className="w-full px-3 gap-2.5 flex">
@@ -137,18 +145,21 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
 
 const PlanView = ({ month }: { month: string }) => {
     const budget = useBudgetStore(s => s.budget)
-    const budgetView = useBudgetStore(s => s.monthlyBudgetsView[month])
+    const budgetView = useBudgetStore(s => s.budgetViews[month])
     if (!budgetView) {
         return null
     }
 
     return (
-        <div className="h-full w-full flex flex-col">
-            <Toolbar month={month} budget={budget}/>
-            <Header />
-            {budgetView.categoryGroups.map(categoryGroup => (
-                <CategoryGroupRow budget={budget} categoryGroup={categoryGroup} key={categoryGroup.id} month={month} />
-            ))}
+        <div className='w-full h-full flex flex-col'>
+            <Topbar budgetView={budgetView} />
+            <div className="h-full w-full flex flex-col">
+                <Toolbar month={month} budget={budget} />
+                <Header />
+                {budgetView.categoryGroups.map(categoryGroup => (
+                    <CategoryGroupRow budget={budget} categoryGroup={categoryGroup} key={categoryGroup.id} month={month} />
+                ))}
+            </div>
         </div>
     )
 }

@@ -1,7 +1,8 @@
 'use server'
 import { getToken } from "@/utils/get-cookie"
+import { Category, CategoryEntry, CategoryGroup, MonthSummary } from "bread-core/src"
 
-export const getGroupedCategories = async (budgetId: string) => {
+export const getCategories = async (budgetId: string) => {
     const token = await getToken()
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/categories`, {
         headers: {
@@ -13,7 +14,52 @@ export const getGroupedCategories = async (budgetId: string) => {
         throw new Error('failed to fetch categories')
     }
 
-    return await res.json() as any
+    return await res.json() as Record<string, Category>
+}
+
+export const getCategoryGroups = async (budgetId: string) => {
+    const token = await getToken()
+    const res = await fetch(`http://localhost:3001/budgets/${budgetId}/categoryGroups`, {
+        headers: {
+            'authorization': `Bearer ${token}`
+        },
+    })
+
+    if (!res.ok) {
+        throw new Error('failed to fetch categories')
+    }
+
+    return await res.json() as Record<string, CategoryGroup>
+}
+
+export const getCategoryEntries = async (budgetId: string, month: string) => {
+    const token = await getToken()
+    const res = await fetch(`http://localhost:3001/budgets/${budgetId}/category-entries/${month}`, {
+        headers: {
+            'authorization': `Bearer ${token}`
+        },
+    })
+
+    if (!res.ok) {
+        throw new Error('failed to fetch categories')
+    }
+
+    return await res.json() as Record<string, CategoryEntry>
+}
+
+export const getMonthSummary = async (budgetId: string, month: string) => {
+    const token = await getToken()
+    const res = await fetch(`http://localhost:3001/budgets/${budgetId}/summary/${month}`, {
+        headers: {
+            'authorization': `Bearer ${token}`
+        },
+    })
+
+    if (!res.ok) {
+        throw new Error('failed to fetch categories')
+    }
+
+    return await res.json() as MonthSummary
 }
 
 export const assignToCategory = async (budgetId: string, categoryId: string, month: string, amount: number) => {

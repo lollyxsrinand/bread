@@ -1,5 +1,5 @@
 import { assignToCategory as _assignToCategory } from '@/lib/actions/category.actions'
-import { Account, Budget, BudgetView } from 'bread-core/src'
+import { Account, Budget, BudgetView, Category, CategoryEntry, CategoryGroup } from 'bread-core/src'
 import { create } from 'zustand'
 
 interface BudgetState {
@@ -9,8 +9,17 @@ interface BudgetState {
     budget: Budget
     setBudget: (budget: Budget) => void
 
-    monthlyBudgetsView: Record<string, BudgetView>
-    setMonthlyBudgetsView: (month: string, budgetView: BudgetView) => void
+    categories: Record<string, Category>
+    setCategories: (categories: Record<string, Category>) => void
+
+    categoryGroups: Record<string, CategoryGroup>
+    setCategoryGroups: (categoryGroups: Record<string, CategoryGroup>) => void
+
+    categoryEntries: Record<string, Record<string, CategoryEntry>>
+    setCategoryEntries: (month: string, categoryEntries: Record<string, CategoryEntry>) => void
+
+    budgetViews: Record<string, BudgetView>
+    setBudgetViews: (month: string, budgetView: BudgetView) => void
 }
 
 export const useBudgetStore = create<BudgetState>((set, get) => ({
@@ -20,8 +29,18 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     budget: {} as Budget,
     setBudget: (budget: Budget) => set({ budget }),
 
-    monthlyBudgetsView: {} as Record<string, BudgetView>,
-    setMonthlyBudgetsView: (month: string, budgetView: BudgetView) => {
-        set((state) => ({ monthlyBudgetsView: { ...state.monthlyBudgetsView, [month]: budgetView}}))
+    categories: {},
+    setCategories: (categories: Record<string, Category>) => set({ categories }),
+
+    categoryGroups: {},
+    setCategoryGroups: (categoryGroups: Record<string, CategoryGroup>) => set({ categoryGroups }),
+
+    categoryEntries:{},
+    setCategoryEntries: (month: string, categoryEntries: Record<string, CategoryEntry>) => set((state) => ({ categoryEntries: {...state.categoryEntries, [month]: categoryEntries} })),
+
+    budgetViews: {} as Record<string, BudgetView>,
+    setBudgetViews: (month: string, budgetView: BudgetView) => {
+        set((state) => ({ budgetViews: { ...state.budgetViews, [month]: budgetView}}))
     }
+
 }))
