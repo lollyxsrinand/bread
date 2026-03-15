@@ -14,9 +14,10 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
     if (!budgetId) {
         return reply.status(400).send({ error: "budget id is required" })
     }
-    const { accountId, toAccountId = null, categoryId = null, amount, date } = request.body as { accountId: string, toAccountId?: string, categoryId?: string, amount: number, date: string }
+    const { accountId, transferAccountId = null, categoryId = null, amount, date } = request.body as { accountId: string, transferAccountId: string, categoryId: string, amount: number, date: string }
+    console.log(accountId, transferAccountId, categoryId, amount, date)
     try {
-        const { transaction, updatedAccounts } = await createTransaction(userId, budgetId, accountId, toAccountId, categoryId, amount, new Date(date))
+        const { transaction, updatedAccounts } = await createTransaction(userId, budgetId, accountId, transferAccountId, categoryId, amount, new Date(date))
         return reply.status(201).send({ transaction, updatedAccounts })
     } catch (error) {
         console.error(error)

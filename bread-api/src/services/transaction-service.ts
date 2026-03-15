@@ -14,8 +14,9 @@ export const createTransaction = async (
     amount: number,
     date: Date
 ) => {
-    if (!!transferAccountId === !!categoryId)
+    if (transferAccountId && categoryId || (!transferAccountId && !categoryId)) {
         throw Error('txn should either be a category txn or a transfer txn. can\t be both or none')
+    }
 
     const budgetRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId)
     const budget = await getBudget(userId, budgetId)
