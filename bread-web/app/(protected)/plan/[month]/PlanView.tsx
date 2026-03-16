@@ -1,6 +1,7 @@
 'use client'
 import { rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
+import { useBudgetView } from "@/store/selectors/useBudgetView"
 import { Budget, BudgetView, CategoryGroupView, CategoryView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
 import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -145,10 +146,12 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
 
 const PlanView = ({ month }: { month: string }) => {
     const budget = useBudgetStore(s => s.budget)
-    const budgetView = useBudgetStore(s => s.budgetViews[month])
+    const budgetView = useBudgetView(month)
+  
     if (!budgetView) {
-        return null
+      return <div className="p-4">loading...</div>
     }
+
 
     return (
         <div className='w-full h-full flex flex-col'>

@@ -153,11 +153,13 @@ const TransactionRow = ({ transaction, accountMap, categoryMap, onDelete }: { tr
 
 export const TransactionsView = ({ transactions }: { transactions: Transaction[] }) => {
     const accounts = useBudgetStore(s => s.accounts)
-    const categoryGroups = useBudgetStore(s => s.monthlyBudgetsView['202603']?.categoryGroups)
+    const budget = useBudgetStore(s => s.budget)
+    // const categoryGroups = useBudgetStore(s => s.monthlyBudgetsView['202603']?.categoryGroups)
+    const categoryGroups = useBudgetStore(s => s.budgetViews['202603']?.categoryGroups)
     const [draftTransaction, setDraftTransaction] = useState<Partial<Transaction> | null>(null)
     const router = useRouter()
 
-    if (!accounts || !categoryGroups) return null
+    if (!accounts || !categoryGroups || !budget) return null
 
     const handleSave = async () => {
         if (!draftTransaction) return
@@ -183,7 +185,7 @@ export const TransactionsView = ({ transactions }: { transactions: Transaction[]
         }
 
         try {
-            const { id, updatedAccounts } = await createTransaction('V1P1gGXgk5EixClmmI1d', draftTransaction)
+            const { id, updatedAccounts } = await createTransaction(budget.id, draftTransaction)
             console.log(id, updatedAccounts);
             setDraftTransaction(null)
             router.refresh()
