@@ -34,7 +34,8 @@ export const getAccountsHandler = async (request: FastifyRequest, reply: Fastify
 
     try {
         const accounts = await getAccounts(userId, budgetId)
-        return reply.status(200).send(accounts)
+        const accountsById = Object.fromEntries(accounts.map(account => [account.id, account]))
+        return reply.status(200).send(accountsById)
     } catch (error) {
         console.error(error)
         return reply.status(500).send({ error: "failed to get accounts" })

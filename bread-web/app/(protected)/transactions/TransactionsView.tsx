@@ -152,10 +152,10 @@ const TransactionRow = ({ transaction, accountMap, categoryMap, onDelete }: { tr
 }
 
 export const TransactionsView = ({ transactions }: { transactions: Transaction[] }) => {
-    const accounts = useBudgetStore(s => s.accounts)
-    const budget = useBudgetStore(s => s.budget)
-    // const categoryGroups = useBudgetStore(s => s.monthlyBudgetsView['202603']?.categoryGroups)
-    const categoryGroups = useBudgetStore(s => s.budgetViews['202603']?.categoryGroups)
+    const accounts = useBudgetStore(s => s.accounts ? s.accounts : null)
+    const 
+    const budget = useBudgetStore(s => s.budget ? s.budget : null)
+    const categoryGroups = useBudgetStore(s => s.categoryGroups ? Object.values(s.categoryGroups) : null)
     const [draftTransaction, setDraftTransaction] = useState<Partial<Transaction> | null>(null)
     const router = useRouter()
 
@@ -209,10 +209,6 @@ export const TransactionsView = ({ transactions }: { transactions: Transaction[]
             toast.error(':( bad luck: transaction couldn\'t be deleted')
         }
     }
-
-
-    const accountMap = Object.fromEntries(accounts.map(a => [a.id, a]))
-    const categoryMap = Object.fromEntries(categoryGroups.flatMap(g => g.categories).map(c => [c.id, c]))
 
     return (
         <div className="w-full flex flex-col">

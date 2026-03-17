@@ -40,6 +40,7 @@ export const getTransactionsHandler = async (request: FastifyRequest, reply: Fas
 
     try {
         const transactions = await getTransactions(userId, budgetId)
+        const transactionsById = Object.fromEntries(transactions.map(transaction => [transaction.id, transaction]))
         return reply.status(200).send(transactions)
     } catch (error) {
         console.error(error)

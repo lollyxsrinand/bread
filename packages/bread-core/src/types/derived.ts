@@ -19,7 +19,7 @@ export interface CategoryGroupView {
 }
 
 export interface BudgetView {
-    month: string, 
+    month: string,
     readytoassign: number,
     categoryGroups: CategoryGroupView[]
 }

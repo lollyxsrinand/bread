@@ -12,7 +12,7 @@ export const getTransactions = async (budgetId: string) => {
         }
     })
     
-    return await res.json()
+    return await res.json() as Record<string, Transaction>
 }
 
 export const createTransaction = async (budgetId: string, transaction: Partial<Transaction>) => {

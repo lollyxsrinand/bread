@@ -14,7 +14,7 @@ export const getAccounts = async (budgetId: string) => {
         throw new Error('Failed to fetch accounts')
     }
 
-    return await res.json() as Account[]
+    return await res.json() as Record<string, Account>
 }
 
 export const createAccount = async (budgetId: string, data: {name: string, type: string, balance: number}) => {

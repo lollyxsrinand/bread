@@ -1,24 +1,16 @@
 import PlanSummary from "./PlanSummary"
 import PlanView from "./PlanView"
 import { BudgetHydrator } from "@/store/budget-hydrator"
-import { getBudget } from "@/lib/actions/budget.actions"
 import { requireUser } from "@/utils/require-user"
 import { redirect } from "next/navigation"
-import {
-  getCategoryEntries,
-  getMonthSummary
-} from "@/lib/actions/category.actions"
-
-interface Props {
-  params: {
-    month: string
-  }
-}
+import { getCategoryEntries, getMonthSummary } from "@/lib/actions/category.actions"
+import { getBudget } from "@/lib/actions/budget.actions"
 
 const Plan = async ({ params }: { params: Promise<{ month: string }> }) => {
   const { month } = await params
 
   const user = await requireUser()
+
   const budget = await getBudget(user.currentBudgetId)
 
   if (month > budget.maxMonth || month < budget.minMonth) {
@@ -33,8 +25,10 @@ const Plan = async ({ params }: { params: Promise<{ month: string }> }) => {
   return (
     <>
       <BudgetHydrator
-        categoryEntries={{ [month]: categoryEntries }}
-        monthSummaries={{ [month]: monthSummary }}
+        data={{
+          monthlyCategoryEntries: { [month]: categoryEntries },
+          monthlySummary: { [month]: monthSummary }
+        }}
       />
 
       <div className="h-full w-full flex">

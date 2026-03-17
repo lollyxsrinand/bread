@@ -1,17 +1,17 @@
 'use client'
 import { rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
-import { useBudgetView } from "@/store/selectors/useBudgetView"
-import { Budget, BudgetView, CategoryGroupView, CategoryView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
+import { Budget, BudgetView, CategoryGroupView, CategoryView, generateBudgetView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
 import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
+import { useBudgetView } from "@/app/hooks/useBudgetView"
 
 const Topbar = ({ budgetView }: { budgetView: BudgetView }) => {
     return (
         <div className="h-24 w-full flex items-center justify-center">
-            <span className="text-2xl">available to assign { budgetView.readytoassign }</span>
+            <span className="text-2xl">available to assign {budgetView.readytoassign}</span>
         </div>
     )
 }
@@ -147,20 +147,30 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
 const PlanView = ({ month }: { month: string }) => {
     const budget = useBudgetStore(s => s.budget)
     const budgetView = useBudgetView(month)
-  
-    if (!budgetView) {
-      return <div className="p-4">loading...</div>
-    }
 
+    if (!budget || !budgetView) {
+        return (
+            <div className="w-full h-full flex items-center justify-center">
+                <span>Loading...</span>
+            </div>
+        )
+    }
 
     return (
         <div className='w-full h-full flex flex-col'>
             <Topbar budgetView={budgetView} />
+
             <div className="h-full w-full flex flex-col">
                 <Toolbar month={month} budget={budget} />
                 <Header />
+
                 {budgetView.categoryGroups.map(categoryGroup => (
-                    <CategoryGroupRow budget={budget} categoryGroup={categoryGroup} key={categoryGroup.id} month={month} />
+                    <CategoryGroupRow
+                        budget={budget}
+                        categoryGroup={categoryGroup}
+                        key={categoryGroup.id}
+                        month={month}
+                    />
                 ))}
             </div>
         </div>
