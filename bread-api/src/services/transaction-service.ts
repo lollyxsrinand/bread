@@ -22,15 +22,15 @@ export const createTransaction = async (
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget doesn't exist")
 
-    const txnRef = budgetRef.collection('transactions').doc()
-
     const account = await getAccount(userId, budgetId, accountId)
     assert(account, "account needs to exist for any txn")
-    
+
     const toAccount = transferAccountId ? await getAccount(userId, budgetId, transferAccountId) : null
+
+    const txnRef = budgetRef.collection('transactions').doc()
     
     const batch = db.batch()
-
+    const changed_entities = {} as Record<string, any>
     if (transferAccountId) {
         if (amount < 0) {
             throw Error("amount should be positive")
@@ -56,6 +56,11 @@ export const createTransaction = async (
         batch.update(toAccountRef, {
             ...toAccount
         })
+
+        changed_entities['accounts'] = [
+            { id: fromAccount.id, balance: fromAccount.balance },
+            { id: toAccount.id, balance: toAccount.balance }
+        ]
     } else if (categoryId) {
         const month = toMonthId(new Date(date))
 
@@ -81,18 +86,15 @@ export const createTransaction = async (
         }, { merge: true })
 
         if (categoryId === 'readytoassign') {
+            budget.totalIncome += amount
             batch.update(budgetRef, {
-                totalIncome: FieldValue.increment(amount) 
-            })
-
-            batch.update(budgetRef.collection('monthly-category-entries').doc(month), {
-                income: FieldValue.increment(amount)
+                totalIncome: budget.totalIncome
             })
         }
 
         // practically cascade computing entries should be cheap. who gonna add a txn for two months ago
         // 2month is long and cheap for computation. 
-        await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, batch)
+        changed_entities['categoryEntries'] = await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, budget.maxMonth, batch)
     }
 
     const transaction: Transaction = {
@@ -106,6 +108,8 @@ export const createTransaction = async (
     }
 
     batch.set(txnRef, transaction)
+
+    changed_entities['transaction'] = transaction
 
     await batch.commit()
 

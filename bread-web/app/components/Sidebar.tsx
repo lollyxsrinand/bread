@@ -149,7 +149,6 @@ const Sidebar = () => {
     const [showCreateAccount, setShowCreateAccount] = useState(false)
     const pathname = usePathname()
 
-    // ✅ hooks must always run
     const accounts = useMemo(
         () => Object.values(accountsMap),
         [accountsMap]
@@ -163,7 +162,6 @@ const Sidebar = () => {
         }, {} as Record<string, Account[]>)
     }, [accounts])
 
-    // ✅ NOW do conditional rendering
     if (pathname === '/settings') return null
     if (!budget) return null
 
@@ -184,6 +182,7 @@ const Sidebar = () => {
             })
 
             const currentAccounts = useBudgetStore.getState().accounts
+            console.log(account)
 
             useBudgetStore.getState().setPartial({
                 accounts: {

@@ -1,7 +1,11 @@
 import { Account } from "bread-core/src"
 import { db } from "../firebase/server"
 import { createTransaction } from "./transaction-service"
+import assert from "assert"
 
+/**
+ * TODO: return changed entities everywhere 
+ */
 export const createAccount = async (userId: string, budgetId: string, data: { name: string, type: string, balance: number }) => {
     const ref = db
         .collection('users').doc(userId)
@@ -19,7 +23,10 @@ export const createAccount = async (userId: string, budgetId: string, data: { na
     await ref.set(account)
     await createTransaction(userId, budgetId, account.id, null, 'readytoassign', data.balance, new Date())
 
-    return account
+    const snapshot = await ref.get()
+    assert(snapshot.exists && snapshot.data(), 'account should exist after creation')
+
+    return snapshot.data() as Account
 }
 
 export const getAccounts = async (uid: string, budgetId: string) => {

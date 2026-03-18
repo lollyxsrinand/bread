@@ -1,4 +1,4 @@
-import { Category, CategoryEntry, CategoryGroup, getNextMonthId, MonthSummary, magic } from "bread-core/src"
+import { Category, CategoryEntry, CategoryGroup, getNextMonthId, MonthSummary, magic, Budget } from "bread-core/src"
 import { db } from "../firebase/server"
 import { getBudget } from "./budget-service"
 import assert from "assert"
@@ -240,21 +240,21 @@ export const getMonthSummary = async (userId: string, budgetId: string, month: s
 }
 
 /**
- * carries forward the `available` for that entry
- * if available turns -ve we make it 0. overspent += this new amount
+ * takes in the changed category entry
+ * fetches all the entries starting from given category entry month to max month
+ * applies magic to all of those to change available
+ * this function cascades only available.
+ * @returns all the changed category entries mapped by their month after cascade computing
  */
 export const cascadeComputeCategoryEntries = async (
     userId: string,
     budgetId: string,
     categoryEntry: CategoryEntry,
+    maxMonth: string,
     batch: FirebaseFirestore.WriteBatch
 ) => {
-    const budget = await getBudget(userId, budgetId)
-    assert(budget, "budget must exist for cascade computing entries")
-
     const categoryId = categoryEntry.id
     const month = categoryEntry.month
-    const maxMonth = budget.maxMonth
 
     // list of months after current month entry
     const months = []
@@ -307,7 +307,7 @@ export const cascadeComputeCategoryEntries = async (
     //     batch.update(db.collection('users').doc(userId).collection('budgets').doc(budgetId), { ...budget })
     // }
 
-    // await batch.commit()
+    return Object.fromEntries(Object.values(updatedEntries).map(entry => [entry.month, entry]))
 }
 
 export const rolloverToNextMonth = async (
