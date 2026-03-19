@@ -1,126 +1,142 @@
-import { toMonthId, Transaction } from "bread-core/src"
+import { CategoryEntry, CategoryTransaction, CategoryTransactionResult, MonthId, toMonthId, Transaction, TransactionResult, TransferTransaction, TransferTransactionResult } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
-import { getAccount } from "./account-service"
+import { getAccount, getAccountRef } from "./account-service"
 import { getBudget, getBudgetRef } from "./budget-service"
-import { cascadeComputeCategoryEntries, getCategoryEntryForMonth, getMonthlyCategoryEntriesRef } from "./category-service"
+import { cascadeComputeCategoryEntries, getCategoryEntryForMonth, getMonthlyCategoryEntriesRef, rangeComputeCategoryEntries } from "./category-service"
 import assert from "assert"
 
-export const createTransaction = async (
+export const getTransactionRef = (userId: string, budgetId: string, transactionId: string | null = null) => {
+    return transactionId === null
+        ? getBudgetRef(userId, budgetId).collection('transactions').doc()
+        : getBudgetRef(userId, budgetId).collection('transactions').doc(transactionId)
+}
+
+export const createTransferTransaction = async (
     userId: string,
     budgetId: string,
     accountId: string,
-    transferAccountId: string | null,
-    categoryId: string | null,
+    toAccountId: string,
     amount: number,
-    date: Date
-) => {
-    if (transferAccountId && categoryId || (!transferAccountId && !categoryId)) {
-        throw Error('txn should either be a category txn or a transfer txn. can\t be both or none')
+    date: number,
+): Promise<TransferTransactionResult> => {
+    if (amount < 0) {
+        throw new Error("amount should be +ve")
     }
 
-    const budgetRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId)
+    if (accountId === toAccountId) {
+        throw Error('can\'t make a transfer between the same accounts')
+    }
+
+    const budgetRef = getBudgetRef(userId, budgetId)
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget doesn't exist")
 
+    const accountRef = getAccountRef(userId, budgetId, accountId)
     const account = await getAccount(userId, budgetId, accountId)
-    assert(account, "account needs to exist for any txn")
+    assert(account, "account doesn't exist")
 
-    const toAccount = transferAccountId ? await getAccount(userId, budgetId, transferAccountId) : null
+    const toAccountRef = getAccountRef(userId, budgetId, toAccountId)
+    const toAccount = await getAccount(userId, budgetId, toAccountId)
+    assert(toAccount, "to account doesn't exist")
 
-    const txnRef = budgetRef.collection('transactions').doc()
-    
+    account.balance -= amount
+    toAccount.balance += amount
+
     const batch = db.batch()
-    const changed_entities = {} as Record<string, any>
-    if (transferAccountId) {
-        if (amount < 0) {
-            throw Error("amount should be positive")
-        }
+    batch.update(accountRef, {
+        balance: account.balance
+    })
 
-        if (accountId === transferAccountId) {
-            throw Error('can\'t make a transfer between the same accounts')
-        }
+    batch.update(toAccountRef, {
+        balance: toAccount.balance
+    })
 
-        const fromAccountRef = budgetRef.collection('accounts').doc(accountId)
-        const fromAccount = account
-
-        const toAccountRef = budgetRef.collection('accounts').doc(transferAccountId)
-        assert(toAccount , "transfer account must exist for transfer")
-
-        fromAccount.balance -= amount
-        toAccount.balance += amount
-
-        batch.update(fromAccountRef, {
-            ...fromAccount
-        })
-
-        batch.update(toAccountRef, {
-            ...toAccount
-        })
-
-        changed_entities['accounts'] = [
-            { id: fromAccount.id, balance: fromAccount.balance },
-            { id: toAccount.id, balance: toAccount.balance }
-        ]
-    } else if (categoryId) {
-        const month = toMonthId(new Date(date))
-
-        const accountRef = budgetRef.collection('accounts').doc(accountId)
-        const account = await getAccount(userId, budgetId, accountId)
-        assert(account, "account must exist for a transaction")
-
-        const categoryEntryRef = getMonthlyCategoryEntriesRef(userId, budgetId).doc(month).collection('category-entries').doc(categoryId)
-        const categoryEntry = await getCategoryEntryForMonth(userId, budgetId, categoryId, month)
-        assert(categoryEntry, "category entry must exxist for a trannsaction")
-
-        account.balance += amount
-        
-        categoryEntry.activity += amount
-        categoryEntry.available += amount
-
-        batch.set(accountRef, {
-            ...account
-        }, { merge: true })
-
-        batch.set(categoryEntryRef, {
-            ...categoryEntry
-        }, { merge: true })
-
-        if (categoryId === 'readytoassign') {
-            budget.totalIncome += amount
-            batch.update(budgetRef, {
-                totalIncome: budget.totalIncome
-            })
-        }
-
-        // practically cascade computing entries should be cheap. who gonna add a txn for two months ago
-        // 2month is long and cheap for computation. 
-        changed_entities['categoryEntries'] = await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, budget.maxMonth, batch)
-    }
-
-    const transaction: Transaction = {
-        id: txnRef.id,
-        accountId,
-        transferAccountId,
-        categoryId,
-        amount,
-        date: Date.now(),
+    const transactionRef = getTransactionRef(userId, budgetId)
+    const transaction: TransferTransaction = {
+        id: transactionRef.id,
+        type: 'transfer',
+        accountId: account.id,
+        toAccountId: toAccount.id,
+        amount: amount,
+        date: date,
         createdAt: FieldValue.serverTimestamp()
     }
-
-    batch.set(txnRef, transaction)
-
-    changed_entities['transaction'] = transaction
 
     await batch.commit()
 
     return {
         transaction,
         updatedAccounts: [
-            ...(account ? [{ id: account.id, balance: account.balance }] : []),
-            ...(toAccount ? [{ id: toAccount.id, balance: toAccount.balance }] : [])
+            { id: account.id, balance: account.balance },
+            { id: toAccount.id, balance: toAccount.balance }
         ]
     }
 }
+
+export const createCategoryTransaction = async (
+    userId: string,
+    budgetId: string,
+    accountId: string,
+    categoryId: string,
+    amount: number,
+    date: number,
+): Promise<CategoryTransactionResult> => {
+    const budgetRef = getBudgetRef(userId, budgetId)
+    const budget = await getBudget(userId, budgetId)
+    assert(budget, "budget doesn't exist")
+
+    const accountRef = getAccountRef(userId, budgetId, accountId)
+    const account = await getAccount(userId, budgetId, accountId)
+    assert(account, "account doesn't exist")
+
+    const month = toMonthId(new Date(date))
+    const categoryEntry = await getCategoryEntryForMonth(userId, budgetId, categoryId, month)
+    assert(categoryEntry, "category entry doesn't exist")
+
+    const batch = db.batch()
+    if (categoryId === 'readytoassign') { // income
+        if (amount < 0) {
+            throw new Error("amount should be +ve for readytoassign category/income")
+        }
+        budget.totalIncome += amount
+
+        batch.update(budgetRef, {
+            totalIncome: budget.totalIncome
+        })
+    }
+
+    account.balance += amount 
+
+    categoryEntry.activity += amount
+    categoryEntry.available += amount
+    
+    const transactionRef = getTransactionRef(userId, budgetId)
+    const transaction: CategoryTransaction = {
+        id: transactionRef.id,
+        type: 'category',
+        accountId: account.id,
+        categoryId,
+        amount,
+        date,
+        createdAt: FieldValue.serverTimestamp()
+    }
+
+    batch.update(accountRef, {
+        balance: account.balance
+    })
+    
+
+    // use the cascade function to update all future category entries for this category
+    const result = await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, budget.maxMonth, batch)
+
+    await batch.commit()
+
+    return {
+        transaction,
+        updatedAccounts: [{ id: account.id, balance: account.balance }],
+        : result
+    }
+} 
 
 export const getTransactions = async (userId: string, budgetId: string) => {
     const snapshot = await db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('transactions').get()
@@ -134,46 +150,4 @@ export const getTransactions = async (userId: string, budgetId: string) => {
 }
 
 export const deleteTransaction = async (userId: string, budgetId: string, transactionId: string) => {
-    const budgetRef = getBudgetRef(userId, budgetId)
-    const ref = budgetRef.collection('transactions').doc(transactionId)
-    const snapshot = await ref.get()
-
-    if (!snapshot.exists) {
-        throw Error('transaction not found')
-    }
-
-    const { accountId, transferAccountId, categoryId, amount, date } = snapshot.data() as Transaction
-
-    const batch = db.batch()
-
-    if (transferAccountId) {
-        const fromAccountRef = budgetRef.collection('accounts').doc(accountId)
-        const toAccountRef = budgetRef.collection('accounts').doc(transferAccountId)
-
-        batch.update(fromAccountRef, {
-            balance: FieldValue.increment(-amount),
-        })
-
-        batch.update(toAccountRef, {
-            balance: FieldValue.increment(amount),
-        })
-    } else if (categoryId) {
-        const accountRef = budgetRef.collection('accounts').doc(accountId)
-        // const categoryMonthRef = getCategoriesMonthRef(userId, budgetId, categoryId)
-        // const categoryMonthRef = getCategoriesMonthRef(userId, budgetId, toMonthId(new Date(date))).doc(categoryId)
-        const categoryEntryRef = db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('monthly-category-entries').doc(toMonthId(new Date(date))).collection('category-entries').doc(categoryId)
-
-        batch.set(accountRef, {
-            balance: FieldValue.increment(-amount),
-        }, { merge: true })
-
-        batch.set(categoryEntryRef, {
-            activity: FieldValue.increment(-amount),
-            available: FieldValue.increment(-amount),
-        }, { merge: true })
-
-    }
-
-    batch.delete(ref)
-    await batch.commit()
 }

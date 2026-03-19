@@ -1,23 +1,27 @@
-import { CategoryEntry } from "../types";
+import { CascadeComputeCategoryEntriesResult, CategoryEntry, MonthId } from "../types";
 
-export const magic = (categoryEntries: Record<string, CategoryEntry>) => {
+/**
+ * 
+ * sorts the category entries
+ * iteratively calculates available for each month based on the previous month
+ * @param categoryEntries 
+ * @returns 
+ */
+export const __cascadeComputeCategoryEntries__ = (categoryEntries: Record<MonthId, CategoryEntry>): CascadeComputeCategoryEntriesResult => {
     const months = Object.keys(categoryEntries).sort()
-    const entries = structuredClone(categoryEntries)
+    const updatedCategoryEntries = structuredClone(categoryEntries)
 
     let prevCategoryEntry: CategoryEntry | null = null
     for (const month of months) {
         if (!prevCategoryEntry) {
-            prevCategoryEntry = entries[month]
+            prevCategoryEntry = updatedCategoryEntries[month]
             continue
         }
         const prevAvailable = prevCategoryEntry.available
-        // if (prevAvailable <= 0) {
-        //     return {updatedEntries: entries, overspent: { amount: prevAvailable, month: prevCategoryEntry.month }}
-        // }
-        const currCategoryEntry = entries[month]
+        const currCategoryEntry = updatedCategoryEntries[month]
         currCategoryEntry.available = currCategoryEntry.assigned + currCategoryEntry.activity + prevAvailable
         prevCategoryEntry = currCategoryEntry
     }
 
-    return { updatedEntries: entries, overspent: null }
+    return { updatedCategoryEntries } 
 }

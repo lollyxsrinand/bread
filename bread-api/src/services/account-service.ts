@@ -2,6 +2,7 @@ import { Account } from "bread-core/src"
 import { db } from "../firebase/server"
 import { createTransaction } from "./transaction-service"
 import assert from "assert"
+import { getBudgetRef } from "./budget-service"
 
 /**
  * TODO: return changed entities everywhere 
@@ -29,8 +30,12 @@ export const createAccount = async (userId: string, budgetId: string, data: { na
     return snapshot.data() as Account
 }
 
-export const getAccounts = async (uid: string, budgetId: string) => {
-    const snapshot = await db.collection('users').doc(uid).collection('budgets').doc(budgetId).collection('accounts').get()
+export const getAccountRef = (userId: string, budgetId: string, accountId: string) => {
+    return getBudgetRef(userId, budgetId).collection('accounts').doc(accountId)
+}
+
+export const getAccounts = async (userId: string, budgetId: string) => {
+    const snapshot = await db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('accounts').get()
     const accounts: Account[] = []
 
     snapshot.forEach((doc) => {

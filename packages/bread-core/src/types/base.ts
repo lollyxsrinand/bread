@@ -48,19 +48,34 @@ export interface CategoryEntry {
   createdAt?:any 
 }
 
-export interface Transaction {
+interface BaseTransaction {
   id: string
   accountId: string
-  categoryId: string | null
-  transferAccountId: string | null
   amount: number
   date: number
   createdAt?: any
 }
 
+export interface CategoryTransaction extends BaseTransaction {
+  type: 'category'
+  categoryId: string
+}
+
+export interface TransferTransaction extends BaseTransaction {
+  type: 'transfer'
+  toAccountId: string
+}
+
+export type Transaction =  CategoryTransaction | TransferTransaction
+
+// brand the type 
+// export type MonthId = string & { __brand: "MonthId" }
+
+export type MonthId = string
+
 export interface MonthSummary {
-  income: number,
-  assigned: number,
-  available: number,
+  income: number
+  assigned: number
   overspent: number
+  available: number
 }

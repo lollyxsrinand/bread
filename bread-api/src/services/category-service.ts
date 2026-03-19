@@ -1,4 +1,4 @@
-import { Category, CategoryEntry, CategoryGroup, getNextMonthId, MonthSummary, magic, Budget } from "bread-core/src"
+import { Category, CategoryEntry, CategoryGroup, getNextMonthId, __cascadeComputeCategoryEntries__, MonthSummary, CascadeComputeCategoryEntriesResult, MonthId } from "bread-core/src"
 import { db } from "../firebase/server"
 import { getBudget } from "./budget-service"
 import assert from "assert"
@@ -143,7 +143,9 @@ export const getCategories = async (userId: string, budgetId: string) => {
     return categories
 }
 
-export const getMonthlyCategoryEntriesRef = (userId: string, budgetId: string) => db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('monthly-category-entries')
+export const getMonthlyCategoryEntriesRef = (userId: string, budgetId: string) => {
+    return db.collection('users').doc(userId).collection('budgets').doc(budgetId).collection('monthly-category-entries')
+}
 
 /**
  * gets all the category entries in `month` as a map
@@ -173,7 +175,7 @@ export const getCategoryEntryForMonth = async (userId: string, budgetId: string,
     const snapshot = await monthlyCategoryEntriesRef.doc(month)
         .collection('category-entries').doc(categoryId)
         .get()
-    
+
     if (!snapshot.exists || !snapshot.data()) {
         return null
     }
@@ -240,11 +242,9 @@ export const getMonthSummary = async (userId: string, budgetId: string, month: s
 }
 
 /**
- * takes in the changed category entry
- * fetches all the entries starting from given category entry month to max month
- * applies magic to all of those to change available
- * this function cascades only available.
- * @returns all the changed category entries mapped by their month after cascade computing
+ * - fetches all the category entries from `categoryEntry.month` to `maxMonth`
+ * - cascade updates the available to maxMonth
+ * @returns all the updated category entries mapped by month
  */
 export const cascadeComputeCategoryEntries = async (
     userId: string,
@@ -252,18 +252,17 @@ export const cascadeComputeCategoryEntries = async (
     categoryEntry: CategoryEntry,
     maxMonth: string,
     batch: FirebaseFirestore.WriteBatch
-) => {
+): Promise<CascadeComputeCategoryEntriesResult> => {
     const categoryId = categoryEntry.id
-    const month = categoryEntry.month
 
-    // list of months after current month entry
+    // generate months (m+1)...maxMonth
     const months = []
-    for (let m = getNextMonthId(month); m <= maxMonth; m = getNextMonthId(m)) {
-        months.push(m)
+    for (let month = getNextMonthId(categoryEntry.month); month <= maxMonth; month = getNextMonthId(month)) {
+        months.push(month)
     }
 
-    // better way of fetching ;-; ?
-    const categoryEntries: Record<string, CategoryEntry> = Object.fromEntries(
+    // fetch the category entries starting from month to maxMonth
+    const categoryEntries: Record<MonthId, CategoryEntry> = Object.fromEntries(
         await Promise.all(
             months.map(async (m) => {
                 const entry = await getCategoryEntryForMonth(
@@ -277,37 +276,23 @@ export const cascadeComputeCategoryEntries = async (
             })
         )
     )
-    categoryEntries[month] = categoryEntry
+    categoryEntries[categoryEntry.month] = categoryEntry // also include the current month entry which is being updated
 
-    const { updatedEntries, overspent } = magic(categoryEntries)
+    // update all the available values 
+    const result = __cascadeComputeCategoryEntries__(categoryEntries)
+    const updatedCategoryEntries = result.updatedCategoryEntries
 
-    for (const entryId in updatedEntries) {
-        const entry = updatedEntries[entryId]
-        const entryRef = db
-            .collection('users').doc(userId)
-            .collection('budgets').doc(budgetId)
-            .collection('monthly-category-entries').doc(entry.month)
+    // store the updated available back to db
+    for (const entryId in updatedCategoryEntries) {
+        const entry = updatedCategoryEntries[entryId]
+        
+        const entryRef = getMonthlyCategoryEntriesRef(userId, budgetId).doc(entry.month)
             .collection('category-entries').doc(entry.id)
 
-        batch.update(entryRef, { ...entry })
-        // batch.update(entryRef, { available: entry.available }) ????
+        batch.update(entryRef, { available: entry.available })
     }
 
-    // if (overspent) {
-    //     const monthSummaryRef = db
-    //         .collection('users').doc(userId)
-    //         .collection('budgets').doc(budgetId)
-    //         .collection('monthly-category-entries').doc(overspent.month)
-    //     const monthSummary = await getMonthSummary(userId, budgetId, overspent.month)
-    //     assert(monthSummary, 'month summary must exist')
-    //     monthSummary.overspent += Math.abs(overspent.amount)
-    //     budget.totalOverspent += Math.abs(overspent.amount)
-
-    //     batch.update(monthSummaryRef, { ...monthSummary })
-    //     batch.update(db.collection('users').doc(userId).collection('budgets').doc(budgetId), { ...budget })
-    // }
-
-    return Object.fromEntries(Object.values(updatedEntries).map(entry => [entry.month, entry]))
+    return result
 }
 
 export const rolloverToNextMonth = async (
