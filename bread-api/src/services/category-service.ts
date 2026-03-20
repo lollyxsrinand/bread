@@ -211,7 +211,7 @@ export const assignToCategory = async (
 
     const batch = db.batch()
 
-    await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, batch)
+    // await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, batch)
 
     const budgetRef = db
         .collection("users")
@@ -255,7 +255,7 @@ export const cascadeComputeCategoryEntries = async (
 ): Promise<CascadeComputeCategoryEntriesResult> => {
     const categoryId = categoryEntry.id
 
-    // generate months (m+1)...maxMonth
+    // generate months [(m+1)...maxMonth]
     const months = []
     for (let month = getNextMonthId(categoryEntry.month); month <= maxMonth; month = getNextMonthId(month)) {
         months.push(month)

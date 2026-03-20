@@ -125,7 +125,6 @@ export const createCategoryTransaction = async (
         balance: account.balance
     })
     
-
     // use the cascade function to update all future category entries for this category
     const result = await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, budget.maxMonth, batch)
 
