@@ -1,7 +1,7 @@
 'use client'
 
 import { useToggle } from "@/app/hooks/useToggle"
-import { createTransaction } from "@/lib/actions/transaction.actions"
+import { createTransaction, deleteTransaction } from "@/lib/actions/transaction.actions"
 import { useBudgetStore } from "@/store/budget-store"
 import { Account, Budget, Category, toMonthId, Transaction } from "bread-core/src"
 import { Plus, PlusCircle, Trash } from "lucide-react"
@@ -27,8 +27,9 @@ interface TransactionViewProps {
     transaction: Transaction
     accounts: Record<string, Account>
     categories: Record<string, Category>
+    budget: Budget
 }
-const TransactionView = ({ transaction, accounts, categories }: TransactionViewProps) => {
+const TransactionView = ({ transaction, accounts, categories, budget }: TransactionViewProps) => {
     const dateObj = new Date(transaction.date)
     const day = `${dateObj.getDate()}`.padStart(2, '0')
     const month = `${dateObj.getMonth()}`.padStart(2, '0')
@@ -41,6 +42,27 @@ const TransactionView = ({ transaction, accounts, categories }: TransactionViewP
     const categoryName = toAccountName === 'none' && type === 'category' ? categories[transaction.categoryId].name : 'readytoassign'
     const amount = transaction.amount
 
+    const handleDeleteTransaction = async () => {
+        try {
+            const res = await deleteTransaction(budget.id, transaction.id)
+            const state = useBudgetStore.getState()
+            const updatedAccounts = {
+                ...state.accounts
+            }
+            res.updatedAccounts.map(acc => updatedAccounts[acc.id] = {...updatedAccounts[acc.id], balance: acc.balance})
+
+            const updatedTransactions = { ...state.transactions }
+            delete updatedTransactions[transaction.id]
+
+            state.setPartial({
+                accounts: updatedAccounts,
+                transactions: updatedTransactions
+            })
+        } catch (error) {
+            console.log("horrrrrible")
+        }
+    }
+
     return (
         <div className="px-8 py-1 w-full h-12 border-t-2 border-neutral-800 flex justify-around items-center">
             <div className="p-2.5 w-36">{parsedDate}</div>
@@ -49,7 +71,7 @@ const TransactionView = ({ transaction, accounts, categories }: TransactionViewP
             <div className="p-2.5 w-36">{categoryName}</div>
             <div className="p-2.5 w-36 text-right">{toAccountName}</div>
             <div className="p-2.5 w-36 text-right">{amount}</div>
-            <button className="h-fit w-fit p-2.5 hover:bg-neutral-100 hover:text-black  rounded-full transition-colors">
+            <button onClick={handleDeleteTransaction} className="h-fit w-fit p-2.5 hover:bg-neutral-100 hover:text-black  rounded-full transition-colors">
                 <Trash size={18} />
             </button>
         </div>
@@ -229,6 +251,7 @@ export const TransactionsView = () => {
                             transaction={transaction}
                             accounts={accounts}
                             categories={categories}
+                            budget={budget}
                         />)
                     }
                 </div>

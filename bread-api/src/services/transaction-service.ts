@@ -1,5 +1,5 @@
 import assert from "assert"
-import { CategoryTransaction, CategoryTransactionResult, IncomeTransactionResult, toMonthId, Transaction, TransactionResult, TransferTransaction, TransferTransactionResult } from "bread-core/src"
+import { CategoryTransaction, CategoryTransactionResult, DeleteCategoryTransactionResult, DeleteIncomeTransactionResult, DeleteTransactionResult, DeleteTransferTransactionResult, IncomeTransactionResult, toMonthId, Transaction, TransactionResult, TransferTransaction, TransferTransactionResult } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
 import { getAccount, getAccountRef } from "./account-service"
 import { getBudget, getBudgetRef } from "./budget-service"
@@ -225,7 +225,11 @@ export const getTransaction = async (userId: string, budgetId: string, transacti
     return snapshot.data() as Transaction
 }
 
-export const deleteCategoryTransaction = async (userId: string, budgetId: string, transactionId: string) => {
+export const deleteCategoryTransaction = async (
+    userId: string, 
+    budgetId: string, 
+    transactionId: string
+): Promise<DeleteCategoryTransactionResult> => {
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget doesn't exist")
 
@@ -267,12 +271,17 @@ export const deleteCategoryTransaction = async (userId: string, budgetId: string
     await batch.commit()
 
     return {
+        type: 'category',
         updatedAccounts: [{ id: account.id, balance: account.balance }],
         ...result
     }
 }
 
-export const deleteTransferTransaction = async (userId: string, budgetId: string, transactionId: string) => {
+export const deleteTransferTransaction = async (
+    userId: string, 
+    budgetId: string, 
+    transactionId: string
+): Promise<DeleteTransferTransactionResult> => {
     const transactionRef = getTransactionRef(userId, budgetId, transactionId)
     const transaction = await getTransaction(userId, budgetId, transactionId)
     assert(transaction, 'transaction does not exist')
@@ -303,6 +312,7 @@ export const deleteTransferTransaction = async (userId: string, budgetId: string
     await batch.commit()
 
     return {
+        type: 'transfer',
         updatedAccounts: [
             { id: fromAccount.id, balance: fromAccount.balance },
             { id: toAccount.id, balance: toAccount.balance }
@@ -310,7 +320,11 @@ export const deleteTransferTransaction = async (userId: string, budgetId: string
     }
 }
 
-export const deleteIncomeTransaction = async (userId: string, budgetId: string, transactionId: string) => {
+export const deleteIncomeTransaction = async (
+    userId: string, 
+    budgetId: string, 
+    transactionId: string
+): Promise<DeleteIncomeTransactionResult> => {
     const budgetRef = getBudgetRef(userId, budgetId)
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget doesn't exist")
@@ -360,6 +374,7 @@ export const deleteIncomeTransaction = async (userId: string, budgetId: string, 
 
 
     return {
+        type: 'income',
         updatedBudget: {
             totalIncome: budget.totalIncome
         },
@@ -368,7 +383,11 @@ export const deleteIncomeTransaction = async (userId: string, budgetId: string, 
     }
 }
 
-export const deleteTransaction = async (userId: string, budgetId: string, transactionId: string) => {
+export const deleteTransaction = async (
+    userId: string, 
+    budgetId: string,
+    transactionId: string
+): Promise<DeleteTransactionResult> => {
     const transaction = await getTransaction(userId, budgetId, transactionId)
     assert(transaction, "transaction doesn't exist")
 

@@ -38,3 +38,32 @@ export type TransactionResult = CategoryTransactionResult | TransferTransactionR
 export interface CreateAccountResult extends IncomeTransactionResult {
    account: Account 
 } 
+
+export interface DeleteIncomeTransactionResult extends CascadeComputeCategoryEntriesResult {
+    type: 'income'
+    updatedBudget: {
+        totalIncome: number;
+    };
+    updatedAccounts: {
+        id: string
+        balance: number;
+    }[];
+}
+
+export interface DeleteCategoryTransactionResult extends CascadeComputeCategoryEntriesResult {
+    type: 'category'
+    updatedAccounts: {
+        id: string
+        balance: number;
+    }[];
+}
+
+export interface DeleteTransferTransactionResult {
+    type: 'transfer'
+    updatedAccounts: {
+        id: string
+        balance: number;
+    }[];
+}
+
+export type DeleteTransactionResult = DeleteCategoryTransactionResult | DeleteIncomeTransactionResult | DeleteTransferTransactionResult
