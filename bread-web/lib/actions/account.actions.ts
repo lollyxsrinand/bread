@@ -1,6 +1,6 @@
 'use server'
 import { getToken } from "@/utils/get-cookie"
-import { Account } from "bread-core/src"
+import { Account, CreateAccountResult } from "bread-core/src"
 
 export const getAccounts = async (budgetId: string) => {
     const token = await getToken()
@@ -32,5 +32,5 @@ export const createAccount = async (budgetId: string, data: {name: string, type:
         throw new Error('failed to create account')
     }
 
-    return await res.json() as Account
+    return await res.json() as CreateAccountResult
 }

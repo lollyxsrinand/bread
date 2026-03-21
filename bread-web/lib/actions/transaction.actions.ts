@@ -1,11 +1,11 @@
 'use server'
 
 import { getToken } from "@/utils/get-cookie"
-import { Transaction } from "bread-core/src"
+import { Transaction, TransactionResult } from "bread-core/src"
 
 export const getTransactions = async (budgetId: string) => {
     const token = await getToken()
-
+    
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/transactions`, {
         headers: {
             'Authorization': `Bearer ${token}`
@@ -15,7 +15,7 @@ export const getTransactions = async (budgetId: string) => {
     return await res.json() as Record<string, Transaction>
 }
 
-export const createTransaction = async (budgetId: string, transaction: Partial<Transaction>) => {
+export const createTransaction = async (budgetId: string, data: any) => {
     const token = await getToken()
 
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/transactions`, {
@@ -24,10 +24,10 @@ export const createTransaction = async (budgetId: string, transaction: Partial<T
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(transaction)
+        body: JSON.stringify(data)
     })
     
-    return await res.json()
+    return await res.json() as TransactionResult
 }
 
 export const deleteTransaction = async (budgetId: string, transactionId: string) => {

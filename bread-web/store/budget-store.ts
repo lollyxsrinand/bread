@@ -53,6 +53,7 @@ export const useBudgetStore = create<BudgetState>((set) => ({
       }
 
       if (data.monthlyCategoryEntries) {
+        console.log('we are here atleast')
         const merged = { ...state.monthlyCategoryEntries }
 
         for (const month in data.monthlyCategoryEntries) {
@@ -60,6 +61,7 @@ export const useBudgetStore = create<BudgetState>((set) => ({
             state.monthlyCategoryEntries[month] !==
             data.monthlyCategoryEntries[month]
           ) {
+            console.log("but we're just not here yet i suppose")
             merged[month] = data.monthlyCategoryEntries[month]
             hasChanged = true
           }

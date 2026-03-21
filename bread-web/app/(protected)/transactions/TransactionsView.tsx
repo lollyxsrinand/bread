@@ -1,246 +1,240 @@
 'use client'
 
+import { useToggle } from "@/app/hooks/useToggle"
+import { createTransaction } from "@/lib/actions/transaction.actions"
 import { useBudgetStore } from "@/store/budget-store"
-import { PlusCircle, Trash } from "lucide-react"
-import { Transaction, Category, Account, CategoryView } from "bread-core/src"
+import { Account, Budget, Category, toMonthId, Transaction } from "bread-core/src"
+import { Plus, PlusCircle, Trash } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
-import { createTransaction, deleteTransaction } from "@/lib/actions/transaction.actions"
 
-const row_spacing = 'px-3 gap-2.5'
-const cell_padding = 'px-3 py-2.5'
-
-const TableHeader = () => {
+const HeaderColumns = () => {
     return (
-        <div className={`${row_spacing} w-full flex items-center`}>
-            <div className={`${cell_padding} w-full`}>
-                <span>date</span>
-            </div>
-            <div className={`${cell_padding} w-full`}>
-                <span>account</span>
-            </div>
-            <div className={`${cell_padding} w-full`}>
-                <span>category</span>
-            </div>
-            <div className={`${cell_padding} w-full`}>
-                <span>transfer to</span>
-            </div>
-            <div className={`${cell_padding} w-full text-right`}>
-                <span>outflow</span>
-            </div>
-            <div className={`${cell_padding} w-full text-right`}>
-                <span>inflow</span>
-            </div>
-            <button className={`${cell_padding} p-1 opacity-0 pointer-events-none`}>
+        <div className="px-8 py-1 w-full h-12 border-t-2 border-neutral-800 flex justify-around items-center">
+            <div className="w-36 p-2.5 font-bold">date</div>
+            <div className="w-36 p-2.5 font-bold">type</div>
+            <div className="w-36 p-2.5 font-bold">account name</div>
+            <div className="w-36 p-2.5 font-bold">category</div>
+            <div className="w-36 p-2.5 font-bold text-right">to account</div>
+            <div className="w-36 p-2.5 font-bold text-right">amount</div>
+            <button className="h-fit w-fit p-2.5 hover:bg-neutral-100 hover:text-black  rounded-full transition-colors bg-neutral-900 border border-neutral-800">
+                <Plus size={18} />
+            </button>
+        </div>
+    )
+}
+interface TransactionViewProps {
+    transaction: Transaction
+    accounts: Record<string, Account>
+    categories: Record<string, Category>
+}
+const TransactionView = ({ transaction, accounts, categories }: TransactionViewProps) => {
+    const dateObj = new Date(transaction.date)
+    const day = `${dateObj.getDate()}`.padStart(2, '0')
+    const month = `${dateObj.getMonth()}`.padStart(2, '0')
+    const year = dateObj.getFullYear()
+    const parsedDate = `${day}/${month}/${year}`
+
+    const type = transaction.type
+    const accountName = accounts[transaction.accountId].name
+    const toAccountName = type === 'transfer' ? accounts[transaction.toAccountId].name : 'none'
+    const categoryName = toAccountName === 'none' && type === 'category' ? categories[transaction.categoryId].name : 'readytoassign'
+    const amount = transaction.amount
+
+    return (
+        <div className="px-8 py-1 w-full h-12 border-t-2 border-neutral-800 flex justify-around items-center">
+            <div className="p-2.5 w-36">{parsedDate}</div>
+            <div className="p-2.5 w-36">{type}</div>
+            <div className="p-2.5 w-36">{accountName}</div>
+            <div className="p-2.5 w-36">{categoryName}</div>
+            <div className="p-2.5 w-36 text-right">{toAccountName}</div>
+            <div className="p-2.5 w-36 text-right">{amount}</div>
+            <button className="h-fit w-fit p-2.5 hover:bg-neutral-100 hover:text-black  rounded-full transition-colors">
                 <Trash size={18} />
             </button>
         </div>
     )
 }
 
-const DraftTransactionRow = ({ transaction, setDraftTransaction, onSave, accountMap, categoryMap }: { transaction: Partial<Transaction>, setDraftTransaction: React.Dispatch<React.SetStateAction<Partial<Transaction> | null>>, onSave: () => void, accountMap: Record<string, Account>, categoryMap: Record<string, CategoryView> }) => {
+interface DraftTransactionProps {
+    accounts: Record<string, Account>
+    categories: Record<string, Category>
+    budget: Budget
+    setShowDraftTransaction: React.Dispatch<React.SetStateAction<boolean>>
+}
+const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransaction }: DraftTransactionProps) => {
+
+    const [date, setDate] = useState("")
+    const [type, setType] = useState("")
+    const [accountId, setAccountId] = useState("")
+    const [categoryId, setCategoryId] = useState("")
+    const [toAccountId, setToAccountId] = useState("")
+    const [amount, setAmount] = useState(0)
+
+    const handleCreateTransaction = async () => {
+        try {
+            const res = await createTransaction(budget.id, {
+                date: new Date(date).getTime(),
+                type,
+                accountId,
+                categoryId,
+                toAccountId,
+                amount
+            })
+            const state = useBudgetStore.getState()
+            const updatedAccounts = {
+                ...state.accounts
+            }
+
+            const updatedTransactions = {
+                ...state.transactions,
+                [res.transaction.id]: res.transaction
+            }
+            res.updatedAccounts.map(acc => updatedAccounts[acc.id] = {...updatedAccounts[acc.id], balance: acc.balance})
+
+            state.setPartial({
+                accounts: updatedAccounts,
+                transactions: updatedTransactions
+            })
+
+        } catch (error) {
+            toast.error('failed to create txn bro better lick next time')
+        }
+    }
+
+
     return (
-        <div className={`${row_spacing} w-full flex items-center bg-neutral-950`}>
-            <div className={`${cell_padding} w-full`}>
-                <input name="date" type="date"
-                    value={transaction.date ? new Date(transaction.date).toISOString().split('T')[0] : ''}
-                    onChange={(e) => setDraftTransaction(prev => prev ? ({ ...prev, date: new Date(e.target.value).getTime() }) : prev)}
-                    className="w-full" />
-            </div>
-            <div className={`${cell_padding} w-full`}>
-                <select
-                    value={transaction.accountId ?? ''}
-                    onChange={(e) => setDraftTransaction(prev => prev ? { ...prev, accountId: e.target.value } : prev)}
-                >
-                    <option value="">select account</option>
-                    {Object.values(accountMap).map(a => (
-                        <option key={a.id} value={a.id}>{a.name}</option>
-                    ))}
-                </select>
-            </div>
-            <div className={`${cell_padding} w-full`}>
-                <select
-                    value={transaction.categoryId ?? ''}
-                    onChange={(e) => setDraftTransaction(prev => prev ? { ...prev, categoryId: e.target.value } : prev)} >
-                    <option value="">select category</option>
-                    {Object.values(categoryMap).map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                </select>
-            </div>
-            <div className={`${cell_padding} w-full`}>
-                <select
-                    value={transaction.transferAccountId ?? ''}
-                    onChange={(e) => setDraftTransaction(prev => prev ? { ...prev, transferAccountId: e.target.value || null } : prev)} >
-                    <option value="">no transfer</option>
-                    {Object.values(accountMap).map(a => (
-                        <option key={a.id} value={a.id}>{a.name}</option>
-                    ))}
-                </select>
-            </div>
-            <div className={`${cell_padding} w-full text-right`}>
-                <input
-                    type="number"
-                    placeholder="0.00"
-                    value={transaction.amount && transaction.amount < 0 ? -transaction.amount : ''}
-                    onChange={(e) => {
-                        const value = Number(e.target.value)
-                        setDraftTransaction(prev =>
-                            prev ? { ...prev, amount: value ? -value : 0 } : prev
-                        )
-                    }}
-                />
-            </div>
-            <div className={`${cell_padding} w-full text-right`}>
-                <input
-                    type="number"
-                    placeholder="0.00"
-                    value={transaction.amount && transaction.amount > 0 ? transaction.amount : ''}
-                    onChange={(e) => {
-                        const value = Number(e.target.value)
-                        setDraftTransaction(prev =>
-                            prev ? { ...prev, amount: value || 0 } : prev
-                        )
-                    }}
-                />
-            </div>
-            <button onClick={onSave} className={`${cell_padding} text-right p-1`}>
-                <PlusCircle size={18} />
+        <div className="px-8 py-1 w-full h-12 border-t-2 border-neutral-800 flex justify-around items-center">
+            {/* take date input */}
+            <input
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                type="date"
+                className="w-36 p-2.5 font-bold"
+            />
+
+            {/* take txn type input */}
+            <select
+                name="type"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="w-36 p-2.5 font-bold"
+            >
+                <option value="">type</option>
+                <option value="category">category</option>
+                <option value="transfer">transfer</option>
+                <option value="income">income</option>
+            </select>
+
+            {/* select account */}
+            <select
+                name="account"
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                className="w-36 p-2.5 font-bold"
+            >
+                <option value="">account</option>
+                {Object.values(accounts).map(account => (
+                    <option key={account.id} value={account.id}>{account.name}</option>
+                ))}
+            </select>
+
+            {/* select category */}
+            <select
+                name="category"
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                className="w-36 p-2.5 font-bold"
+            >
+                <option value="">category</option>
+                {Object.values(categories).map(category => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+            </select>
+
+            {/* select to account */}
+            <select
+                name="toAccount"
+                value={toAccountId}
+                onChange={(e) => setToAccountId(e.target.value)}
+                className="w-36 p-2.5 font-bold text-right"
+            >
+                <option value="">to account</option>
+                {Object.values(accounts).map(account => (
+                    <option key={account.id} value={account.id}>{account.name}</option>
+                ))}
+            </select>
+
+            <input 
+            type="number"
+            placeholder="amount"
+            onChange={(e) => setAmount(parseInt(e.target.value))}
+            className="w-36 p-2.5 font-bold text-right"></input>
+
+            <button 
+            onClick={handleCreateTransaction}
+            className="h-fit w-fit p-2.5 hover:bg-neutral-100 hover:text-black  rounded-full transition-colors bg-neutral-900 border border-neutral-800">
+                <Plus size={18} />
             </button>
         </div>
     )
 }
 
-const TransactionRow = ({ transaction, accountMap, categoryMap, onDelete }: { transaction: Transaction, accountMap: Record<string, Account>, categoryMap: Record<string, CategoryView>, onDelete: (transactionId: string) => void }) => {
-    const transactionDate = new Date(transaction.date).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })
-    const accountName = accountMap[transaction.accountId]?.name ?? 'unknown account'
-    const categoryName = transaction.categoryId
-        ? categoryMap[transaction.categoryId]?.name ?? 'unknown category'
-        : 'no category'
-    const transferAccountName = transaction.transferAccountId
-        ? accountMap[transaction.transferAccountId]?.name ?? 'unknown account'
-        : 'no transfer'
-    const inflow = transaction.amount > 0 ? transaction.amount : 0
-    const outflow = transaction.amount < 0 ? -transaction.amount : 0
-
-    return (
-        <div className={`${row_spacing} w-full flex items-center`}>
-            <div className={`${cell_padding} w-full`}>
-                <span>{transactionDate}</span>
-            </div>
-            <div className={`${cell_padding} w-full`}>
-                <span>{accountName}</span>
-            </div>
-            <div className={`${cell_padding} w-full`}>
-                <span>{categoryName}</span>
-            </div>
-            <div className={`${cell_padding} w-full`}>
-                <span>{transferAccountName}</span>
-            </div>
-            <div className={`${cell_padding} w-full text-right`}>
-                <span>{outflow}</span>
-            </div>
-            <div className={`${cell_padding} w-full text-right`}>
-                <span>{inflow}</span>
-            </div>
-            <button onClick={() => onDelete(transaction.id)} className={`${cell_padding} text-right p-1`}>
-                <Trash size={18} />
-            </button>
-        </div>
-    )
-}
-
-export const TransactionsView = ({ transactions }: { transactions: Transaction[] }) => {
-    const accounts = useBudgetStore(s => s.accounts ? s.accounts : null)
-    const 
-    const budget = useBudgetStore(s => s.budget ? s.budget : null)
-    const categoryGroups = useBudgetStore(s => s.categoryGroups ? Object.values(s.categoryGroups) : null)
-    const [draftTransaction, setDraftTransaction] = useState<Partial<Transaction> | null>(null)
-    const router = useRouter()
-
-    if (!accounts || !categoryGroups || !budget) return null
-
-    const handleSave = async () => {
-        if (!draftTransaction) return
-
-        if (!draftTransaction.accountId) {
-            toast.error('ow man: please select an account')
-            return
-        }
-
-        if (!draftTransaction.amount) {
-            toast.error('ow man: amount cannot be zero')
-            return
-        }
-
-        if (!draftTransaction.date) {
-            toast.error('ow man:please select a date')
-            return
-        }
-
-        if (!draftTransaction.categoryId && !draftTransaction.transferAccountId) {
-            toast.error('ow man: please select a category or a transfer account')
-            return
-        }
-
-        try {
-            const { id, updatedAccounts } = await createTransaction(budget.id, draftTransaction)
-            console.log(id, updatedAccounts);
-            setDraftTransaction(null)
-            router.refresh()
-            toast.success(':) good luck: transaction saved')
-
-        } catch (error) {
-            console.error('failed to save transaction:', error)
-            toast.error(':( bad luck: transaction couldn\'t be saved')
-        }
+export const TransactionsView = () => {
+    const transactions = useBudgetStore(s => s.transactions)
+    const budget = useBudgetStore(s => s.budget)
+    const accounts = useBudgetStore(s => s.accounts)
+    const categories = useBudgetStore(s => s.categories)
+    if (!transactions || !accounts || !categories || !budget) {
+        return <h1>we are loading...</h1>
     }
 
-    const handleDelete = async (transactionId: string) => {
+    const transactionsList = Object.values(transactions)
 
-        try {
-            const yes = await deleteTransaction('V1P1gGXgk5EixClmmI1d', transactionId)
-            console.log(yes);
-            router.refresh()
-            toast.success('transaction deleted')
-        } catch (error) {
-            console.error('failed to delete transaction:', error)
-            toast.error(':( bad luck: transaction couldn\'t be deleted')
-        }
-    }
+    // const { value: showDraftTransaction, toggle, setValue:  } = useToggle(false)
+    const [showDraftTransaction, setShowDraftTransaction] = useState<boolean>(false)
+
 
     return (
-        <div className="w-full flex flex-col">
-            <div className="w-full h-24 flex items-center justify-center">
-                <h1 className="text-2xl font-extralight">transactions</h1>
+        <div className="h-full w-full flex flex-col gap-2.5">
+            <div className="h-28 w-full flex justify-center items-center">
+                <span className="text-2xl">
+                    transactions
+                </span>
             </div>
 
-            <div className="px-3 w-full">
-                <button
-                    onClick={() => setDraftTransaction({
-                        date: Date.now(),
-                        accountId: '',
-                        categoryId: '',
-                        transferAccountId: null,
-                        amount: 0,
-                    })}
-                    className="flex px-3 py-2 gap-2.5 items-center hover:bg-neutral-100 hover:text-neutral-950">
+            <button onClick={() => setShowDraftTransaction(!showDraftTransaction)} className="w-fit p-2.5 rounded-2xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-100 hover:text-black hover:border-neutral-100 transition-colors">
+                <div className="flex items-center justify-center gap-2.5">
                     <PlusCircle size={18} />
-                    <span>add transaction</span>
-                </button>
-            </div>
+                    <span>new transaction</span>
+                </div>
+            </button>
 
-            <TableHeader />
-            {draftTransaction && <DraftTransactionRow transaction={draftTransaction} setDraftTransaction={setDraftTransaction} onSave={handleSave} accountMap={accountMap} categoryMap={categoryMap} /> }
-            {transactions.map(transaction => (
-                <TransactionRow key={transaction.id}
-                    transaction={transaction}
-                    accountMap={accountMap}
-                    categoryMap={categoryMap}
-                    onDelete={handleDelete}
-                />
-            ))}
+            <div>
+                {/* display column names */}
+                <HeaderColumns />
+
+                {/* transactions list */}
+                <div className="w-full flex flex-col">
+                    {showDraftTransaction && 
+                    <DraftTransaction 
+                    accounts={accounts} 
+                    categories={categories}
+                    budget={budget} 
+                    setShowDraftTransaction={setShowDraftTransaction}
+                    />}
+                    {transactionsList.map(transaction =>
+                        <TransactionView
+                            key={transaction.id}
+                            transaction={transaction}
+                            accounts={accounts}
+                            categories={categories}
+                        />)
+                    }
+                </div>
+            </div>
         </div>
     )
 }
+
+export default TransactionsView

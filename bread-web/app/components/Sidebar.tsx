@@ -175,20 +175,39 @@ const Sidebar = () => {
         balance: number
     }) => {
         try {
-            const account = await createAccount(budget.id, {
+            const res = await createAccount(budget.id, {
                 name,
                 type,
                 balance
             })
+            const state = useBudgetStore.getState()
+            const updatedAccounts = {
+                ...state.accounts,
+                [res.account.id]: res.account
+            }
+            res.updatedAccounts.map(acc => updatedAccounts[acc.id].balance = acc.balance)
+            const updatedTransactions = {
+                ...state.transactions,
+                [res.transaction.id]: res.transaction
+            }
 
-            const currentAccounts = useBudgetStore.getState().accounts
-            console.log(account)
-
-            useBudgetStore.getState().setPartial({
-                accounts: {
-                    ...currentAccounts,
-                    [account.id]: account
-                }
+            const updatedBudget = {
+                ...budget,
+                ...res.updatedBudget
+            }
+            // const updatedCategoryEntries = {
+            //     ...state.monthlyCategoryEntries,
+            // }
+            // for (const month in res.updatedCategoryEntries) {
+            //     const entry = res.updatedCategoryEntries[month]
+            //     updatedCategoryEntries[month][entry.id] = entry
+            // }
+            
+            state.setPartial({
+                accounts: updatedAccounts,
+                transactions: updatedTransactions,
+                budget: updatedBudget,
+                // monthlyCategoryEntries: updatedCategoryEntries
             })
         } catch (error) {
             console.log(error)
