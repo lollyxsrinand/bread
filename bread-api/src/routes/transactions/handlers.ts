@@ -14,11 +14,16 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
     if (!budgetId) {
         return reply.status(400).send({ error: "budget id is required" })
     }
-    const { accountId, transferAccountId = null, categoryId = null, amount, date } = request.body as { accountId: string, transferAccountId: string, categoryId: string, amount: number, date: string }
-    console.log(accountId, transferAccountId, categoryId, amount, date)
+
+    const { type, accountId, toAccountId=null, categoryId=null, amount, date } = request.body as { type: string, accountId: string, toAccountId?: string, categoryId?: string, amount: number, date: number }
+
+    // does not prevent client from sending extra fields, but that's prob fine since we just ignore them
+    if (type === undefined || accountId === undefined || amount === undefined || date === undefined) {
+        return reply.status(400).send({ error: "type, accountId, amount and date are all required" })
+    }
     try {
-        const { transaction, updatedAccounts } = await createTransaction(userId, budgetId, accountId, transferAccountId, categoryId, amount, new Date(date))
-        return reply.status(201).send({ transaction, updatedAccounts })
+        const transactionResult = await createTransaction(userId, budgetId, type, accountId, toAccountId, categoryId, amount, date)
+        return reply.status(201).send(transactionResult)
     } catch (error) {
         console.error(error)
         return reply.status(500).send({ error: "failed to create transaction" })
@@ -66,8 +71,8 @@ export const deleteTransactionHandler = async (request: FastifyRequest, reply: F
     }
 
     try {
-        await deleteTransaction(userId, budgetId, transactionId)
-        return reply.status(200).send({ message: "transaction deleted successfully" })
+        const resp = await deleteTransaction(userId, budgetId, transactionId)
+        return reply.status(200).send(resp)
     } catch (error) {
         console.error(error)
         return reply.status(500).send({ error: "failed to delete transaction" })

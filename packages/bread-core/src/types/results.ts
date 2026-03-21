@@ -1,6 +1,6 @@
-import { Account, CategoryEntry, CategoryTransaction, MonthId, Transaction, TransferTransaction, } from "./base"
+import { Account, CategoryEntry, CategoryTransaction, IncomeTransaction, MonthId, Transaction, TransferTransaction, } from "./base"
 
-// in the future we could add overspent and other shit we might need
+// in the future we could add overspent and other shit we might need so
 export interface CascadeComputeCategoryEntriesResult  {
     updatedCategoryEntries: Record<MonthId, CategoryEntry>
 }
@@ -13,7 +13,12 @@ export interface CategoryTransactionResult extends CascadeComputeCategoryEntries
     }[]
 }
 
-export interface IncomeTransactionResult extends CategoryTransactionResult {
+export interface IncomeTransactionResult extends CascadeComputeCategoryEntriesResult {
+    transaction: IncomeTransaction
+    updatedAccounts: {
+        id: string
+        balance: number
+    }[]
     updatedBudget: {
         totalIncome: number
     } 
@@ -27,6 +32,7 @@ export interface TransferTransactionResult  {
     }[]
 }
 
+// why do i need this
 export type TransactionResult = CategoryTransactionResult | TransferTransactionResult | IncomeTransactionResult
 
 export interface CreateAccountResult extends IncomeTransactionResult {

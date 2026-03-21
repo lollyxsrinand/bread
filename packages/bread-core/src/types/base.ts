@@ -12,6 +12,8 @@ export interface Budget {
   currency: string
   minMonth: string
   maxMonth: string
+  
+  // could i move this to under monthly-category-entries/?
   totalIncome: number
   totalAssigned: number
   totalOverspent: number
@@ -66,13 +68,18 @@ export interface TransferTransaction extends BaseTransaction {
   toAccountId: string
 }
 
-export type Transaction =  CategoryTransaction | TransferTransaction
+export interface IncomeTransaction extends BaseTransaction {
+  type: 'income'
+}
+
+export type Transaction = CategoryTransaction | TransferTransaction | IncomeTransaction
 
 // brand the type 
 // export type MonthId = string & { __brand: "MonthId" }
 
 export type MonthId = string
 
+// doubtful about this
 export interface MonthSummary {
   income: number
   assigned: number
