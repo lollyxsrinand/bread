@@ -95,3 +95,21 @@ export const rolloverToNextMonth = async (budgetId: string) => {
 
     return await res.json()
 }
+
+export const createCategory = async (budgetId: string, name: string, groupId: string) => {
+    const token = await getToken()
+    const res = await fetch(`http://localhost:3001/budgets/${budgetId}/categories`, {
+        method: 'POST',
+        headers: {
+            'authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, groupId })
+    })
+
+    if (!res.ok) {
+        throw new Error('failed to create category')
+    }
+
+    return await res.json() as Category
+}

@@ -3,7 +3,7 @@ import { CategoryTransaction, CategoryTransactionResult, DeleteCategoryTransacti
 import { db, FieldValue } from "../firebase/server"
 import { getAccount, getAccountRef } from "./account-service"
 import { getBudget, getBudgetRef } from "./budget-service"
-import { cascadeComputeCategoryEntries, getCategoryEntryForMonth, getMonthlyCategoryEntriesRef } from "./category-service"
+import { cascadeComputeCategoryEntries, fixMyEntriesPls, getCategoryEntryForMonth, getMonthlyCategoryEntriesRef } from "./category-service"
 
 export const getTransactionRef = (userId: string, budgetId: string, transactionId: string | null = null) => {
     return transactionId === null
@@ -157,6 +157,8 @@ export const createCategoryTransaction = async (
     assert(account, "account doesn't exist")
 
     const month = toMonthId(new Date(date))
+    await fixMyEntriesPls(userId, budgetId, categoryId, month, budget.maxMonth)
+
     const categoryEntryRef = getMonthlyCategoryEntriesRef(userId, budgetId).doc(month)
         .collection('category-entries').doc(categoryId)
     const categoryEntry = await getCategoryEntryForMonth(userId, budgetId, categoryId, month)

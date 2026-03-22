@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify"
 import { getUserId } from "../../utils/auth"
-import { assignToCategory, getCategories, getAllCategoryEntriesForMonth, getCategoryGroups, rolloverToNextMonth, getMonthSummary } from "../../services/category-service"
+import { assignToCategory, getCategories, getAllCategoryEntriesForMonth, getCategoryGroups, rolloverToNextMonth, getMonthSummary, createCategory } from "../../services/category-service"
 import { request } from "http"
 // import { getMonthlyBudgetView } from "../../services/budget-service"
 
@@ -102,6 +102,29 @@ export const getMonthSummaryHandler = async (request: FastifyRequest, reply: Fas
     try {
         const monthSummary = await getMonthSummary(userId, budgetId, month)
         return reply.status(200).send(monthSummary)
+    } catch (error) {
+        console.error(error)
+        return reply.status(500).send({ error: `internal error: ${error}`})
+    }
+}
+
+export const createCategoryHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = await getUserId(request)
+    if (!userId) {
+        return reply.status(401).send({ error: "not authenticated" })
+    }
+
+    const { budgetId } = request.params as { budgetId: string }
+
+    const { name, groupId } = request.body as { name: string, groupId: string }
+
+    if (!name || !groupId) {
+        return reply.status(400).send({ error: "name and groupId are required" })
+    }
+
+    try {
+        const res = await createCategory(userId, budgetId, groupId, name)
+        return reply.status(200).send(res)
     } catch (error) {
         console.error(error)
         return reply.status(500).send({ error: `internal error: ${error}`})

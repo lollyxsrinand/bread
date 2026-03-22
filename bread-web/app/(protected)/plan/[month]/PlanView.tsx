@@ -1,10 +1,10 @@
 'use client'
-import { assignToCategory, rolloverToNextMonth } from "@/lib/actions/category.actions"
+import { assignToCategory, createCategory, rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
 import { Budget, BudgetView, CategoryGroupView, CategoryView, generateBudgetView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
-import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, PlusCircle } from "lucide-react"
+import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, Plus, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { SetStateAction, useEffect, useState } from "react"
 import { toast } from "react-toastify"
 import { useBudgetView } from "@/app/hooks/useBudgetView"
 
@@ -80,7 +80,53 @@ const Header = () => {
     )
 }
 
+const DraftCategory = ({ setShowDraftCategory, categoryGroupId, budget }: { setShowDraftCategory: React.Dispatch<SetStateAction<boolean>>, categoryGroupId: string, budget: Budget }) => {
+    const [name, setName] = useState('')
+    const handleCreateCategory = async () => {
+        try {
+            const res = await createCategory(budget.id, name, categoryGroupId)
+            const state = useBudgetStore.getState()
+            const updatedCategories = {
+                ...state.categories,
+                res
+            }
+
+            state.setPartial({
+                categories: updatedCategories,
+            })
+
+            console.log(res);
+        } catch (error) {
+            console.log(error)
+            toast.error('Failed to create category')
+        }
+    }
+    return (
+        <div className="w-full px-3 gap-2.5 flex">
+            <div className="px-3 py-2 w-full flex items-center gap-1">
+                <button className="p-1 opacity-0 pointer-events-none cursor-none">
+                    <ChevronDown size={18} />
+                </button>
+                <input className="bg-neutral-900 w-full border border-neutral-800 rounded-lg p-1 focus:outline-none focus:ring-2 focus:ring-neutral-600"
+                    type="text"
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="category name"
+                    value={name}
+                />
+            </div>
+            <button className="px-3 py-2 w-full flex items-center gap-1"
+                onClick={handleCreateCategory}
+            >
+                <div className="flex gap-2 items-center justify-center rounded-full hover:bg-neutral-100 bg-neutral-900 border border-neutral-800 p-1 transition-colors hover:text-black">
+                    <Plus size={18} />
+                </div>
+            </button>
+        </div>
+    )
+}
+
 const CategoryGroupRow = ({ budget, categoryGroup, month }: { budget: Budget, categoryGroup: CategoryGroupView, month: string }) => {
+    const [showDraftCategory, setShowDraftCategory] = useState(false)
     return (
         <div>
             <div className="w-full px-3 flex gap-2.5 group">
@@ -89,8 +135,11 @@ const CategoryGroupRow = ({ budget, categoryGroup, month }: { budget: Budget, ca
                         <ChevronDown size={18} />
                     </button>
                     <span>{categoryGroup.name}</span>
-                    <button className="p-1 group-hover:opacity-100 opacity-0 pointer-events-none group-hover:pointer-events-auto">
-                        <PlusCircle size={18} />
+                    <button
+                        className="p-1 group-hover:opacity-100 opacity-0 pointer-events-none group-hover:pointer-events-auto transition-all"
+                        onClick={() => setShowDraftCategory(!showDraftCategory)}
+                    >
+                        <PlusCircle className="" size={18} />
                     </button>
                 </div>
                 <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
@@ -103,6 +152,13 @@ const CategoryGroupRow = ({ budget, categoryGroup, month }: { budget: Budget, ca
                     <span>{categoryGroup.available}</span>
                 </div>
             </div>
+            {showDraftCategory &&
+                <DraftCategory
+                    setShowDraftCategory={setShowDraftCategory}
+                    categoryGroupId={categoryGroup.id}
+                    budget={budget}
+                />
+            }
             {categoryGroup.categories.map(category => (
                 <CategoryRow budget={budget} category={category} key={category.id} month={month} />
             ))}
@@ -112,13 +168,13 @@ const CategoryGroupRow = ({ budget, categoryGroup, month }: { budget: Budget, ca
 
 const CategoryRow = ({ budget, category, month }: { budget: Budget, category: CategoryView, month: string }) => {
     const [assigned, setAssigned] = useState(category.assigned.toString())
-    // useEffect(() => {
-    //     setAssigned(category.assigned.toString())
-    // }, [category.assigned])
 
     const handleAssignToCategory = async () => {
         try {
             const newAssigned = parseInt(assigned)
+            if (category.assigned - newAssigned === 0) {
+                return
+            }
             const res = await assignToCategory(budget.id, category.id, month, newAssigned)
 
             const state = useBudgetStore.getState()

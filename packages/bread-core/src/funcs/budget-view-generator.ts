@@ -9,7 +9,7 @@ export const generateBudgetView = (
     const categoryGroupsViewRecord: Record<string, CategoryGroupView> = {}
     for (const categoryId in categories) {
         const category = categories[categoryId]
-        const categoryEntry = categoryEntries[categoryId]
+        const categoryEntry = categoryEntries[categoryId] ?? { assigned: 0, activity: 0, available: 0 }
 
         const categoryView: CategoryView = {
             id: category.id,
@@ -17,7 +17,7 @@ export const generateBudgetView = (
             isSystem: category.isSystem,
             assigned: categoryEntry.assigned,
             activity: categoryEntry.activity,
-            available: categoryEntry.available
+            available: categoryEntry.available,
         }
         
         if (!categoryGroupsViewRecord[category.categoryGroupId]) {

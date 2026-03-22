@@ -1,4 +1,4 @@
-import { Category, CategoryEntry, CategoryGroup, getNextMonthId, __cascadeComputeCategoryEntries__, MonthSummary, CascadeComputeCategoryEntriesResult, MonthId, AssignToCategoryResult } from "bread-core/src"
+import { Category, CategoryEntry, CategoryGroup, getNextMonthId, __cascadeComputeCategoryEntries__, MonthSummary, CascadeComputeCategoryEntriesResult, MonthId, AssignToCategoryResult, getCurrentMonthId } from "bread-core/src"
 import { db } from "../firebase/server"
 import { getBudget, getBudgetRef } from "./budget-service"
 import assert from "assert"
@@ -7,6 +7,21 @@ import assert from "assert"
 // monthly-category-entries -> MonthlyCategoryEntries
 // monthly-category-entries/{month}/category-entries -> CategoryEntries (CategoryEntry[])
 // monthly-category-entries/{month}/category-entries/{category-entry} -> CategoryEntry
+
+export const getCategory = async (userId: string, budgetId: string, categoryId: string) => {
+    const categoryRef = db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categories').doc(categoryId)
+
+    const snapshot = await categoryRef.get()
+
+    if (!snapshot.exists || !snapshot.data()) {
+        return null
+    }
+
+    return snapshot.data() as Category
+}
 
 /**
  * - creates a new `CategoryGroup` doc under `budgets/{budgetId}/categoryGroups` collection
@@ -183,6 +198,45 @@ export const getCategoryEntryForMonth = async (userId: string, budgetId: string,
     return snapshot.data() as CategoryEntry
 }
 
+/**
+ * creates empty month entries from given month...maxMonth
+ * stops creation when an entry is found 
+ */
+export const fixMyEntriesPls = async (
+    userId: string,
+    budgetId: string,
+    categoryId: string,
+    month: MonthId,
+    maxMonth: MonthId,
+) => {
+    const monthlyCategoryEntriesRef = getMonthlyCategoryEntriesRef(userId, budgetId)
+
+    const batch = db.batch()
+
+    for (let m = month; m <= maxMonth; m = getNextMonthId(m)) {
+        const entryRef = monthlyCategoryEntriesRef.doc(m)
+            .collection('category-entries').doc(categoryId)
+
+        const snapshot = await entryRef.get()
+
+        if (snapshot.exists)
+            break
+
+        const categoryEntry: CategoryEntry = {
+            id: categoryId,
+            month: m,
+            assigned: 0,
+            activity: 0,
+            available: 0,
+            createdAt: Date.now(),
+        }
+
+        batch.set(entryRef, categoryEntry)
+    }
+
+    await batch.commit()
+}
+
 export const assignToCategory = async (
     userId: string,
     budgetId: string,
@@ -190,13 +244,18 @@ export const assignToCategory = async (
     categoryId: string,
     amount: number
 ): Promise<AssignToCategoryResult> => {
-    // const [budget, categoryEntry,...] = promise.all...bblahaj
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget does not exist")
 
+    const category = await getCategory(userId, budgetId, categoryId)
+    assert(category, "category does not exist")
+
+    await fixMyEntriesPls(userId, budgetId, categoryId, month, budget.maxMonth)
+
     const monthlyCategoryEntriesRef = getMonthlyCategoryEntriesRef(userId, budgetId)
     const categoryEntry = await getCategoryEntryForMonth(userId, budgetId, categoryId, month)
-    assert(categoryEntry, "category entry missing")
+    assert(categoryEntry, "category entry does not exist. it must bro it must")
+
 
     const delta = amount - categoryEntry.assigned
 
@@ -289,7 +348,7 @@ export const cascadeComputeCategoryEntries = async (
     // store the updated available back to db
     for (const entryId in updatedCategoryEntries) {
         const entry = updatedCategoryEntries[entryId]
-        
+
         const entryRef = getMonthlyCategoryEntriesRef(userId, budgetId).doc(entry.month)
             .collection('category-entries').doc(entry.id)
 
