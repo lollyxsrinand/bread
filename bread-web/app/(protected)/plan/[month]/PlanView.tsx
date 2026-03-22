@@ -1,5 +1,5 @@
 'use client'
-import { rolloverToNextMonth } from "@/lib/actions/category.actions"
+import { assignToCategory, rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
 import { Budget, BudgetView, CategoryGroupView, CategoryView, generateBudgetView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
 import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, PlusCircle } from "lucide-react"
@@ -8,10 +8,10 @@ import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
 import { useBudgetView } from "@/app/hooks/useBudgetView"
 
-const Topbar = ({ budgetView }: { budgetView: BudgetView }) => {
+const Topbar = ({ budgetView, budget }: { budgetView: BudgetView, budget: Budget }) => {
     return (
         <div className="h-24 w-full flex items-center justify-center">
-            <span className="text-2xl">available to assign {budgetView.readytoassign}</span>
+            <span className="text-2xl">available to assign {budget.totalIncome - budget.totalAssigned}</span>
         </div>
     )
 }
@@ -112,11 +112,43 @@ const CategoryGroupRow = ({ budget, categoryGroup, month }: { budget: Budget, ca
 
 const CategoryRow = ({ budget, category, month }: { budget: Budget, category: CategoryView, month: string }) => {
     const [assigned, setAssigned] = useState(category.assigned.toString())
-    const assignToCategory = (a: any, b: any, c: any, d: any) => void
+    // useEffect(() => {
+    //     setAssigned(category.assigned.toString())
+    // }, [category.assigned])
 
-        useEffect(() => {
-            setAssigned(category.assigned.toString())
-        }, [category.assigned])
+    const handleAssignToCategory = async () => {
+        try {
+            const newAssigned = parseInt(assigned)
+            const res = await assignToCategory(budget.id, category.id, month, newAssigned)
+
+            const state = useBudgetStore.getState()
+            const updatedCategoryEntries = {
+                ...state.monthlyCategoryEntries,
+            }
+            Object.values(res.updatedCategoryEntries).map(entry => {
+                updatedCategoryEntries[entry.month] = {
+                    ...updatedCategoryEntries[entry.month],
+                    [entry.id]: entry,
+                }
+            })
+
+            // const updatedBudget = {
+            //     ...budget,
+            //     ...res.updatedBudget
+            // }
+            if (state.budget) {
+                state.budget.totalAssigned = res.updatedBudget.totalAssigned
+            }
+
+            state.setPartial({
+                // budget: updatedBudget,
+                monthlyCategoryEntries: updatedCategoryEntries,
+            })
+        } catch (error) {
+            console.log(error)
+            toast.error('Failed to assign to category')
+        }
+    }
 
     return (
         <div className="w-full px-3 gap-2.5 flex">
@@ -131,7 +163,7 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
                     type="number"
                     onChange={(e) => setAssigned(e.target.value)}
                     value={assigned}
-                    onBlur={() => assignToCategory(budget.id, month, category.id, parseInt(assigned) || 0)}
+                    onBlur={handleAssignToCategory}
                 />
             </div>
             <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
@@ -158,7 +190,7 @@ const PlanView = ({ month }: { month: string }) => {
 
     return (
         <div className='w-full h-full flex flex-col'>
-            <Topbar budgetView={budgetView} />
+            <Topbar budgetView={budgetView} budget={budget} />
 
             <div className="h-full w-full flex flex-col">
                 <Toolbar month={month} budget={budget} />

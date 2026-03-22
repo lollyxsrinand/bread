@@ -42,6 +42,7 @@ export interface CreateAccountResult extends IncomeTransactionResult {
 export interface DeleteIncomeTransactionResult extends CascadeComputeCategoryEntriesResult {
     type: 'income'
     updatedBudget: {
+        // id: string
         totalIncome: number;
     };
     updatedAccounts: {
@@ -67,3 +68,10 @@ export interface DeleteTransferTransactionResult {
 }
 
 export type DeleteTransactionResult = DeleteCategoryTransactionResult | DeleteIncomeTransactionResult | DeleteTransferTransactionResult
+
+export interface AssignToCategoryResult extends CascadeComputeCategoryEntriesResult {
+    updatedBudget: {
+        id: string
+        totalAssigned: number
+    }
+}

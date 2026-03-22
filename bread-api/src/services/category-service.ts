@@ -1,6 +1,6 @@
-import { Category, CategoryEntry, CategoryGroup, getNextMonthId, __cascadeComputeCategoryEntries__, MonthSummary, CascadeComputeCategoryEntriesResult, MonthId } from "bread-core/src"
+import { Category, CategoryEntry, CategoryGroup, getNextMonthId, __cascadeComputeCategoryEntries__, MonthSummary, CascadeComputeCategoryEntriesResult, MonthId, AssignToCategoryResult } from "bread-core/src"
 import { db } from "../firebase/server"
-import { getBudget } from "./budget-service"
+import { getBudget, getBudgetRef } from "./budget-service"
 import assert from "assert"
 
 // path -> entity name as in dtype
@@ -189,42 +189,46 @@ export const assignToCategory = async (
     month: string,
     categoryId: string,
     amount: number
-) => {
+): Promise<AssignToCategoryResult> => {
     // const [budget, categoryEntry,...] = promise.all...bblahaj
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget does not exist")
 
+    const monthlyCategoryEntriesRef = getMonthlyCategoryEntriesRef(userId, budgetId)
     const categoryEntry = await getCategoryEntryForMonth(userId, budgetId, categoryId, month)
     assert(categoryEntry, "category entry missing")
-
-    const monthSummary = await getMonthSummary(userId, budgetId, month)
-    assert(monthSummary, "month summary must exist")
 
     const delta = amount - categoryEntry.assigned
 
     budget.totalAssigned += delta
-    monthSummary.assigned += delta
-    monthSummary.available += delta // cascade compute this aswell
 
     categoryEntry.assigned += delta
     categoryEntry.available += delta
 
     const batch = db.batch()
 
-    // await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, batch)
+    batch.update(monthlyCategoryEntriesRef.doc(month).collection('category-entries').doc(categoryId), {
+        assigned: categoryEntry.assigned,
+        available: categoryEntry.available
+    })
 
-    const budgetRef = db
-        .collection("users")
-        .doc(userId)
-        .collection("budgets")
-        .doc(budgetId)
+    const res = await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, budget.maxMonth, batch)
 
-    await budgetRef.set(budget, { merge: true })
-    await budgetRef.collection('monthly-category-entries').doc(month).update({ ...monthSummary })
+    const budgetRef = getBudgetRef(userId, budgetId)
+
+    batch.update(budgetRef, {
+        totalAssigned: budget.totalAssigned
+    })
 
     await batch.commit()
 
-    return { changed_entities: [categoryEntry, budget] }
+    return {
+        ...res,
+        updatedBudget: {
+            id: budget.id,
+            totalAssigned: budget.totalAssigned
+        }
+    }
 }
 
 export const getMonthSummary = async (userId: string, budgetId: string, month: string) => {

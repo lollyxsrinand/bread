@@ -1,6 +1,6 @@
 'use server'
 import { getToken } from "@/utils/get-cookie"
-import { Category, CategoryEntry, CategoryGroup, MonthSummary } from "bread-core/src"
+import { AssignToCategoryResult, Category, CategoryEntry, CategoryGroup, MonthSummary } from "bread-core/src"
 
 export const getCategories = async (budgetId: string) => {
     const token = await getToken()
@@ -77,7 +77,7 @@ export const assignToCategory = async (budgetId: string, categoryId: string, mon
         throw new Error('failed to assign transaction to category')
     }
 
-    return await res.json()
+    return await res.json() as AssignToCategoryResult
 }
 
 export const rolloverToNextMonth = async (budgetId: string) => {

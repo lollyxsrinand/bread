@@ -1,11 +1,10 @@
 'use client'
 
-import { useToggle } from "@/app/hooks/useToggle"
 import { createTransaction, deleteTransaction } from "@/lib/actions/transaction.actions"
 import { useBudgetStore } from "@/store/budget-store"
-import { Account, Budget, Category, toMonthId, Transaction } from "bread-core/src"
+import { Account, Budget, Category, Transaction } from "bread-core/src"
 import { Plus, PlusCircle, Trash } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "react-toastify"
 
 const HeaderColumns = () => {
@@ -51,12 +50,12 @@ const TransactionView = ({ transaction, accounts, categories, budget }: Transact
             }
             res.updatedAccounts.map(acc => updatedAccounts[acc.id] = {...updatedAccounts[acc.id], balance: acc.balance})
 
-            const updatedTransactions = { ...state.transactions }
-            delete updatedTransactions[transaction.id]
+            // idk if this is legal
+            delete state.transactions[transaction.id]
 
             state.setPartial({
                 accounts: updatedAccounts,
-                transactions: updatedTransactions
+                // transactions: updatedTransactions
             })
         } catch (error) {
             console.log("horrrrrible")
