@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { createAccount, getAccount, getAccounts } from "../../services/account-service";
+import { closeAccount, createAccount, getAccount, getAccounts, openAccount } from "../../services/account-service";
 import { getUserId } from "../../utils/auth";
 
 export const createAccountHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -64,3 +64,36 @@ export const getAccountHandler= async (request: FastifyRequest, reply: FastifyRe
     }
 }
 
+export const closeAccountHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = await getUserId(request)
+    if (!userId) {
+        return reply.status(401).send({ error: "not authenticated" })
+    }
+
+    const { budgetId, accountId } = request.params as { budgetId: string, accountId: string }
+
+    try {
+        const account = await closeAccount(userId, budgetId, accountId)
+        return reply.status(200).send(account)
+    } catch (error) {
+        console.error(error)
+        return reply.status(500).send({ error: "failed to close account" })
+    }
+}
+
+export const openAccountHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = await getUserId(request)
+    if (!userId) {
+        return reply.status(401).send({ error: "not authenticated" })
+    }
+
+    const { budgetId, accountId } = request.params as { budgetId: string, accountId: string }
+
+    try {
+        const account = await openAccount(userId, budgetId, accountId)
+        return reply.status(200).send(account)
+    } catch (error) {
+        console.error(error)
+        return reply.status(500).send({ error: "failed to close account" })
+    }
+}

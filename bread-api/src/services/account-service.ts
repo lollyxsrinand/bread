@@ -1,7 +1,8 @@
 import { Account, CreateAccountResult } from "bread-core/src"
-import { db } from "../firebase/server"
+import { db, FieldValue } from "../firebase/server"
 import { createIncomeTransaction } from "./transaction-service"
 import { getBudgetRef } from "./budget-service"
+import assert from "assert"
 
 export const createAccount = async (
     userId: string, 
@@ -19,6 +20,7 @@ export const createAccount = async (
         type: data.type,
         balance: 0,
         createdAt: Date.now(),
+        isClosed: false
     }
 
     await ref.set(account)
@@ -55,4 +57,39 @@ export const getAccount = async (userId: string, budgetId: string, accountId: st
     }
 
     return snapshot.data() as Account
+}
+
+export const closeAccount = async (userId: string, budgetId: string, accountId: string): Promise<Account> => {
+    const ref = getAccountRef(userId, budgetId, accountId)
+    const account = await getAccount(userId, budgetId, accountId)
+    assert(account, "account not found")
+    assert(!account.isClosed, "account already closed wtf?")
+    assert(account.balance === 0, "account balance must be 0 to close")
+
+    const updatedAccount = {
+        ...account,
+        isClosed: true,
+        closedAt: Date.now()
+    }
+
+    await ref.update(updatedAccount)
+
+    return updatedAccount
+}
+
+export const openAccount = async (userId: string, budgetId: string, accountId: string): Promise<Account> => {
+    const ref = getAccountRef(userId, budgetId, accountId)
+    const account = await getAccount(userId, budgetId, accountId)
+    assert(account, "account not found")
+    assert(account.isClosed, "account already open wtf?")
+
+    const updatedAccount = {
+        ...account,
+        isClosed: false,
+        closedAt: Date.now()
+    }
+
+    await ref.update(updatedAccount)
+
+    return updatedAccount
 }

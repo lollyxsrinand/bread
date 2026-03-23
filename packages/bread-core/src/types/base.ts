@@ -25,6 +25,8 @@ export interface Account {
   type: string
   balance: number
   createdAt?: any 
+  isClosed: boolean
+  closedAt?: any
 }
 
 export interface Category {

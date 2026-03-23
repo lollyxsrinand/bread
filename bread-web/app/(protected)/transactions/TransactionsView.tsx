@@ -31,7 +31,7 @@ interface TransactionViewProps {
 const TransactionView = ({ transaction, accounts, categories, budget }: TransactionViewProps) => {
     const dateObj = new Date(transaction.date)
     const day = `${dateObj.getDate()}`.padStart(2, '0')
-    const month = `${dateObj.getMonth()}`.padStart(2, '0')
+    const month = `${dateObj.getMonth()+1}`.padStart(2, '0')
     const year = dateObj.getFullYear()
     const parsedDate = `${day}/${month}/${year}`
 

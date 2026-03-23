@@ -13,51 +13,132 @@ import { usePathname } from 'next/navigation'
 import { useToggle } from '../hooks/useToggle'
 import { Account } from 'bread-core/src'
 import { useBudgetStore } from '@/store/budget-store'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createAccount } from '@/lib/actions/account.actions'
 
-const AccountLink = ({ account }: { account: Account }) => {
+interface CloseAccountPromptProps {
+    pos: { x: number; y: number }
+    account: Account
+    onClose: () => void
+  }
+  
+  const CloseAccountPrompt = ({ pos, account, onClose }: CloseAccountPromptProps) => {
     return (
-        <Link href="#" className='px-4 py-2 flex justify-between'>
-            <div className='flex items-center gap-2'>
-                <LucideChevronDown size={18} className='opacity-0' />
-                <span>{account.name}</span>
-            </div>
-            <span className='tabular-nums'>{account.balance}</span>
-        </Link>
+      <div
+        style={{ top: pos.y, left: pos.x }}
+        className='fixed bg-neutral-900 rounded-lg p-4 text-sm flex flex-col z-50'
+      >
+        <span className='text-neutral-400'>
+          to close "{account.name}", make sure balance is 0
+        </span>
+  
+        <button
+          className='px-4 py-2 hover:bg-neutral-50 hover:text-black rounded-xl w-full text-left transition-colors'
+          onClick={() => {
+            console.log('close account', account.id)
+            onClose()
+          }}
+        >
+          close account
+        </button>
+  
+        <button
+          className='px-4 py-2 hover:bg-neutral-50 hover:text-black rounded-xl w-full text-left transition-colors'
+          onClick={onClose}
+        >
+          no thanks
+        </button>
+      </div>
     )
-}
+  }
 
-const AccountGroupRow = ({
+  const AccountLink = ({
+    account,
+    onRightClick
+  }: {
+    account: Account
+    onRightClick: (e: React.MouseEvent, account: Account) => void
+  }) => {
+    return (
+      <div
+        onContextMenu={(e) => onRightClick(e, account)}
+        className='px-4 py-2 flex justify-between cursor-pointer'
+      >
+        <div className='flex items-center gap-2'>
+          <LucideChevronDown size={18} className='opacity-0' />
+          <span>{account.name}</span>
+        </div>
+        <span className='tabular-nums'>{account.balance}</span>
+      </div>
+    )
+  }
+
+  const AccountGroupRow = ({
     name,
     accounts
-}: {
+  }: {
     name: string
     accounts: Account[]
-}) => {
+  }) => {
     const { value: open, toggle } = useToggle(true)
-
+  
+    const [contextMenu, setContextMenu] = useState<{
+      x: number
+      y: number
+      account: Account
+    } | null>(null)
+  
+    const handleRightClick = (e: React.MouseEvent, account: Account) => {
+      e.preventDefault()
+  
+      setContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        account
+      })
+    }
+  
+    useEffect(() => {
+      const close = () => setContextMenu(null)
+      window.addEventListener('click', close)
+      return () => window.removeEventListener('click', close)
+    }, [])
+  
     return (
+      <>
+        {contextMenu && (
+          <CloseAccountPrompt
+            pos={{ x: contextMenu.x, y: contextMenu.y }}
+            account={contextMenu.account}
+            onClose={() => setContextMenu(null)}
+          />
+        )}
+  
         <div className='flex flex-col'>
-            <button
-                onClick={toggle}
-                className='px-4 py-2 gap-2 flex items-center rounded-lg hover:bg-neutral-900'
-            >
-                {open ? (
-                    <LucideChevronDown size={18} />
-                ) : (
-                    <LucideChevronRight size={18} />
-                )}
-                <span className='font-bold'>{name}</span>
-            </button>
-
-            {open &&
-                accounts.map((account) => (
-                    <AccountLink key={account.id} account={account} />
-                ))}
+          <button
+            onClick={toggle}
+            className='px-4 py-2 gap-2 flex items-center rounded-lg hover:bg-neutral-900'
+          >
+            {open ? (
+              <LucideChevronDown size={18} />
+            ) : (
+              <LucideChevronRight size={18} />
+            )}
+            <span className='font-bold'>{name}</span>
+          </button>
+  
+          {open &&
+            accounts.map((account) => (
+              <AccountLink
+                key={account.id}
+                account={account}
+                onRightClick={handleRightClick}
+              />
+            ))}
         </div>
+      </>
     )
-}
+  }
 
 const CreateAccount = ({
     handleCreateNewAccount,
@@ -150,7 +231,7 @@ const Sidebar = () => {
     const pathname = usePathname()
 
     const accounts = useMemo(
-        () => Object.values(accountsMap),
+        () => Object.values(accountsMap).filter(acc => !acc.isClosed),
         [accountsMap]
     )
 
@@ -202,7 +283,7 @@ const Sidebar = () => {
             //     const entry = res.updatedCategoryEntries[month]
             //     updatedCategoryEntries[month][entry.id] = entry
             // }
-            
+
             state.setPartial({
                 accounts: updatedAccounts,
                 transactions: updatedTransactions,

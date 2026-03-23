@@ -60,10 +60,12 @@ export const createTransferTransaction = async (
     const accountRef = getAccountRef(userId, budgetId, accountId)
     const account = await getAccount(userId, budgetId, accountId)
     assert(account, "account doesn't exist")
+    assert(!account.isClosed, "can't add a transaction to a closed account")
 
     const toAccountRef = getAccountRef(userId, budgetId, toAccountId)
     const toAccount = await getAccount(userId, budgetId, toAccountId)
     assert(toAccount, "to account doesn't exist")
+    assert(!toAccount.isClosed, "can't add a transaction to a closed account")
 
     account.balance -= amount
     toAccount.balance += amount
@@ -155,6 +157,7 @@ export const createCategoryTransaction = async (
     const accountRef = getAccountRef(userId, budgetId, accountId)
     const account = await getAccount(userId, budgetId, accountId)
     assert(account, "account doesn't exist")
+    assert(!account.isClosed, "can't add a transaction to a closed account")
 
     const month = toMonthId(new Date(date))
     await fixMyEntriesPls(userId, budgetId, categoryId, month, budget.maxMonth)
@@ -243,6 +246,7 @@ export const deleteCategoryTransaction = async (
     const accountRef = getAccountRef(userId, budgetId, transaction.accountId)
     const account = await getAccount(userId, budgetId, transaction.accountId)
     assert(account, "account doesn't exist")
+    assert(!account.isClosed, "can't add a transaction to a closed account")
 
     const month = toMonthId(new Date(transaction.date))
     const categoryEntryRef = getMonthlyCategoryEntriesRef(userId, budgetId).doc(month)
@@ -292,10 +296,12 @@ export const deleteTransferTransaction = async (
     const fromAccountRef = getAccountRef(userId, budgetId, transaction.accountId)
     const fromAccount = await getAccount(userId, budgetId, transaction.accountId)
     assert(fromAccount, "from account doesn't exist")
+    assert(!fromAccount.isClosed, "can't add a transaction to a closed account")
 
     const toAccountRef = getAccountRef(userId, budgetId, transaction.toAccountId!)
     const toAccount = await getAccount(userId, budgetId, transaction.toAccountId!)
     assert(toAccount, "to account doesn't exist")
+    assert(!toAccount.isClosed, "can't add a transaction to a closed account")
 
     fromAccount.balance += transaction.amount
     toAccount.balance -= transaction.amount
@@ -339,6 +345,7 @@ export const deleteIncomeTransaction = async (
     const accountRef = getAccountRef(userId, budgetId, transaction.accountId)
     const account = await getAccount(userId, budgetId, transaction.accountId)
     assert(account, "account doesn't exist")
+    assert(!account.isClosed, "can't delete transaction of a closed account")
 
     const month = toMonthId(new Date(transaction.date))
     const categoryEntryRef = getMonthlyCategoryEntriesRef(userId, budgetId).doc(month)
@@ -373,7 +380,6 @@ export const deleteIncomeTransaction = async (
     const result = await cascadeComputeCategoryEntries(userId, budgetId, categoryEntry, budget.maxMonth, batch)
 
     await batch.commit()
-
 
     return {
         type: 'income',
