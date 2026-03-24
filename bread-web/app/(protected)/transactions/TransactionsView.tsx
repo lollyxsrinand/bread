@@ -217,16 +217,16 @@ export const TransactionsView = () => {
 
 
     return (
-        <div className="h-full w-full flex flex-col gap-2.5">
+        <div className="h-full w-full flex flex-col gap-2.5 p-2.5">
             <div className="h-28 w-full flex justify-center items-center">
                 <span className="text-2xl">
                     transactions
                 </span>
             </div>
 
-            <button onClick={() => setShowDraftTransaction(!showDraftTransaction)} className="w-fit p-2.5 rounded-2xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-100 hover:text-black hover:border-neutral-100 transition-colors">
+            <button onClick={() => setShowDraftTransaction(!showDraftTransaction)} className="w-fit p-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-100 hover:text-black hover:border-neutral-100 transition-colors">
                 <div className="flex items-center justify-center gap-2.5">
-                    <PlusCircle size={18} />
+                    {/* <Plus size={16} /> */}
                     <span>new transaction</span>
                 </div>
             </button>
