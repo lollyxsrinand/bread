@@ -262,6 +262,7 @@ const Sidebar = () => {
                 balance
             })
             const state = useBudgetStore.getState()
+
             const updatedAccounts = {
                 ...state.accounts,
                 [res.account.id]: res.account
@@ -276,9 +277,6 @@ const Sidebar = () => {
                 ...budget,
                 ...res.updatedBudget
             }
-            // const updatedCategoryEntries = {
-            //     ...state.monthlyCategoryEntries,
-            // }
             // for (const month in res.updatedCategoryEntries) {
             //     const entry = res.updatedCategoryEntries[month]
             //     updatedCategoryEntries[month][entry.id] = entry

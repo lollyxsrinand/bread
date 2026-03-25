@@ -84,7 +84,6 @@ interface DraftTransactionProps {
     setShowDraftTransaction: React.Dispatch<React.SetStateAction<boolean>>
 }
 const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransaction }: DraftTransactionProps) => {
-
     const [date, setDate] = useState("")
     const [type, setType] = useState("")
     const [accountId, setAccountId] = useState("")
@@ -115,7 +114,7 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
 
             state.setPartial({
                 accounts: updatedAccounts,
-                transactions: updatedTransactions
+                transactions: updatedTransactions,
             })
 
         } catch (error) {
