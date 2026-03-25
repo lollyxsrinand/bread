@@ -5,7 +5,6 @@ import { getAccounts } from "@/lib/actions/account.actions";
 import { getTransactions } from "@/lib/actions/transaction.actions";
 import { getCategories, getCategoryGroups } from "@/lib/actions/category.actions";
 import { BudgetHydrator } from "@/store/budget-hydrator";
-import SidebarNaya from "../components/SidebarNaya";
 
 export default async function Layout({ children }: Readonly<{ children: React.ReactNode; }>) {
   const user = await requireUser()
@@ -31,7 +30,7 @@ export default async function Layout({ children }: Readonly<{ children: React.Re
         }}
       />
 
-      <SidebarNaya />
+      <Sidebar />
 
       <div className="h-full flex-1">
         {children}
