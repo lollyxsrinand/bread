@@ -93,3 +93,23 @@ export const openAccount = async (userId: string, budgetId: string, accountId: s
 
     return updatedAccount
 }
+
+export const updateAccount = async (userId: string, budgetId: string, accountId: string, data: { name: string, type: string }) => {
+    const ref = getAccountRef(userId, budgetId, accountId)
+    const account = await getAccount(userId, budgetId, accountId)
+    assert(account, "account not found")
+    assert(!account.isClosed, "can't update an account that's closed")
+
+    if (account.name === data.name && account.type === data.type) {
+        return account
+    }
+
+    const updatedAccount = {
+        ...account,
+        ...data
+    }
+
+    await ref.update(updatedAccount)
+
+    return updatedAccount
+}

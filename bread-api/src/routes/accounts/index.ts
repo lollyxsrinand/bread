@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { closeAccountHandler, createAccountHandler, getAccountHandler, getAccountsHandler, openAccountHandler } from "./handlers";
+import { closeAccountHandler, createAccountHandler, getAccountHandler, getAccountsHandler, openAccountHandler, updateAccountHandler } from "./handlers";
 
 const accountRoutes = async (fastify: FastifyInstance) => {
     // create account
@@ -16,6 +16,9 @@ const accountRoutes = async (fastify: FastifyInstance) => {
 
     // open account
     fastify.patch('/budgets/:budgetId/accounts/:accountId/open', openAccountHandler)
+
+    // update account
+    fastify.patch('/budgets/:budgetId/accounts/:accountId', updateAccountHandler)
 }
 
 export default accountRoutes 
