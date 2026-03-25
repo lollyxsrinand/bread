@@ -46,7 +46,7 @@ const Links = () => {
             />
             <LinkRow
                 icon={<PiggyBank size={16} />}
-                label="all accounts"
+                label="accounts"
                 href="/accounts"
             />
         </div>
