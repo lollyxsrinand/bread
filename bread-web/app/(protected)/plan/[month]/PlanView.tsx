@@ -7,11 +7,21 @@ import { useRouter } from "next/navigation"
 import { SetStateAction, useEffect, useState } from "react"
 import { toast } from "react-toastify"
 import { useBudgetView } from "@/app/hooks/useBudgetView"
+const formatBalance = (balance: number) => {
+    const formatter = new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })
+
+    return formatter.format(balance)
+}
 
 const Topbar = ({ budgetView, budget }: { budgetView: BudgetView, budget: Budget }) => {
     return (
         <div className="h-24 w-full flex items-center justify-center">
-            <span className="text-2xl">available to assign {budget.totalIncome - budget.totalAssigned}</span>
+            <span className="text-2xl">{formatBalance(budget.totalIncome - budget.totalAssigned)} is available to assign</span>
         </div>
     )
 }

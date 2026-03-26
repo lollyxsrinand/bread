@@ -3,21 +3,21 @@
 import { createTransaction, deleteTransaction } from "@/lib/actions/transaction.actions"
 import { useBudgetStore } from "@/store/budget-store"
 import { Account, Budget, Category, Transaction } from "bread-core/src"
-import { Plus, PlusCircle, Trash } from "lucide-react"
+import { MoreHorizontal, Plus, PlusCircle, Trash } from "lucide-react"
 import { useState } from "react"
 import { toast } from "react-toastify"
 
 const HeaderColumns = () => {
     return (
-        <div className="px-8 py-1 w-full h-12 border-t-2 border-neutral-800 flex justify-around items-center">
-            <div className="w-36 p-2.5 font-bold">date</div>
-            <div className="w-36 p-2.5 font-bold">type</div>
-            <div className="w-36 p-2.5 font-bold">account name</div>
-            <div className="w-36 p-2.5 font-bold">category</div>
-            <div className="w-36 p-2.5 font-bold text-right">to account</div>
-            <div className="w-36 p-2.5 font-bold text-right">amount</div>
-            <button className="h-fit w-fit p-2.5 hover:bg-neutral-100 hover:text-black  rounded-full transition-colors bg-neutral-900 border border-neutral-800">
-                <Plus size={18} />
+        <div className="px-4 py-2 w-full flex justify-around items-center gap-2.5 hover:bg-neutral-950 transition-colors">
+            <div className="flex-1 px-2 py-1">date</div>
+            <div className="flex-1 px-2 py-1">type</div>
+            <div className="flex-1 px-2 py-1">account name</div>
+            <div className="flex-1 px-2 py-1">category</div>
+            <div className="flex-1 px-2 py-1 text-right">to account</div>
+            <div className="flex-1 px-2 py-1 text-right">amount</div>
+            <button className="p-1 hover:bg-neutral-100 hover:text-black rounded-full transition-colors bg-neutral-900 border border-neutral-800">
+                <Plus size={16} />
             </button>
         </div>
     )
@@ -37,8 +37,19 @@ const TransactionView = ({ transaction, accounts, categories, budget }: Transact
 
     const type = transaction.type
     const accountName = accounts[transaction.accountId].name
-    const toAccountName = type === 'transfer' ? accounts[transaction.toAccountId].name : 'none'
-    const categoryName = toAccountName === 'none' && type === 'category' ? categories[transaction.categoryId].name : 'readytoassign'
+    // const toAccountName = type === 'transfer' ? accounts[transaction.toAccountId].name : '-'
+    // const categoryName = toAccountName === '-' && type === 'category' ? categories[transaction.categoryId].name : 'readytoassign'
+    let toAccountName = '-'
+    let categoryName = '-'
+    if (type === 'transfer') {
+        toAccountName = accounts[transaction.toAccountId].name
+    } else if (type === 'category') {
+        categoryName = categories[transaction.categoryId].name
+    } else if (type === 'income') {
+        categoryName = 'ready to assign'
+    }
+
+
     const amount = transaction.amount
 
     const handleDeleteTransaction = async () => {
@@ -50,12 +61,10 @@ const TransactionView = ({ transaction, accounts, categories, budget }: Transact
             }
             res.updatedAccounts.map(acc => updatedAccounts[acc.id] = {...updatedAccounts[acc.id], balance: acc.balance})
 
-            // idk if this is legal
             delete state.transactions[transaction.id]
 
             state.setPartial({
                 accounts: updatedAccounts,
-                // transactions: updatedTransactions
             })
         } catch (error) {
             console.log("horrrrrible")
@@ -63,15 +72,15 @@ const TransactionView = ({ transaction, accounts, categories, budget }: Transact
     }
 
     return (
-        <div className="px-8 py-1 w-full h-12 border-t-2 border-neutral-800 flex justify-around items-center">
-            <div className="p-2.5 w-36">{parsedDate}</div>
-            <div className="p-2.5 w-36">{type}</div>
-            <div className="p-2.5 w-36">{accountName}</div>
-            <div className="p-2.5 w-36">{categoryName}</div>
-            <div className="p-2.5 w-36 text-right">{toAccountName}</div>
-            <div className="p-2.5 w-36 text-right">{amount}</div>
-            <button onClick={handleDeleteTransaction} className="h-fit w-fit p-2.5 hover:bg-neutral-100 hover:text-black  rounded-full transition-colors">
-                <Trash size={18} />
+        <div className="px-4 py-2 w-full flex justify-around items-center gap-2.5 border-t border-neutral-800 hover:bg-neutral-900 transition-colors">
+            <div className="flex-1 px-2 py-1">{parsedDate}</div>
+            <div className="flex-1 px-2 py-1">{type}</div>
+            <div className="flex-1 px-2 py-1">{accountName}</div>
+            <div className="flex-1 px-2 py-1">{categoryName}</div>
+            <div className={`flex-1 px-2 py-1 text-right ${toAccountName === '-' ? 'text-neutral-600': 'text-neutral-50'}`}>{toAccountName}</div>
+            <div className="flex-1 px-2 py-1 text-right">{amount}</div>
+            <button onClick={() => null} className="p-1 transition-colors border border-transparent text-neutral-600 hover:text-neutral-100">
+                <MoreHorizontal size={16} />
             </button>
         </div>
     )
@@ -124,13 +133,13 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
 
 
     return (
-        <div className="px-8 py-1 w-full h-12 border-t-2 border-neutral-800 flex justify-around items-center">
+        <div className="px-4 py-2 w-full flex justify-around items-center gap-2.5 border-t border-neutral-800 hover:bg-neutral-950 transition-colors">
             {/* take date input */}
             <input
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 type="date"
-                className="w-36 p-2.5 font-bold"
+                className="px-2 py-1 flex-1 rounded-lg bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all"
             />
 
             {/* take txn type input */}
@@ -138,7 +147,7 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
                 name="type"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-36 p-2.5 font-bold"
+                className="px-2 py-1 flex-1 rounded-lg bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all appearance-none"
             >
                 <option value="">type</option>
                 <option value="category">category</option>
@@ -151,7 +160,7 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
                 name="account"
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
-                className="w-36 p-2.5 font-bold"
+                className="px-2 py-1 flex-1 rounded-lg bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all appearance-none"
             >
                 <option value="">account</option>
                 {Object.values(accounts).map(account => (
@@ -164,7 +173,7 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
                 name="category"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-36 p-2.5 font-bold"
+                className="px-2 py-1 flex-1 rounded-lg bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all appearance-none"
             >
                 <option value="">category</option>
                 {Object.values(categories).map(category => (
@@ -177,7 +186,7 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
                 name="toAccount"
                 value={toAccountId}
                 onChange={(e) => setToAccountId(e.target.value)}
-                className="w-36 p-2.5 font-bold text-right"
+                className="px-2 py-1 text-right flex-1 rounded-lg bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all appearance-none"
             >
                 <option value="">to account</option>
                 {Object.values(accounts).map(account => (
@@ -189,12 +198,12 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
             type="number"
             placeholder="amount"
             onChange={(e) => setAmount(parseInt(e.target.value))}
-            className="w-36 p-2.5 font-bold text-right"></input>
+            className="px-2 py-1 flex-1 text-right rounded-lg bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all" />
 
             <button 
             onClick={handleCreateTransaction}
-            className="h-fit w-fit p-2.5 hover:bg-neutral-100 hover:text-black  rounded-full transition-colors bg-neutral-900 border border-neutral-800">
-                <Plus size={18} />
+            className="p-1 hover:bg-neutral-100 hover:text-black rounded-full transition-colors bg-neutral-900 border border-neutral-800">
+                <Plus size={16} />
             </button>
         </div>
     )
@@ -230,12 +239,12 @@ export const TransactionsView = () => {
                 </div>
             </button>
 
-            <div>
+            <div className="border-2 border-neutral-800 rounded-xl">
                 {/* display column names */}
                 <HeaderColumns />
 
                 {/* transactions list */}
-                <div className="w-full flex flex-col">
+                <div className="w-full flex flex-col justify-between">
                     {showDraftTransaction && 
                     <DraftTransaction 
                     accounts={accounts} 

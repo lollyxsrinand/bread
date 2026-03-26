@@ -1,4 +1,3 @@
-import PlanSummary from "./PlanSummary"
 import PlanView from "./PlanView"
 import { BudgetHydrator } from "@/store/budget-hydrator"
 import { requireUser } from "@/utils/require-user"
@@ -34,9 +33,6 @@ const Plan = async ({ params }: { params: Promise<{ month: string }> }) => {
       <div className="h-full w-full flex">
         <PlanView month={month} />
 
-        <div className="w-64">
-          <PlanSummary />
-        </div>
       </div>
     </>
   )
