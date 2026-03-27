@@ -2,10 +2,10 @@
 
 import { closeAccount, createAccount, updateAccount } from "@/lib/actions/account.actions"
 import { useBudgetStore } from "@/store/budget-store"
-import { Account, Budget } from "bread-core/src"
+import { Account, Budget, getCurrentMonthId } from "bread-core/src"
 import { ArrowUpRight, Banknote, Calendar, CalendarDays, ChartColumn, ChartNoAxesColumn, ChevronDown, ChevronsUpDownIcon, Edit2, Info, LogOut, LucideInfo, MoreHorizontal, PiggyBank, Settings, TriangleAlert, X } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { JSX, SetStateAction, useMemo, useState } from "react"
 import { toast } from "react-toastify"
 
@@ -14,14 +14,15 @@ const sidebar_item_classes = 'w-full px-4 py-2 rounded-xl hover:bg-neutral-800 t
 
 const LinkRow = ({ icon, label, href }: { icon: JSX.Element, label: string, href: string }) => {
     const pathname = usePathname()
+    const router = useRouter()
     const is_active = pathname.startsWith(href)
     return (
-        <Link href={href} className={`${sidebar_item_classes} ${is_active ? 'bg-neutral-800' : ''}`}>
+        <div onClick={() => router.push(href)} className={`${sidebar_item_classes} ${is_active ? 'bg-neutral-800' : ''}`}>
             <div className="flex gap-2.5 items-center">
                 {icon}
                 <span>{label}</span>
             </div>
-        </Link>
+        </div>
     )
 }
 
@@ -32,7 +33,7 @@ const Links = () => {
             <LinkRow
                 icon={<Calendar size={16} />}
                 label="plan"
-                href="/plan"
+                href={`/plan/${getCurrentMonthId()}`}
             />
             <LinkRow
                 icon={<ChartNoAxesColumn size={16} />}
