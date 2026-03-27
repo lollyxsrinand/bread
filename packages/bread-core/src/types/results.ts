@@ -6,6 +6,7 @@ export interface CascadeComputeCategoryEntriesResult  {
 }
 
 export interface CategoryTransactionResult extends CascadeComputeCategoryEntriesResult {
+    type: 'category'
     transaction: CategoryTransaction
     updatedAccounts: {
         id: string
@@ -14,6 +15,7 @@ export interface CategoryTransactionResult extends CascadeComputeCategoryEntries
 }
 
 export interface IncomeTransactionResult extends CascadeComputeCategoryEntriesResult {
+    type: 'income'
     transaction: IncomeTransaction
     updatedAccounts: {
         id: string
@@ -25,6 +27,7 @@ export interface IncomeTransactionResult extends CascadeComputeCategoryEntriesRe
 }
 
 export interface TransferTransactionResult  {
+    type: 'transfer'
     transaction: TransferTransaction
     updatedAccounts: {
         id: string
@@ -32,7 +35,6 @@ export interface TransferTransactionResult  {
     }[]
 }
 
-// why do i need this
 export type TransactionResult = CategoryTransactionResult | TransferTransactionResult | IncomeTransactionResult
 
 export interface CreateAccountResult extends IncomeTransactionResult {

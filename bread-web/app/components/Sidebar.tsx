@@ -2,6 +2,7 @@
 
 import { closeAccount, createAccount, updateAccount } from "@/lib/actions/account.actions"
 import { useBudgetStore } from "@/store/budget-store"
+import { formatBalance } from "@/utils/format-balance"
 import { Account, Budget, getCurrentMonthId } from "bread-core/src"
 import { ArrowUpRight, Banknote, Calendar, CalendarDays, ChartColumn, ChartNoAxesColumn, ChevronDown, ChevronsUpDownIcon, Edit2, Info, LogOut, LucideInfo, MoreHorizontal, PiggyBank, Settings, TriangleAlert, X } from "lucide-react"
 import Link from "next/link"
@@ -52,18 +53,6 @@ const Links = () => {
             />
         </div>
     )
-}
-
-// format balance in indian format with rupee sign and also format floating point numbers to 2 decimal places
-const formatBalance = (balance: number) => {
-    const formatter = new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    })
-
-    return formatter.format(balance)
 }
 
 const EditAccountPrompt = ({ setShowEditAccountPrompt, budget, account }: { setShowEditAccountPrompt: React.Dispatch<SetStateAction<boolean>>, budget: Budget, account: Account }) => {

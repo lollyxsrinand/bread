@@ -120,10 +120,17 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
                 [res.transaction.id]: res.transaction
             }
             res.updatedAccounts.map(acc => updatedAccounts[acc.id] = {...updatedAccounts[acc.id], balance: acc.balance})
+            const updatedBudget = {
+                ...budget
+            }
+            if (res.type === 'income') {
+                updatedBudget.totalIncome = res.updatedBudget.totalIncome
+            }
 
             state.setPartial({
                 accounts: updatedAccounts,
                 transactions: updatedTransactions,
+                budget: updatedBudget,
             })
 
         } catch (error) {
@@ -226,11 +233,11 @@ export const TransactionsView = () => {
 
     return (
         <div className="h-full w-full flex flex-col gap-2.5 p-2.5">
-            <div className="h-28 w-full flex justify-center items-center">
+            {/* <div className="h-28 w-full flex items-center">
                 <span className="text-2xl">
                     transactions
                 </span>
-            </div>
+            </div> */}
 
             <button onClick={() => setShowDraftTransaction(!showDraftTransaction)} className="w-fit p-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-100 hover:text-black hover:border-neutral-100 transition-colors">
                 <div className="flex items-center justify-center gap-2.5">
@@ -239,7 +246,7 @@ export const TransactionsView = () => {
                 </div>
             </button>
 
-            <div className="border-2 border-neutral-800 rounded-xl">
+            <div className="border-2 border-neutral-800 rounded-xl overflow-hidden">
                 {/* display column names */}
                 <HeaderColumns />
 

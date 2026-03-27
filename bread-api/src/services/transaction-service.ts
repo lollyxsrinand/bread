@@ -95,6 +95,7 @@ export const createTransferTransaction = async (
     await batch.commit()
 
     return {
+        type: 'transfer',
         transaction,
         updatedAccounts: [
             { id: account.id, balance: account.balance },
@@ -133,6 +134,7 @@ export const createIncomeTransaction = async (
         await batch.commit()
 
     return {
+        type: 'income',
         transaction: { ...categoryTransactionResult.transaction, type: 'income' },
         updatedBudget: {
             totalIncome: budget.totalIncome
@@ -203,6 +205,7 @@ export const createCategoryTransaction = async (
         await batch.commit()
 
     return {
+        type: 'category',
         transaction,
         updatedAccounts: [{ id: account.id, balance: account.balance }],
         ...result
