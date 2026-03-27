@@ -58,6 +58,7 @@ export const rolloverToNextMonthHandler = async (request: FastifyRequest, reply:
 }
 
 export const getCategoryEntriesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    console.log('hope we are not spamming this 🙏')
     const userId = await getUserId(request)
     if (!userId) {
         return reply.status(401).send({ error: "Not authenticated" })

@@ -18,7 +18,7 @@ const LinkRow = ({ icon, label, href }: { icon: JSX.Element, label: string, href
     const router = useRouter()
     const is_active = pathname.startsWith(href)
     return (
-        <div onClick={() => router.push(href)} className={`${sidebar_item_classes} ${is_active ? 'bg-neutral-800' : ''}`}>
+        <div onClick={() => router.push(href)} className={`${sidebar_item_classes} cursor-pointer ${is_active ? 'bg-neutral-800' : ''}`}>
             <div className="flex gap-2.5 items-center">
                 {icon}
                 <span>{label}</span>

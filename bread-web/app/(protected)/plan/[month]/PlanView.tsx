@@ -1,5 +1,5 @@
 'use client'
-import { assignToCategory, createCategory, rolloverToNextMonth } from "@/lib/actions/category.actions"
+import { assignToCategory, createCategory, getCategoryEntries, rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
 import { Budget, BudgetView, CategoryGroupView, CategoryView, generateBudgetView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
 import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, Plus, PlusCircle } from "lucide-react"
@@ -190,10 +190,6 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
                 }
             })
 
-            // const updatedBudget = {
-            //     ...budget,
-            //     ...res.updatedBudget
-            // }
             if (state.budget) {
                 state.budget.totalAssigned = res.updatedBudget.totalAssigned
             }
@@ -236,15 +232,24 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
 
 const PlanView = ({ month }: { month: string }) => {
     const budget = useBudgetStore(s => s.budget)
+    const entries = useBudgetStore(s => s.monthlyCategoryEntries[month])
+    const setPartial = useBudgetStore(s => s.setPartial)
+    
+    useEffect(() => {
+        if (!entries) {
+            getCategoryEntries(budget.id, month).then(data => {
+                setPartial({
+                    monthlyCategoryEntries: {
+                        [month]: data,
+                    }
+                })
+            })
+        }
+    }, [month, budget, setPartial, entries])
+    
     const budgetView = useBudgetView(month)
-
-    if (!budget || !budgetView) {
-        return (
-            <div className="w-full h-full flex items-center justify-center">
-                <span>Loading...</span>
-            </div>
-        )
-    }
+    if (!budgetView || !budget) return <h1>loading</h1>
+    
 
     return (
         <div className='w-full h-full flex flex-col'>

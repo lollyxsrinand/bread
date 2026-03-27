@@ -7,32 +7,17 @@ import { getBudget } from "@/lib/actions/budget.actions"
 
 const Plan = async ({ params }: { params: Promise<{ month: string }> }) => {
   const { month } = await params
-
   const user = await requireUser()
-
   const budget = await getBudget(user.currentBudgetId)
 
   if (month > budget.maxMonth || month < budget.minMonth) {
     redirect(`/plan/${budget.maxMonth}`)
   }
 
-  const [categoryEntries, monthSummary] = await Promise.all([
-    getCategoryEntries(budget.id, month),
-    getMonthSummary(budget.id, month)
-  ])
-
   return (
     <>
-      <BudgetHydrator
-        data={{
-          monthlyCategoryEntries: { [month]: categoryEntries },
-          monthlySummary: { [month]: monthSummary }
-        }}
-      />
-
       <div className="h-full w-full flex">
         <PlanView month={month} />
-
       </div>
     </>
   )

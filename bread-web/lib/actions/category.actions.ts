@@ -34,6 +34,7 @@ export const getCategoryGroups = async (budgetId: string) => {
 
 export const getCategoryEntries = async (budgetId: string, month: string) => {
     const token = await getToken()
+    console.log("fuck man")
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/category-entries/${month}`, {
         headers: {
             'authorization': `Bearer ${token}`

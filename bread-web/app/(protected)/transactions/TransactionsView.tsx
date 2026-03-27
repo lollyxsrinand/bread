@@ -127,6 +127,7 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
                 updatedBudget.totalIncome = res.updatedBudget.totalIncome
             }
 
+            // todo: update the category entries
             state.setPartial({
                 accounts: updatedAccounts,
                 transactions: updatedTransactions,
@@ -221,14 +222,14 @@ export const TransactionsView = () => {
     const budget = useBudgetStore(s => s.budget)
     const accounts = useBudgetStore(s => s.accounts)
     const categories = useBudgetStore(s => s.categories)
+    const [showDraftTransaction, setShowDraftTransaction] = useState<boolean>(false)
     if (!transactions || !accounts || !categories || !budget) {
-        return <h1>we are loading...</h1>
+        return <h1>loading...</h1>
     }
 
     const transactionsList = Object.values(transactions)
 
     // const { value: showDraftTransaction, toggle, setValue:  } = useToggle(false)
-    const [showDraftTransaction, setShowDraftTransaction] = useState<boolean>(false)
 
 
     return (

@@ -12,7 +12,7 @@ import { create } from "zustand"
 interface BudgetState {
   transactions: Record<string, Transaction>
   accounts: Record<string, Account>
-  budget: Budget | null
+  budget: Budget
   categories: Record<string, Category>
   categoryGroups: Record<string, CategoryGroup>
   monthlyCategoryEntries: Record<string, Record<string, CategoryEntry>>
@@ -24,7 +24,7 @@ interface BudgetState {
 export const useBudgetStore = create<BudgetState>((set) => ({
   transactions: {},
   accounts: {},
-  budget: null,
+  budget: {} as Budget,
   categories: {},
   categoryGroups: {},
   monthlyCategoryEntries: {},
