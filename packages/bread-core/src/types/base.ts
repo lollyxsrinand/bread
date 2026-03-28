@@ -54,9 +54,11 @@ export interface CategoryEntry {
 
 interface BaseTransaction {
   id: string
+  type: 'category' | 'transfer' | 'income'
   accountId: string
   amount: number
   date: number
+  note?: string
   createdAt?: any
 }
 
@@ -81,7 +83,7 @@ export type Transaction = CategoryTransaction | TransferTransaction | IncomeTran
 
 export type MonthId = string
 
-// doubtful about this
+// do we even need this?
 export interface MonthSummary {
   income: number
   assigned: number

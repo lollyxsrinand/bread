@@ -4,6 +4,8 @@ import { createIncomeTransaction } from "./transaction-service"
 import { getBudgetRef } from "./budget-service"
 import assert from "assert"
 
+
+// warning: this function can break in some situation, and then bite everyone who uses it in their ass
 export const createAccount = async (
     userId: string, 
     budgetId: string, 
@@ -24,8 +26,8 @@ export const createAccount = async (
     }
 
     await ref.set(account)
-
-    const incomeTransactionResult = await createIncomeTransaction(userId, budgetId, account.id, data.balance, Date.now())
+    // maria, what if account is set successfully but the transaction isn't done. absolute clown
+    const incomeTransactionResult = await createIncomeTransaction(userId, budgetId, {type: 'income', accountId: account.id, amount: data.balance, note: 'initate balance', date: Date.now()})
 
     return {
         ...incomeTransactionResult,

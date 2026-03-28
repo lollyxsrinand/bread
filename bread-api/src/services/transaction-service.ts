@@ -1,5 +1,5 @@
 import assert from "assert"
-import { CategoryTransaction, CategoryTransactionResult, DeleteCategoryTransactionResult, DeleteIncomeTransactionResult, DeleteTransactionResult, DeleteTransferTransactionResult, IncomeTransactionResult, toMonthId, Transaction, TransactionResult, TransferTransaction, TransferTransactionResult } from "bread-core/src"
+import { CategoryTransaction, CategoryTransactionResult, CreateCategoryTransactionInput, CreateIncomeTransactionInput, CreateTransactionInput, CreateTransferTransactionInput, DeleteCategoryTransactionResult, DeleteIncomeTransactionResult, DeleteTransactionResult, DeleteTransferTransactionResult, IncomeTransactionResult, toMonthId, Transaction, TransactionResult, TransferTransaction, TransferTransactionResult } from "bread-core/src"
 import { db, FieldValue } from "../firebase/server"
 import { getAccount, getAccountRef } from "./account-service"
 import { getBudget, getBudgetRef } from "./budget-service"
@@ -14,25 +14,18 @@ export const getTransactionRef = (userId: string, budgetId: string, transactionI
 export const createTransaction = async (
     userId: string,
     budgetId: string,
-    type: string,
-    accountId: string,
-    toAccountId: string | null,
-    categoryId: string | null,
-    amount: number,
-    date: number,
+    input: CreateTransactionInput
 ): Promise<TransactionResult> => {
     let transactionResult: TransactionResult;
-    switch (type) {
+    switch (input.type) {
         case 'category':
-            assert(categoryId, "category id is required for category transactions")
-            transactionResult = await createCategoryTransaction(userId, budgetId, accountId, categoryId, amount, date)
+            transactionResult = await createCategoryTransaction(userId, budgetId, input)
             break
         case 'transfer':
-            assert(toAccountId, "to account id is required for transfer transactions")
-            transactionResult = await createTransferTransaction(userId, budgetId, accountId, toAccountId, amount, date)
+            transactionResult = await createTransferTransaction(userId, budgetId, input)
             break
         case 'income':
-            transactionResult = await createIncomeTransaction(userId, budgetId, accountId, amount, date)
+            transactionResult = await createIncomeTransaction(userId, budgetId, input)
             break
         default:
             throw new Error("invalid transaction type")
@@ -44,14 +37,12 @@ export const createTransaction = async (
 export const createTransferTransaction = async (
     userId: string,
     budgetId: string,
-    accountId: string,
-    toAccountId: string,
-    amount: number,
-    date: number,
+    input: CreateTransferTransactionInput
 ): Promise<TransferTransactionResult> => {
     // if (amount < 0) {
     //     throw new Error("amount should be +ve")
     // }
+    const { accountId , toAccountId, date, amount, note } = input
 
     if (accountId === toAccountId) {
         throw Error('can\'t make a transfer between the same accounts')
@@ -107,11 +98,10 @@ export const createTransferTransaction = async (
 export const createIncomeTransaction = async (
     userId: string,
     budgetId: string,
-    accountId: string,
-    amount: number,
-    date: number,
+    input: CreateIncomeTransactionInput,
     batch: FirebaseFirestore.WriteBatch | null = null,
 ): Promise<IncomeTransactionResult> => {
+    const { accountId , date, amount, note } = input
     const budgetRef = getBudgetRef(userId, budgetId)
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget doesn't exist")
@@ -125,7 +115,8 @@ export const createIncomeTransaction = async (
     })
 
     // works but in a lazy way prolly implement the logic here
-    const categoryTransactionResult = await createCategoryTransaction(userId, budgetId, accountId, 'readytoassign', amount, date, batch)
+    const categoryTransactionResult = await createCategoryTransaction(userId, budgetId, { accountId, date, amount, note, categoryId: 'readytoassign', type: 'category' }, batch)
+    // sometimes i actually am blown away how lazy i am
     batch.update(getTransactionRef(userId, budgetId, categoryTransactionResult.transaction.id), {
         type: 'income'
     })
@@ -147,12 +138,10 @@ export const createIncomeTransaction = async (
 export const createCategoryTransaction = async (
     userId: string,
     budgetId: string,
-    accountId: string,
-    categoryId: string,
-    amount: number,
-    date: number,
+    input: CreateCategoryTransactionInput,
     batch: FirebaseFirestore.WriteBatch | null = null,
 ): Promise<CategoryTransactionResult> => {
+    const { accountId , date, categoryId, amount, note } = input
     const budget = await getBudget(userId, budgetId)
     assert(budget, "budget doesn't exist")
 
@@ -182,6 +171,7 @@ export const createCategoryTransaction = async (
         categoryId,
         amount,
         date,
+        note,
         createdAt: FieldValue.serverTimestamp()
     }
 

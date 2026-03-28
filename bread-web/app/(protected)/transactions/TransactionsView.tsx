@@ -2,7 +2,7 @@
 
 import { createTransaction, deleteTransaction } from "@/lib/actions/transaction.actions"
 import { useBudgetStore } from "@/store/budget-store"
-import { Account, Budget, Category, Transaction } from "bread-core/src"
+import { Account, Budget, Category, CreateTransactionInput, Transaction, validateCreateTransactionInput } from "bread-core/src"
 import { MoreHorizontal, Plus, PlusCircle, Trash } from "lucide-react"
 import { useState } from "react"
 import { toast } from "react-toastify"
@@ -15,6 +15,7 @@ const HeaderColumns = () => {
             <div className="flex-1 px-2 py-1">account name</div>
             <div className="flex-1 px-2 py-1">category</div>
             <div className="flex-1 px-2 py-1 text-right">to account</div>
+            <div className="flex-1 px-2 py-1 text-right">note</div>
             <div className="flex-1 px-2 py-1 text-right">amount</div>
             <button className="p-1 hover:bg-neutral-100 hover:text-black rounded-full transition-colors bg-neutral-900 border border-neutral-800">
                 <Plus size={16} />
@@ -31,7 +32,7 @@ interface TransactionViewProps {
 const TransactionView = ({ transaction, accounts, categories, budget }: TransactionViewProps) => {
     const dateObj = new Date(transaction.date)
     const day = `${dateObj.getDate()}`.padStart(2, '0')
-    const month = `${dateObj.getMonth()+1}`.padStart(2, '0')
+    const month = `${dateObj.getMonth() + 1}`.padStart(2, '0')
     const year = dateObj.getFullYear()
     const parsedDate = `${day}/${month}/${year}`
 
@@ -48,6 +49,7 @@ const TransactionView = ({ transaction, accounts, categories, budget }: Transact
     } else if (type === 'income') {
         categoryName = 'ready to assign'
     }
+    const note = transaction.note || '-'
 
 
     const amount = transaction.amount
@@ -59,7 +61,7 @@ const TransactionView = ({ transaction, accounts, categories, budget }: Transact
             const updatedAccounts = {
                 ...state.accounts
             }
-            res.updatedAccounts.map(acc => updatedAccounts[acc.id] = {...updatedAccounts[acc.id], balance: acc.balance})
+            res.updatedAccounts.map(acc => updatedAccounts[acc.id] = { ...updatedAccounts[acc.id], balance: acc.balance })
 
             delete state.transactions[transaction.id]
 
@@ -77,9 +79,10 @@ const TransactionView = ({ transaction, accounts, categories, budget }: Transact
             <div className="flex-1 px-2 py-1">{type}</div>
             <div className="flex-1 px-2 py-1">{accountName}</div>
             <div className="flex-1 px-2 py-1">{categoryName}</div>
-            <div className={`flex-1 px-2 py-1 text-right ${toAccountName === '-' ? 'text-neutral-600': 'text-neutral-50'}`}>{toAccountName}</div>
+            <div className={`flex-1 px-2 py-1 text-right ${toAccountName === '-' ? 'text-neutral-600' : 'text-neutral-50'}`}>{toAccountName}</div>
+            <div className="flex-1 px-2 py-1 text-right">{note}</div>
             <div className="flex-1 px-2 py-1 text-right">{amount}</div>
-            <button onClick={() => null} className="p-1 transition-colors border border-transparent text-neutral-600 hover:text-neutral-100">
+            <button onClick={handleDeleteTransaction} className="p-1 transition-colors border border-transparent text-neutral-600 hover:text-neutral-100">
                 <MoreHorizontal size={16} />
             </button>
         </div>
@@ -98,18 +101,52 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
     const [accountId, setAccountId] = useState("")
     const [categoryId, setCategoryId] = useState("")
     const [toAccountId, setToAccountId] = useState("")
+    const [note, setNote] = useState("")
     const [amount, setAmount] = useState(0)
 
     const handleCreateTransaction = async () => {
+        if (!date || !type || !accountId || (type === 'category' && !categoryId) || (type === 'transfer' && !toAccountId)) {
+            toast.error('please fill all required fields')
+            return
+        }
+        let txnInput: CreateTransactionInput
+        switch (type) {
+            case 'category':
+                txnInput = {
+                    type,
+                    accountId,
+                    categoryId,
+                    amount,
+                    date: new Date(date).getTime(),
+                    note
+                }
+                break
+            case 'transfer':
+                txnInput = {
+                    type,
+                    accountId,
+                    toAccountId,
+                    amount,
+                    date: new Date(date).getTime(),
+                    note
+                }
+                break
+            case 'income':
+                txnInput = {
+                    type,
+                    accountId,
+                    amount,
+                    date: new Date(date).getTime(),
+                    note
+                }
+                break
+            default:
+                toast.error('invalid transaction type')
+                return
+        }
+
         try {
-            const res = await createTransaction(budget.id, {
-                date: new Date(date).getTime(),
-                type,
-                accountId,
-                categoryId,
-                toAccountId,
-                amount
-            })
+            const res = await createTransaction(budget.id, txnInput)
             const state = useBudgetStore.getState()
             const updatedAccounts = {
                 ...state.accounts
@@ -119,7 +156,7 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
                 ...state.transactions,
                 [res.transaction.id]: res.transaction
             }
-            res.updatedAccounts.map(acc => updatedAccounts[acc.id] = {...updatedAccounts[acc.id], balance: acc.balance})
+            res.updatedAccounts.map(acc => updatedAccounts[acc.id] = { ...updatedAccounts[acc.id], balance: acc.balance })
             const updatedBudget = {
                 ...budget
             }
@@ -189,6 +226,7 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
                 ))}
             </select>
 
+
             {/* select to account */}
             <select
                 name="toAccount"
@@ -202,15 +240,24 @@ const DraftTransaction = ({ accounts, categories, budget, setShowDraftTransactio
                 ))}
             </select>
 
-            <input 
-            type="number"
-            placeholder="amount"
-            onChange={(e) => setAmount(parseInt(e.target.value))}
-            className="px-2 py-1 flex-1 text-right rounded-lg bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all" />
+            {/* take note input */}
+            <input
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                type="text"
+                placeholder="note"
+                className="px-2 py-1 flex-1 text-right rounded-lg bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all"
+            />
 
-            <button 
-            onClick={handleCreateTransaction}
-            className="p-1 hover:bg-neutral-100 hover:text-black rounded-full transition-colors bg-neutral-900 border border-neutral-800">
+            <input
+                type="number"
+                placeholder="amount"
+                onChange={(e) => setAmount(parseInt(e.target.value))}
+                className="px-2 py-1 flex-1 text-right rounded-lg bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all" />
+
+            <button
+                onClick={handleCreateTransaction}
+                className="p-1 hover:bg-neutral-100 hover:text-black rounded-full transition-colors bg-neutral-900 border border-neutral-800">
                 <Plus size={16} />
             </button>
         </div>
@@ -227,7 +274,8 @@ export const TransactionsView = () => {
         return <h1>loading...</h1>
     }
 
-    const transactionsList = Object.values(transactions)
+    // voodoo sorting
+    const transactionsList = Object.values(transactions).sort((a, b) => b.date - a.date)
 
     // const { value: showDraftTransaction, toggle, setValue:  } = useToggle(false)
 
@@ -253,13 +301,13 @@ export const TransactionsView = () => {
 
                 {/* transactions list */}
                 <div className="w-full flex flex-col justify-between">
-                    {showDraftTransaction && 
-                    <DraftTransaction 
-                    accounts={accounts} 
-                    categories={categories}
-                    budget={budget} 
-                    setShowDraftTransaction={setShowDraftTransaction}
-                    />}
+                    {showDraftTransaction &&
+                        <DraftTransaction
+                            accounts={accounts}
+                            categories={categories}
+                            budget={budget}
+                            setShowDraftTransaction={setShowDraftTransaction}
+                        />}
                     {transactionsList.map(transaction =>
                         <TransactionView
                             key={transaction.id}

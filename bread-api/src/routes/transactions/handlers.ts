@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { createTransaction, deleteTransaction, getTransactions } from "../../services/transaction-service";
 import { getUserId } from "../../utils/auth";
+import { CreateTransactionInput, Transaction, validateCreateTransactionInput } from "bread-core/src";
 
 export const createTransactionHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const userId = await getUserId(request)
@@ -15,14 +16,10 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
         return reply.status(400).send({ error: "budget id is required" })
     }
 
-    const { type, accountId, toAccountId=null, categoryId=null, amount, date } = request.body as { type: string, accountId: string, toAccountId?: string, categoryId?: string, amount: number, date: number }
+    const transactionInput = validateCreateTransactionInput(request.body)
 
-    // does not prevent client from sending extra fields, but that's prob fine since we just ignore them
-    if (type === undefined || accountId === undefined || amount === undefined || date === undefined) {
-        return reply.status(400).send({ error: "type, accountId, amount and date are all required" })
-    }
     try {
-        const transactionResult = await createTransaction(userId, budgetId, type, accountId, toAccountId, categoryId, amount, date)
+        const transactionResult = await createTransaction(userId, budgetId, transactionInput)
         return reply.status(201).send(transactionResult)
     } catch (error) {
         console.error(error)
