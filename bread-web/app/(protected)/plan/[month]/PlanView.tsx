@@ -2,7 +2,7 @@
 import { assignToCategory, createCategory, getCategoryEntries, rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
 import { Budget, BudgetView, CategoryGroupView, CategoryView, generateBudgetView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
-import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, Plus, PlusCircle } from "lucide-react"
+import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, Edit2, Plus, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { SetStateAction, useEffect, useState } from "react"
 import { toast } from "react-toastify"
@@ -10,10 +10,14 @@ import { useBudgetView } from "@/app/hooks/useBudgetView"
 import { formatBalance } from "@/utils/format-balance"
 
 
-const Topbar = ({ budgetView, budget }: { budgetView: BudgetView, budget: Budget }) => {
+const Topbar = ({ budget }: { budget: Budget }) => {
+    const available = formatBalance(budget.totalIncome - budget.totalAssigned)
     return (
-        <div className="h-24 w-full flex items-center justify-center border-b border-neutral-800">
-            <span className="text-2xl">{formatBalance(budget.totalIncome - budget.totalAssigned)} is available to assign</span>
+        <div className="w-full h-24 flex justify-center items-center">
+            <div className="">
+                <p className="text-lg">{available} is available to assign</p>
+                <p className="text-neutral-500 hover:text-neutral-100 text-sm transition-colors">you need to make this number 0</p>
+            </div>
         </div>
     )
 }
@@ -230,11 +234,86 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
     )
 }
 
+const CategoryTableHeader = () => {
+    return (
+        <div className="px-2 py-1 w-full flex items-center gap-2 justify-between ">
+            <div className="w-full flex items-center flex-1 justify-between">
+                <div className="flex items-center justify-center">
+                    {/* i have no idea design choice. below button is pure 100% aesthetic choice */}
+                    <button className="p-1 opacity-0 ring-1 ring-neutral-800 rounded-full bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors">
+                        <Plus size={16} />
+                    </button>
+                    <span className="px-2 py-1">category</span>
+                </div>
+                <button className="p-1 ring-1 ring-neutral-800 rounded-full bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors">
+                    <Plus size={16} />
+                </button>
+            </div>
+            <span className="text-right flex-1 px-2 py-1">assigned</span>
+            <span className="text-right flex-1 px-2 py-1">activity</span>
+            <span className="text-right flex-1 px-2 py-1">available</span>
+        </div>
+    )
+}
+
+const CategoryRow_ = ({ category }: { category: CategoryView }) => {
+    return (
+        <div className="w-full px-2 py-1 flex gap-2 hover:bg-neutral-950 items-center justify-between border-t border-neutral-800 transition-colors">
+            <div className='flex-1 flex items-center'>
+                <button className="p-1 opacity-0">
+                    <ChevronDown size={16} />
+                </button>
+                <input className="flex-1 px-2 py-1 focus:outline-none focus:ring-1 ring-neutral-800 rounded-lg transition-colors" defaultValue={category.name} />
+            </div>
+            <input className="flex-1 px-2 py-1 focus:outline-none hover:ring-1 focus:bg-neutral-900 focus:ring-2 ring-neutral-800 rounded-lg transition-colors text-right" defaultValue={category.assigned} />
+            <span className="flex-1 px-2 py-1 text-right">{category.activity}</span>
+            <span className="flex-1 px-2 py-1 text-right">{category.available}</span>
+        </div>
+    )
+}
+
+const CategoryGroupRow_ = ({ categoryGroup, budget, month }: { categoryGroup: CategoryGroupView, budget: Budget, month: string }) => {
+    return (
+        <>
+            <div className="w-full px-2 py-1 flex gap-2 items-center justify-between border-t border-neutral-800" >
+                <div className='flex-1 flex items-center'>
+                    <button className="p-1 ">
+                        <ChevronDown size={16} />
+                    </button>
+                    <input className="flex-1 px-2 py-1 focus:outline-none focus:ring-1 ring-neutral-800 rounded-lg transition-colors" defaultValue={categoryGroup.name} />
+                </div>
+                <span className="flex-1 px-2 py-1 text-right">{categoryGroup.assigned}</span>  
+                <span className="flex-1 px-2 py-1 text-right">{categoryGroup.activity}</span>
+                <span className="flex-1 px-2 py-1 text-right">{categoryGroup.available}</span>
+            </div>
+            {categoryGroup.categories.map(category => (
+                <CategoryRow_ category={category} key={category.id} />
+            ))}
+        </>
+    )
+}
+
+const CategoryTable = ({ budgetView, budget }: { budgetView: BudgetView, budget: Budget }) => {
+    return (
+        <div className="bg-black rounded-lg w-full flex flex-col border border-neutral-800 overflow-clip">
+            <CategoryTableHeader />
+            {budgetView.categoryGroups.map(categoryGroup => (
+                <CategoryGroupRow_
+                    key={categoryGroup.id}
+                    categoryGroup={categoryGroup}
+                    budget={budget}
+                    month={budgetView.month}
+                />
+            ))}
+        </div>
+    )
+}
+
 const PlanView = ({ month }: { month: string }) => {
     const budget = useBudgetStore(s => s.budget)
     const entries = useBudgetStore(s => s.monthlyCategoryEntries[month])
     const setPartial = useBudgetStore(s => s.setPartial)
-    
+
     useEffect(() => {
         if (!entries) {
             getCategoryEntries(budget.id, month).then(data => {
@@ -246,27 +325,16 @@ const PlanView = ({ month }: { month: string }) => {
             })
         }
     }, [month, budget, setPartial, entries])
-    
+
     const budgetView = useBudgetView(month)
     if (!budgetView || !budget) return <h1>loading</h1>
-    
+
 
     return (
         <div className='w-full h-full flex flex-col'>
-            <Topbar budgetView={budgetView} budget={budget} />
-
-            <div className="h-full w-full flex flex-col">
-                <Toolbar month={month} budget={budget} />
-                <Header />
-
-                {budgetView.categoryGroups.map(categoryGroup => (
-                    <CategoryGroupRow
-                        budget={budget}
-                        categoryGroup={categoryGroup}
-                        key={categoryGroup.id}
-                        month={month}
-                    />
-                ))}
+            <Topbar budget={budget} />
+            <div className="size-full flex flex-col p-2.5 border-t border-neutral-800">
+                <CategoryTable budgetView={budgetView} budget={budget} />
             </div>
         </div>
     )

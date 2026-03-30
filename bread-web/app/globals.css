@@ -49,31 +49,13 @@ form {
   }
 } */
 
+/* why do we even need this stuff? */
 @layer utilities {
-  .button {
-    @apply p-2.5 rounded-lg cursor-pointer transition-all;
-
-  }
-  .button-gray {
-    @apply bg-gray-400 p-2.5 rounded-lg hover:invert-100 transition-all;
+  .button-padding-primary {
+    @apply px-4 py-2;
   }
 }
 
-.sidebar-collapsed {
-  @apply w-16 p-2.5 h-full absolute;
-  @apply outline; /* temporary */
-}
-
-.sidebar-expanded {
-  @apply flex flex-col relative;
-  @apply /* w-64 */ p-2.5 h-full;
-  @apply outline-2 outline-neutral-800;
-}
-.sidebar {
-  @apply h-full flex flex-col justify-between items-center relative p-2.5;
-  @apply transition-all duration-200 ease-out;
-  @apply outline outline-neutral-700; /* temporary */
-}
 .truncate {
   @apply overflow-hidden overflow-ellipsis whitespace-nowrap;
 }
