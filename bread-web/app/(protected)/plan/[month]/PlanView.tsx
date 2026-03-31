@@ -358,6 +358,11 @@ const CategoryGroupRow_ = ({ categoryGroup, budget, month }: { categoryGroup: Ca
                 ...state.categoryGroups,
                 [res.id]: res,
             }
+
+            state.setPartial({
+                categoryGroups: updatedCategoryGroups,
+            })
+            toast.success('renamed category group')
         } catch(error)  {
             console.log("failed to rename category group", error)
             toast.error('failed to rename category group')

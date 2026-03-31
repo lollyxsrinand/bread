@@ -115,7 +115,7 @@ export const createCategory = async (budgetId: string, name: string, groupId: st
     return await res.json() as Category
 }
 
-export const renameCategoryGroup = async (budgetId: string, groupId: string, name: string) => {
+export const renameCategoryGroup = async (budgetId: string, groupId: string, newName: string) => {
     const token = await getToken()
     const res = await fetch(`http://localhost:3001/budgets/${budgetId}/categoryGroups/${groupId}/rename`, {
         method: 'PATCH',
@@ -123,7 +123,7 @@ export const renameCategoryGroup = async (budgetId: string, groupId: string, nam
             'authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ newName })
     })
 
     if (!res.ok) {

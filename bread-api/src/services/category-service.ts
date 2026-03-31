@@ -444,3 +444,33 @@ export const renameCategory = async (userId: string, budgetId: string, categoryI
 
     return category
 }
+
+export const getCategoryGroup = async (userId: string, budgetId: string, categoryGroupId: string) => {
+    const categoryGroupRef = db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categoryGroups').doc(categoryGroupId)
+
+    const snapshot = await categoryGroupRef.get()
+
+    if (!snapshot.exists || !snapshot.data()) {
+        return null
+    }
+
+    return snapshot.data() as CategoryGroup
+}
+
+export const renameCategoryGroup = async (userId: string, budgetId: string, categoryGroupId:string, newName: string) => {
+    const categoryRef = db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categoryGroups').doc(categoryGroupId)
+    
+    const categoryGroup = await getCategoryGroup(userId, budgetId, categoryGroupId)
+    assert(categoryGroup, "category doesn't exist")
+
+    categoryGroup.name = newName
+    await categoryRef.update({ name: newName })
+
+    return categoryGroup
+}
