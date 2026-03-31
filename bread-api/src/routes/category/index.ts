@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { assignToCategoryHandler, createCategoryHandler, getCategoriesHandler, getCategoryEntriesHandler, getCategoryGroupsHandler, getMonthSummaryHandler, rolloverToNextMonthHandler } from "./handlers";
+import { assignToCategoryHandler, createCategoryHandler, getCategoriesHandler, getCategoryEntriesHandler, getCategoryGroupsHandler, getMonthSummaryHandler, renameCategoryHandler, rolloverToNextMonthHandler } from "./handlers";
 
 const categoryRoutes = async (fastify: FastifyInstance) => {
       fastify.get('/budgets/:budgetId/categories', getCategoriesHandler)
@@ -15,6 +15,9 @@ const categoryRoutes = async (fastify: FastifyInstance) => {
       fastify.post('/budgets/:budgetId/rollover', rolloverToNextMonthHandler)
 
       fastify.post('/budgets/:budgetId/categories', createCategoryHandler)
+
+      // rename category
+      fastify.patch('/budgets/:budgetId/categories/:categoryId/rename', renameCategoryHandler)
 }
 
 export default categoryRoutes
