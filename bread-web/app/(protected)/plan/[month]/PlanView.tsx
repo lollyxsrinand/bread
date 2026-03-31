@@ -1,8 +1,8 @@
 'use client'
-import { assignToCategory, createCategory, getCategoryEntries, rolloverToNextMonth } from "@/lib/actions/category.actions"
+import { assignToCategory, createCategory, getCategoryEntries, renameCategory, renameCategoryGroup, rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
 import { Budget, BudgetView, CategoryGroupView, CategoryView, generateBudgetView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
-import { ChevronDown, ChevronLeftCircle, ChevronRightCircle, Edit2, Plus, PlusCircle } from "lucide-react"
+import { ChevronDown, ChevronLeftCircle, ChevronRight, ChevronRightCircle, Edit2, Plus, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { SetStateAction, useEffect, useState } from "react"
 import { toast } from "react-toastify"
@@ -16,7 +16,7 @@ const Topbar = ({ budget }: { budget: Budget }) => {
         <div className="w-full h-24 flex justify-center items-center">
             <div className="">
                 <p className="text-lg">{available} is available to assign</p>
-                <p className="text-neutral-500 hover:text-neutral-100 text-sm transition-colors">you need to make this number 0</p>
+                <p className="text-neutral-500 hover:text-neutral-100 text-sm transition-colors font-light">you need to make this number 0</p>
             </div>
         </div>
     )
@@ -236,9 +236,9 @@ const CategoryRow = ({ budget, category, month }: { budget: Budget, category: Ca
 
 const CategoryTableHeader = () => {
     return (
-        <div className="px-2 py-1 w-full flex items-center gap-2 justify-between ">
+        <div className="px-2 py-1 w-full flex items-center gap-2 justify-between  bg-neutral-950">
             <div className="w-full flex items-center flex-1 justify-between">
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center min-w-4">
                     {/* i have no idea design choice. below button is pure 100% aesthetic choice */}
                     <button className="p-1 opacity-0 ring-1 ring-neutral-800 rounded-full bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors">
                         <Plus size={16} />
@@ -249,45 +249,140 @@ const CategoryTableHeader = () => {
                     <Plus size={16} />
                 </button>
             </div>
-            <span className="text-right flex-1 px-2 py-1">assigned</span>
+            <span className="text-right min-w-0 flex-1 px-2 py-1">assigned</span>
             <span className="text-right flex-1 px-2 py-1">activity</span>
             <span className="text-right flex-1 px-2 py-1">available</span>
         </div>
     )
 }
 
-const CategoryRow_ = ({ category }: { category: CategoryView }) => {
+// why is month being passed wtf? why is budget being passed???? 
+// budget can come from store and month from params why pass??????????
+const CategoryRow_ = ({ category, budget, month }: { category: CategoryView, budget: Budget, month: string }) => {
+    const [categoryName, setCategoryName] = useState(category.name)
+    const [assigned, setAssigned] = useState(category.assigned)
+    const handleAssignToCategory = async () => {
+        try {
+            if (category.assigned - assigned === 0) {
+                return
+            }
+            const res = await assignToCategory(budget.id, category.id, month, assigned)
+
+            const state = useBudgetStore.getState()
+            const updatedCategoryEntries = {
+                ...state.monthlyCategoryEntries,
+            }
+            Object.values(res.updatedCategoryEntries).map(entry => {
+                updatedCategoryEntries[entry.month] = {
+                    ...updatedCategoryEntries[entry.month],
+                    [entry.id]: entry,
+                }
+            })
+
+            if (state.budget) {
+                state.budget.totalAssigned = res.updatedBudget.totalAssigned
+            }
+
+            state.setPartial({
+                // budget: updatedBudget,
+                monthlyCategoryEntries: updatedCategoryEntries,
+            })
+            toast.success('assigned to category')
+        } catch (error) {
+            console.log(error)
+            toast.error('Failed to assign to category')
+        }
+    }
+    const handleRenameCategory = async () => {
+        const newName = categoryName.trim()
+        if (newName === category.name) {
+            return
+        }
+
+        try {
+            const res = await renameCategory(budget.id, category.id, newName)
+            const state = useBudgetStore.getState()
+            const updatedCategories = {
+                ...state.categories,
+                [res.id]: res,
+            }
+                state.setPartial({
+                    categories: updatedCategories,
+                })
+                toast.success('renamed category')
+            
+        } catch(error)  {
+            console.log("failed to rename category group", error)
+            toast.error('failed to rename category group')
+        }
+    }
+
+
     return (
         <div className="w-full px-2 py-1 flex gap-2 hover:bg-neutral-950 items-center justify-between border-t border-neutral-800 transition-colors">
-            <div className='flex-1 flex items-center'>
+            <div className='flex-1 flex items-center min-w-4 '>
                 <button className="p-1 opacity-0">
                     <ChevronDown size={16} />
                 </button>
-                <input className="flex-1 px-2 py-1 focus:outline-none focus:ring-1 ring-neutral-800 rounded-lg transition-colors" defaultValue={category.name} />
+                <input 
+                className="flex-1 px-2 py-1 font-light focus:outline-none focus:ring-2 ring-neutral-800 focus:bg-neutral-900 rounded-lg transition-colors" 
+                onChange={(e) => setCategoryName(e.target.value)}
+                onBlur={handleRenameCategory}
+                defaultValue={category.name} />
             </div>
-            <input className="flex-1 px-2 py-1 focus:outline-none hover:ring-1 focus:bg-neutral-900 focus:ring-2 ring-neutral-800 rounded-lg transition-colors text-right" defaultValue={category.assigned} />
-            <span className="flex-1 px-2 py-1 text-right">{category.activity}</span>
-            <span className="flex-1 px-2 py-1 text-right">{category.available}</span>
+            <input 
+            className="flex-1 min-w-0 px-2 py-1 focus:outline-none font-light hover:ring-1 focus:bg-neutral-900 focus:ring-2 ring-neutral-800 rounded-lg transition-colors text-right" 
+            type="number"
+            onChange={(e) => setAssigned(parseInt(e.target.value))}
+            onBlur={handleAssignToCategory}
+            defaultValue={assigned} />
+            <span className="flex-1 px-2 py-1 text-right font-light">{category.activity}</span>
+            <span className="flex-1 px-2 py-1 text-right font-light">{category.available}</span>
         </div>
     )
 }
 
 const CategoryGroupRow_ = ({ categoryGroup, budget, month }: { categoryGroup: CategoryGroupView, budget: Budget, month: string }) => {
+    const [categoryGroupName, setCategoryGroupName] = useState(categoryGroup.name)
+    const [showCategories, setShowCategories] = useState(true)
+    const handleRenameCategoryGroup = async () => {
+        const newName = categoryGroupName.trim()
+        if (newName === categoryGroup.name) {
+            return
+        }
+
+        try {
+            const res = await renameCategoryGroup(budget.id, categoryGroup.id, newName)
+            const state = useBudgetStore.getState()
+            const updatedCategoryGroups = {
+                ...state.categoryGroups,
+                [res.id]: res,
+            }
+        } catch(error)  {
+            console.log("failed to rename category group", error)
+            toast.error('failed to rename category group')
+        }
+    }
     return (
         <>
-            <div className="w-full px-2 py-1 flex gap-2 items-center justify-between border-t border-neutral-800" >
-                <div className='flex-1 flex items-center'>
-                    <button className="p-1 ">
-                        <ChevronDown size={16} />
+            <div className="w-full px-2 py-1 flex gap-2 items-center justify-between border-t border-neutral-800 bg-neutral-950" >
+                <div className='flex-1 flex items-center min-w-4'>
+                    <button onClick={() => setShowCategories(!showCategories)} className="p-1 text-neutral-500 hover:text-neutral-100 transition-colors">
+                        {showCategories ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </button>
-                    <input className="flex-1 px-2 py-1 focus:outline-none focus:ring-1 ring-neutral-800 rounded-lg transition-colors" defaultValue={categoryGroup.name} />
+                    <input 
+                    className="flex-1 px-2 py-1 focus:outline-none focus:ring-1 ring-neutral-800 rounded-lg transition-colors" 
+                    onChange={(e) => setCategoryGroupName(e.target.value)}
+                    onBlur={handleRenameCategoryGroup}
+                    defaultValue={categoryGroupName} />
                 </div>
-                <span className="flex-1 px-2 py-1 text-right">{categoryGroup.assigned}</span>  
+                <span className="flex-1 px-2 py-1 text-right">{categoryGroup.assigned}</span>
                 <span className="flex-1 px-2 py-1 text-right">{categoryGroup.activity}</span>
                 <span className="flex-1 px-2 py-1 text-right">{categoryGroup.available}</span>
             </div>
-            {categoryGroup.categories.map(category => (
-                <CategoryRow_ category={category} key={category.id} />
+            
+            {showCategories && categoryGroup.categories.map(category => (
+                <CategoryRow_ category={category} key={category.id} budget={budget} month={month}/>
             ))}
         </>
     )
@@ -334,6 +429,8 @@ const PlanView = ({ month }: { month: string }) => {
         <div className='w-full h-full flex flex-col'>
             <Topbar budget={budget} />
             <div className="size-full flex flex-col p-2.5 border-t border-neutral-800">
+                {/* TODO: LEARN hOW TO FUCKING CREATE BEAUTIFUL TABLES USING <TABLE> OR SOMESHIT */}
+                {/* warning: don't f with anyyy stylings. it's fragile af. <div> spiral*/}
                 <CategoryTable budgetView={budgetView} budget={budget} />
             </div>
         </div>

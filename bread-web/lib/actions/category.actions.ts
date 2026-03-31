@@ -114,3 +114,39 @@ export const createCategory = async (budgetId: string, name: string, groupId: st
 
     return await res.json() as Category
 }
+
+export const renameCategoryGroup = async (budgetId: string, groupId: string, name: string) => {
+    const token = await getToken()
+    const res = await fetch(`http://localhost:3001/budgets/${budgetId}/categoryGroups/${groupId}/rename`, {
+        method: 'PATCH',
+        headers: {
+            'authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name })
+    })
+
+    if (!res.ok) {
+        throw new Error('failed to rename category group')
+    }
+
+    return await res.json() as CategoryGroup
+}
+
+export const renameCategory = async (budgetId: string, categoryId: string, newName: string) => {
+    const token = await getToken()
+    const res = await fetch(`http://localhost:3001/budgets/${budgetId}/categories/${categoryId}/rename`, {
+        method: 'PATCH',
+        headers: {
+            'authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ newName })
+    })
+
+    if (!res.ok) {
+        throw new Error('failed to rename category')
+    }
+
+    return await res.json() as Category
+}
