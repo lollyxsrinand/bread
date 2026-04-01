@@ -201,8 +201,20 @@ const NavigateMonths = () => {
     const year = parseInt(monthId.slice(0, 4))
     const month = parseInt(monthId.slice(4, 7))
 
-    
+    const handleCreateNextMonth = async () => {
+        try {
+            const res = await rolloverToNextMonth(budget.id)
+            console.log(res);
+            router.push(`/plan/${getNextMonthId(monthId)}`)
+        } catch (error) {
+            console.log(error);
+            toast.error('Failed to create next month')
+        }
+    }
 
+    // TODO: 
+    // after creating and navigating to next month
+    // the pathname update is not reflected in the component
     return (
         <div className="flex px-2 py-1 w-fit flex-col border border-neutral-800 rounded-lg">
             <div className="flex items-center justify-center">
@@ -227,7 +239,7 @@ const NavigateMonths = () => {
                 {budget.maxMonth === monthId ?
                     <button
                         className="p-1 rounded-full hover:bg-neutral-100 hover:text-black transition-colors"
-                        onClick={() => null}
+                        onClick={handleCreateNextMonth}
                     >
                         <Plus size={16} />
                     </button>
