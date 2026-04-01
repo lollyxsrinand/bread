@@ -191,10 +191,10 @@ const Toolbar = () => {
 }
 
 const NavigateMonths = () => {
-    const pathname = usePathname()
+    const { month: monthId } = useParams() as { month: string }
     const budget = useBudgetStore(s => s.budget)
-    const monthId = pathname.split('/').at(-1)
-    if (!monthId || !budget) return null
+
+    if (!budget || !monthId) return null
 
     const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
     const router = useRouter()
@@ -205,6 +205,7 @@ const NavigateMonths = () => {
         try {
             const res = await rolloverToNextMonth(budget.id)
             console.log(res);
+            budget.maxMonth = getNextMonthId(budget.maxMonth)
             router.push(`/plan/${getNextMonthId(monthId)}`)
         } catch (error) {
             console.log(error);
@@ -212,9 +213,6 @@ const NavigateMonths = () => {
         }
     }
 
-    // TODO: 
-    // after creating and navigating to next month
-    // the pathname update is not reflected in the component
     return (
         <div className="flex px-2 py-1 w-fit flex-col border border-neutral-800 rounded-lg">
             <div className="flex items-center justify-center">
