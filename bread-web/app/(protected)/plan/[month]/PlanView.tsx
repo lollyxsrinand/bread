@@ -1,9 +1,9 @@
 'use client'
 import { assignToCategory, createCategory, getCategoryEntries, renameCategory, renameCategoryGroup, rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
-import { Budget, BudgetView, CategoryGroupView, CategoryView, generateBudgetView, getNextMonthId, getPreviousMonthId } from "bread-core/src"
-import { ChevronDown, ChevronLeftCircle, ChevronRight, ChevronRightCircle, Edit2, Plus, PlusCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Budget, BudgetView, CategoryGroupView, CategoryView, generateBudgetView, getNextMonthId, getPreviousMonthId, MonthId } from "bread-core/src"
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronLeftCircle, ChevronRight, ChevronRightCircle, Edit2, Plus, PlusCircle } from "lucide-react"
+import { useParams, usePathname, useRouter } from "next/navigation"
 import { SetStateAction, useEffect, useState } from "react"
 import { toast } from "react-toastify"
 import { useBudgetView } from "@/app/hooks/useBudgetView"
@@ -22,217 +22,6 @@ const Topbar = ({ budget }: { budget: Budget }) => {
     )
 }
 
-const Toolbar = ({ month, budget }: { month: string, budget: Budget }) => {
-    const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
-    const router = useRouter()
-
-    const handleCreateNextMonth = async () => {
-        try {
-            const res = await rolloverToNextMonth(budget.id)
-            console.log(res);
-            router.push(`/plan/${getNextMonthId(month)}`)
-        } catch (error) {
-            console.log(error);
-            toast.error('Failed to create next month')
-        }
-    }
-
-    return (
-        <div className="w-full h-fit flex px-3 ">
-            <div className="flex px-3 py-2 items-center gap-1">
-                {budget.minMonth < month ?
-                    <button className="p-1" onClick={() => router.push(`/plan/${getPreviousMonthId(month)}`)}>
-                        <ChevronLeftCircle size={18} />
-                    </button>
-                    :
-                    <button className="p-1">
-                        <ChevronLeftCircle size={18} className="opacity-50" />
-                    </button>
-                }
-                <span>{monthNames[parseInt(month.slice(4, 7)) - 1]}</span>
-                {budget.maxMonth > month ?
-                    <button className="p-1" onClick={() => router.push(`/plan/${getNextMonthId(month)}`)}>
-                        <ChevronRightCircle size={18} />
-                    </button>
-                    :
-                    <button className="p-1" onClick={handleCreateNextMonth}>
-                        <PlusCircle size={18} />
-                    </button>
-                }
-            </div>
-        </div>
-    )
-}
-
-const Header = () => {
-    return (
-        <div className="w-full px-3 flex gap-2.5">
-            <div className="px-3 py-2 w-full flex items-center gap-1">
-                <button className="p-1">
-                    <PlusCircle size={18} />
-                </button>
-                <span>category</span>
-            </div>
-            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                <span>assigned</span>
-            </div>
-            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                <span>activity</span>
-            </div>
-            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                <span>available</span>
-            </div>
-        </div>
-    )
-}
-
-const DraftCategory = ({ setShowDraftCategory, categoryGroupId, budget }: { setShowDraftCategory: React.Dispatch<SetStateAction<boolean>>, categoryGroupId: string, budget: Budget }) => {
-    const [name, setName] = useState('')
-    const handleCreateCategory = async () => {
-        try {
-            const res = await createCategory(budget.id, name, categoryGroupId)
-            const state = useBudgetStore.getState()
-            const updatedCategories = {
-                ...state.categories,
-                res
-            }
-
-            state.setPartial({
-                categories: updatedCategories,
-            })
-
-            console.log(res);
-        } catch (error) {
-            console.log(error)
-            toast.error('Failed to create category')
-        }
-    }
-    return (
-        <div className="w-full px-3 gap-2.5 flex">
-            <div className="px-3 py-2 w-full flex items-center gap-1">
-                <button className="p-1 opacity-0 pointer-events-none cursor-none">
-                    <ChevronDown size={18} />
-                </button>
-                <input className="bg-neutral-900 w-full border border-neutral-800 rounded-lg p-1 focus:outline-none focus:ring-2 focus:ring-neutral-600"
-                    type="text"
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="category name"
-                    value={name}
-                />
-            </div>
-            <button className="px-3 py-2 w-full flex items-center gap-1"
-                onClick={handleCreateCategory}
-            >
-                <div className="flex gap-2 items-center justify-center rounded-full hover:bg-neutral-100 bg-neutral-900 border border-neutral-800 p-1 transition-colors hover:text-black">
-                    <Plus size={18} />
-                </div>
-            </button>
-        </div>
-    )
-}
-
-const CategoryGroupRow = ({ budget, categoryGroup, month }: { budget: Budget, categoryGroup: CategoryGroupView, month: string }) => {
-    const [showDraftCategory, setShowDraftCategory] = useState(false)
-    return (
-        <div>
-            <div className="w-full px-3 flex gap-2.5 group">
-                <div className="px-3 py-2 w-full flex items-center gap-1">
-                    <button className="p-1">
-                        <ChevronDown size={18} />
-                    </button>
-                    <span>{categoryGroup.name}</span>
-                    <button
-                        className="p-1 group-hover:opacity-100 opacity-0 pointer-events-none group-hover:pointer-events-auto transition-all"
-                        onClick={() => setShowDraftCategory(!showDraftCategory)}
-                    >
-                        <PlusCircle className="" size={18} />
-                    </button>
-                </div>
-                <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                    <span>{categoryGroup.assigned}</span>
-                </div>
-                <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                    <span>{categoryGroup.activity}</span>
-                </div>
-                <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                    <span>{categoryGroup.available}</span>
-                </div>
-            </div>
-            {showDraftCategory &&
-                <DraftCategory
-                    setShowDraftCategory={setShowDraftCategory}
-                    categoryGroupId={categoryGroup.id}
-                    budget={budget}
-                />
-            }
-            {categoryGroup.categories.map(category => (
-                <CategoryRow budget={budget} category={category} key={category.id} month={month} />
-            ))}
-        </div>
-    )
-}
-
-const CategoryRow = ({ budget, category, month }: { budget: Budget, category: CategoryView, month: string }) => {
-    const [assigned, setAssigned] = useState(category.assigned.toString())
-
-    const handleAssignToCategory = async () => {
-        try {
-            const newAssigned = parseInt(assigned)
-            if (category.assigned - newAssigned === 0) {
-                return
-            }
-            const res = await assignToCategory(budget.id, category.id, month, newAssigned)
-
-            const state = useBudgetStore.getState()
-            const updatedCategoryEntries = {
-                ...state.monthlyCategoryEntries,
-            }
-            Object.values(res.updatedCategoryEntries).map(entry => {
-                updatedCategoryEntries[entry.month] = {
-                    ...updatedCategoryEntries[entry.month],
-                    [entry.id]: entry,
-                }
-            })
-
-            if (state.budget) {
-                state.budget.totalAssigned = res.updatedBudget.totalAssigned
-            }
-
-            state.setPartial({
-                // budget: updatedBudget,
-                monthlyCategoryEntries: updatedCategoryEntries,
-            })
-        } catch (error) {
-            console.log(error)
-            toast.error('Failed to assign to category')
-        }
-    }
-
-    return (
-        <div className="w-full px-3 gap-2.5 flex">
-            <div className="px-3 py-2 w-full flex items-center gap-1">
-                <button className="p-1 opacity-0">
-                    <ChevronDown size={18} />
-                </button>
-                <span>{category.name}</span>
-            </div>
-            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                <input className="text-right bg-transparent w-full"
-                    type="number"
-                    onChange={(e) => setAssigned(e.target.value)}
-                    value={assigned}
-                    onBlur={handleAssignToCategory}
-                />
-            </div>
-            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                <span>{category.activity}</span>
-            </div>
-            <div className="px-3 py-2 w-full flex items-center gap-1 justify-end">
-                <span>{category.available}</span>
-            </div>
-        </div>
-    )
-}
 
 const CategoryTableHeader = () => {
     return (
@@ -258,7 +47,7 @@ const CategoryTableHeader = () => {
 
 // why is month being passed wtf? why is budget being passed???? 
 // budget can come from store and month from params why pass??????????
-const CategoryRow_ = ({ category, budget, month }: { category: CategoryView, budget: Budget, month: string }) => {
+const CategoryRow = ({ category, budget, month }: { category: CategoryView, budget: Budget, month: string }) => {
     const [categoryName, setCategoryName] = useState(category.name)
     const [assigned, setAssigned] = useState(category.assigned)
     const handleAssignToCategory = async () => {
@@ -306,12 +95,12 @@ const CategoryRow_ = ({ category, budget, month }: { category: CategoryView, bud
                 ...state.categories,
                 [res.id]: res,
             }
-                state.setPartial({
-                    categories: updatedCategories,
-                })
-                toast.success('renamed category')
-            
-        } catch(error)  {
+            state.setPartial({
+                categories: updatedCategories,
+            })
+            toast.success('renamed category')
+
+        } catch (error) {
             console.log("failed to rename category group", error)
             toast.error('failed to rename category group')
         }
@@ -324,25 +113,25 @@ const CategoryRow_ = ({ category, budget, month }: { category: CategoryView, bud
                 <button className="p-1 opacity-0">
                     <ChevronDown size={16} />
                 </button>
-                <input 
-                className="flex-1 px-2 py-1 font-light focus:outline-none focus:ring-2 ring-neutral-800 focus:bg-neutral-900 rounded-lg transition-colors" 
-                onChange={(e) => setCategoryName(e.target.value)}
-                onBlur={handleRenameCategory}
-                defaultValue={category.name} />
+                <input
+                    className="flex-1 px-2 py-1 font-light focus:outline-none focus:ring-2 ring-neutral-800 focus:bg-neutral-900 rounded-lg transition-colors"
+                    onChange={(e) => setCategoryName(e.target.value)}
+                    onBlur={handleRenameCategory}
+                    defaultValue={category.name} />
             </div>
-            <input 
-            className="flex-1 min-w-0 px-2 py-1 focus:outline-none font-light hover:ring-1 focus:bg-neutral-900 focus:ring-2 ring-neutral-800 rounded-lg transition-colors text-right" 
-            type="number"
-            onChange={(e) => setAssigned(parseInt(e.target.value))}
-            onBlur={handleAssignToCategory}
-            defaultValue={assigned} />
+            <input
+                className="flex-1 min-w-0 px-2 py-1 focus:outline-none font-light hover:ring-1 focus:bg-neutral-900 focus:ring-2 ring-neutral-800 rounded-lg transition-colors text-right"
+                type="number"
+                onChange={(e) => setAssigned(parseInt(e.target.value))}
+                onBlur={handleAssignToCategory}
+                defaultValue={assigned} />
             <span className="flex-1 px-2 py-1 text-right font-light">{category.activity}</span>
             <span className="flex-1 px-2 py-1 text-right font-light">{category.available}</span>
         </div>
     )
 }
 
-const CategoryGroupRow_ = ({ categoryGroup, budget, month }: { categoryGroup: CategoryGroupView, budget: Budget, month: string }) => {
+const CategoryGroupRow = ({ categoryGroup, budget, month }: { categoryGroup: CategoryGroupView, budget: Budget, month: string }) => {
     const [categoryGroupName, setCategoryGroupName] = useState(categoryGroup.name)
     const [showCategories, setShowCategories] = useState(true)
     const handleRenameCategoryGroup = async () => {
@@ -363,7 +152,7 @@ const CategoryGroupRow_ = ({ categoryGroup, budget, month }: { categoryGroup: Ca
                 categoryGroups: updatedCategoryGroups,
             })
             toast.success('renamed category group')
-        } catch(error)  {
+        } catch (error) {
             console.log("failed to rename category group", error)
             toast.error('failed to rename category group')
         }
@@ -375,21 +164,83 @@ const CategoryGroupRow_ = ({ categoryGroup, budget, month }: { categoryGroup: Ca
                     <button onClick={() => setShowCategories(!showCategories)} className="p-1 text-neutral-500 hover:text-neutral-100 transition-colors">
                         {showCategories ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </button>
-                    <input 
-                    className="flex-1 px-2 py-1 focus:outline-none focus:ring-1 ring-neutral-800 rounded-lg transition-colors" 
-                    onChange={(e) => setCategoryGroupName(e.target.value)}
-                    onBlur={handleRenameCategoryGroup}
-                    defaultValue={categoryGroupName} />
+                    <input
+                        className="flex-1 px-2 py-1 focus:outline-none focus:ring-1 ring-neutral-800 rounded-lg transition-colors"
+                        onChange={(e) => setCategoryGroupName(e.target.value)}
+                        onBlur={handleRenameCategoryGroup}
+                        defaultValue={categoryGroupName} />
                 </div>
                 <span className="flex-1 px-2 py-1 text-right">{categoryGroup.assigned}</span>
                 <span className="flex-1 px-2 py-1 text-right">{categoryGroup.activity}</span>
                 <span className="flex-1 px-2 py-1 text-right">{categoryGroup.available}</span>
             </div>
-            
+
             {showCategories && categoryGroup.categories.map(category => (
-                <CategoryRow_ category={category} key={category.id} budget={budget} month={month}/>
+                <CategoryRow category={category} key={category.id} budget={budget} month={month} />
             ))}
         </>
+    )
+}
+
+const Toolbar = () => {
+    return (
+        <div className="w-full">
+            <NavigateMonths />
+        </div>
+    )
+}
+
+const NavigateMonths = () => {
+    const pathname = usePathname()
+    const budget = useBudgetStore(s => s.budget)
+    const monthId = pathname.split('/').at(-1)
+    if (!monthId || !budget) return null
+
+    const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+    const router = useRouter()
+    const year = parseInt(monthId.slice(0, 4))
+    const month = parseInt(monthId.slice(4, 7))
+
+    
+
+    return (
+        <div className="flex px-2 py-1 w-fit flex-col border border-neutral-800 rounded-lg">
+            <div className="flex items-center justify-center">
+                <span className="w-12 text-neutral-500 text-center">{year}</span>
+            </div>
+            <div className="flex items-center justify-center">
+                {budget.minMonth === monthId ?
+                    <button
+                        className="p-1 text-neutral-500 transition-colors"
+                    >
+                        <ArrowLeft size={16} />
+                    </button>
+                    :
+                    <button
+                        className="p-1 text-neutral-500 hover:text-neutral-100 transition-colors"
+                        onClick={() => router.push(`/plan/${getPreviousMonthId(monthId)}`)}
+                    >
+                        <ArrowLeft size={16} />
+                    </button>
+                 }
+                <span className="w-12 text-center">{monthNames[month - 1]}</span>
+                {budget.maxMonth === monthId ?
+                    <button
+                        className="p-1 rounded-full hover:bg-neutral-100 hover:text-black transition-colors"
+                        onClick={() => null}
+                    >
+                        <Plus size={16} />
+                    </button>
+                    :
+                    <button
+                        className="p-1 text-neutral-500 hover:text-neutral-100 transition-colors"
+                        onClick={() => router.push(`/plan/${getNextMonthId(monthId)}`)}
+                    >
+                        <ArrowRight size={16} />
+                    </button>
+                 }
+            </div>
+        </div>
     )
 }
 
@@ -398,7 +249,7 @@ const CategoryTable = ({ budgetView, budget }: { budgetView: BudgetView, budget:
         <div className="bg-black rounded-lg w-full flex flex-col border border-neutral-800 overflow-clip">
             <CategoryTableHeader />
             {budgetView.categoryGroups.map(categoryGroup => (
-                <CategoryGroupRow_
+                <CategoryGroupRow
                     key={categoryGroup.id}
                     categoryGroup={categoryGroup}
                     budget={budget}
@@ -433,7 +284,8 @@ const PlanView = ({ month }: { month: string }) => {
     return (
         <div className='w-full h-full flex flex-col'>
             <Topbar budget={budget} />
-            <div className="size-full flex flex-col p-2.5 border-t border-neutral-800">
+            <div className="size-full flex flex-col p-2.5 border-t border-neutral-800 gap-2.5">
+                <Toolbar />
                 {/* TODO: LEARN hOW TO FUCKING CREATE BEAUTIFUL TABLES USING <TABLE> OR SOMESHIT */}
                 {/* warning: don't f with anyyy stylings. it's fragile af. <div> spiral*/}
                 <CategoryTable budgetView={budgetView} budget={budget} />
