@@ -22,11 +22,90 @@ const Topbar = ({ budget }: { budget: Budget }) => {
     )
 }
 
+const CreateCategoryPrompt = ({setShowCreateCategoryPrompt} : { setShowCreateCategoryPrompt: React.Dispatch<SetStateAction<boolean>>}) => {
+    const categoryGroups = useBudgetStore(s => s.categoryGroups)
+    const budget = useBudgetStore(s => s.budget)
+    if (!categoryGroups) return null
+    const [categoryName, setCategoryName] = useState("")
+    const [categoryGroupId, setCategoryGroupId] = useState("")
+
+    const handleCreateCategory = async () => {
+        if (!categoryName || !categoryGroupId) {
+            toast.error("please fill out all fields")
+            return
+        }
+        if (categoryName === 'readytoassign') {
+            toast.error("category name cannot be 'readytoassign'")
+            return
+        }
+
+        try {
+            const res = await createCategory(budget.id, categoryName, categoryGroupId)
+            const state = useBudgetStore.getState()
+            const updatedCategories = {
+                ...state.categories,
+                [res.id]: res,
+            }
+            state.setPartial({
+                categories: updatedCategories,
+            })
+
+            toast.success("created category")
+            setShowCreateCategoryPrompt(false)
+        } catch (error) {
+            toast.error("failed to create category")
+            console.log(error)
+        }
+    }
+
+    return (
+        <div className="h-full w-full flex justify-center items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 backdrop-blur-xs">
+            <div className="flex flex-col justify-center items-center w-86 gap-6 py-6 px-10 rounded-xl bg-neutral-950 border border-neutral-800">
+                <span className="text-2xl text-neutral-100 font-extralight">create a category</span>
+
+                <div className="flex flex-col w-full gap-2.5">
+                    <input
+                        className="px-4 py-2 rounded-xl bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all"
+                        type="text"
+                        onChange={(e) => setCategoryName(e.target.value)}
+                        value={categoryName}
+                        placeholder="category name" />
+
+                    <select
+                        className="px-4 py-2 rounded-xl bg-neutral-900 border border-neutral-800 focus:outline-none focus:ring-2 ring-neutral-600 transition-all appearance-none"
+                        value={categoryGroupId}
+                        onChange={(e) => setCategoryGroupId(e.target.value)}
+                        name="type">
+                            {Object.values(categoryGroups).map(group => (
+                                <option key={group.id} value={group.id}>{group.name}</option>
+                            ))}
+                    </select>
+
+
+                    <button
+                        onClick={handleCreateCategory}
+                        className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors" type="submit">
+                        create
+                    </button>
+                    <button
+                        className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors"
+                        type="button"
+                        onClick={() => setShowCreateCategoryPrompt(false)}
+                    >
+                        cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 const CategoryTableHeader = () => {
+    const [showCreateCategoryPrompt, setShowCreateCategoryPrompt] = useState<boolean>(false)
     return (
         <div className="px-2 py-1 w-full flex items-center gap-2 justify-between  bg-neutral-950">
-            <div className="w-full flex items-center flex-1 justify-between">
+            {showCreateCategoryPrompt && <CreateCategoryPrompt setShowCreateCategoryPrompt={setShowCreateCategoryPrompt} /> }
+            <div className="w-full flex items-center flex-1 gap-2.5">
                 <div className="flex items-center justify-center min-w-4">
                     {/* i have no idea design choice. below button is pure 100% aesthetic choice */}
                     <button className="p-1 opacity-0 ring-1 ring-neutral-800 rounded-full bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors">
@@ -34,7 +113,10 @@ const CategoryTableHeader = () => {
                     </button>
                     <span className="px-2 py-1">category</span>
                 </div>
-                <button className="p-1 ring-1 ring-neutral-800 rounded-full bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors">
+                <button 
+                className="p-1 ring-1 ring-neutral-800 rounded-full bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors"
+                onClick={() => setShowCreateCategoryPrompt(true)}
+                >
                     <Plus size={16} />
                 </button>
             </div>
@@ -232,7 +314,7 @@ const NavigateMonths = () => {
                     >
                         <ArrowLeft size={16} />
                     </button>
-                 }
+                }
                 <span className="w-12 text-center">{monthNames[month - 1]}</span>
                 {budget.maxMonth === monthId ?
                     <button
@@ -248,7 +330,7 @@ const NavigateMonths = () => {
                     >
                         <ArrowRight size={16} />
                     </button>
-                 }
+                }
             </div>
         </div>
     )

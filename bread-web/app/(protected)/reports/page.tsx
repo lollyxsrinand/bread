@@ -2,7 +2,7 @@ import React from 'react'
 
 const Reports = () => {
   return (
-    <div>coming zoooooooon</div>
+    <div>working on it...</div>
   )
 }
 
