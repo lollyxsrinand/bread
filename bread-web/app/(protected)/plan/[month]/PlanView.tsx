@@ -2,12 +2,14 @@
 import { assignToCategory, createCategory, getCategoryEntries, renameCategory, renameCategoryGroup, rolloverToNextMonth } from "@/lib/actions/category.actions"
 import { useBudgetStore } from "@/store/budget-store"
 import { Budget, BudgetView, CategoryGroupView, CategoryView, generateBudgetView, getNextMonthId, getPreviousMonthId, MonthId } from "bread-core/src"
-import { ArrowLeft, ArrowRight, ChevronDown, ChevronLeftCircle, ChevronRight, ChevronRightCircle, Edit2, Plus, PlusCircle } from "lucide-react"
+import { ArrowLeft, ArrowRight, ChevronDown, ChevronLeftCircle, ChevronRight, ChevronRightCircle, Edit2, MoreHorizontal, Plus, PlusCircle } from "lucide-react"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { SetStateAction, useEffect, useState } from "react"
 import { toast } from "react-toastify"
 import { useBudgetView } from "@/app/hooks/useBudgetView"
 import { formatBalance } from "@/utils/format-balance"
+import Dropdown from "@/app/components/ui/dropdown/Dropdown"
+import DropdownItem from "@/app/components/ui/dropdown/DropdownItem"
 
 
 const Topbar = ({ budget }: { budget: Budget }) => {
@@ -22,7 +24,7 @@ const Topbar = ({ budget }: { budget: Budget }) => {
     )
 }
 
-const CreateCategoryPrompt = ({setShowCreateCategoryPrompt} : { setShowCreateCategoryPrompt: React.Dispatch<SetStateAction<boolean>>}) => {
+const CreateCategoryPrompt = ({ setShowCreateCategoryPrompt }: { setShowCreateCategoryPrompt: React.Dispatch<SetStateAction<boolean>> }) => {
     const categoryGroups = useBudgetStore(s => s.categoryGroups)
     const budget = useBudgetStore(s => s.budget)
     if (!categoryGroups) return null
@@ -61,7 +63,7 @@ const CreateCategoryPrompt = ({setShowCreateCategoryPrompt} : { setShowCreateCat
     return (
         <div className="h-full w-full flex justify-center items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 backdrop-blur-xs">
             <div className="flex flex-col justify-center items-center w-86 gap-6 py-6 px-10 rounded-xl bg-neutral-950 border border-neutral-800">
-                <span className="text-2xl text-neutral-100 font-extralight">create a category</span>
+                <span className="text-2xl text-neutral-100 font-extralight">create category</span>
 
                 <div className="flex flex-col w-full gap-2.5">
                     <input
@@ -76,9 +78,9 @@ const CreateCategoryPrompt = ({setShowCreateCategoryPrompt} : { setShowCreateCat
                         value={categoryGroupId}
                         onChange={(e) => setCategoryGroupId(e.target.value)}
                         name="type">
-                            {Object.values(categoryGroups).map(group => (
-                                <option key={group.id} value={group.id}>{group.name}</option>
-                            ))}
+                        {Object.values(categoryGroups).map(group => (
+                            <option key={group.id} value={group.id}>{group.name}</option>
+                        ))}
                     </select>
 
 
@@ -104,7 +106,7 @@ const CategoryTableHeader = () => {
     const [showCreateCategoryPrompt, setShowCreateCategoryPrompt] = useState<boolean>(false)
     return (
         <div className="px-2 py-1 w-full flex items-center gap-2 justify-between  bg-neutral-950">
-            {showCreateCategoryPrompt && <CreateCategoryPrompt setShowCreateCategoryPrompt={setShowCreateCategoryPrompt} /> }
+            {showCreateCategoryPrompt && <CreateCategoryPrompt setShowCreateCategoryPrompt={setShowCreateCategoryPrompt} />}
             <div className="w-full flex items-center flex-1 gap-2.5">
                 <div className="flex items-center justify-center min-w-4">
                     {/* i have no idea design choice. below button is pure 100% aesthetic choice */}
@@ -113,9 +115,9 @@ const CategoryTableHeader = () => {
                     </button>
                     <span className="px-2 py-1">category</span>
                 </div>
-                <button 
-                className="p-1 ring-1 ring-neutral-800 rounded-full bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors"
-                onClick={() => setShowCreateCategoryPrompt(true)}
+                <button
+                    className="p-1 ring-1 ring-neutral-800 rounded-full bg-neutral-900 hover:bg-neutral-100 hover:text-black transition-colors"
+                    onClick={() => setShowCreateCategoryPrompt(true)}
                 >
                     <Plus size={16} />
                 </button>
@@ -132,6 +134,7 @@ const CategoryTableHeader = () => {
 const CategoryRow = ({ category, budget, month }: { category: CategoryView, budget: Budget, month: string }) => {
     const [categoryName, setCategoryName] = useState(category.name)
     const [assigned, setAssigned] = useState(category.assigned)
+    const [showDropdown, setShowDropdown] = useState(false)
     const handleAssignToCategory = async () => {
         try {
             if (category.assigned - assigned === 0) {
@@ -189,11 +192,25 @@ const CategoryRow = ({ category, budget, month }: { category: CategoryView, budg
     }
 
 
+
     return (
-        <div className="w-full px-2 py-1 flex gap-2 hover:bg-neutral-950 items-center justify-between border-t border-neutral-800 transition-colors">
+        <div className="w-full px-2 py-1 flex gap-2 hover:bg-neutral-950 items-center justify-between border-t border-neutral-800 group transition-colors">
+            {showDropdown && (
+                <Dropdown>
+                    <DropdownItem>
+                        <span>hello</span>
+                    </DropdownItem>
+                    <DropdownItem>
+                        <span>hello again</span>
+                    </DropdownItem>
+                </Dropdown>
+            )}
             <div className='flex-1 flex items-center min-w-4 '>
-                <button className="p-1 opacity-0">
-                    <ChevronDown size={16} />
+                <button
+                    className="p-1 text-neutral-500 opacity-0 group-hover:opacity-100 hover:text-neutral-100 transition-all"
+                    onClick={() => setShowDropdown(!showDropdown)}
+                >
+                    <MoreHorizontal size={16} />
                 </button>
                 <input
                     className="flex-1 px-2 py-1 font-light focus:outline-none focus:ring-2 ring-neutral-800 focus:bg-neutral-900 rounded-lg transition-colors"
