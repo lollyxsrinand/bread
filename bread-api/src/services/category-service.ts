@@ -474,3 +474,19 @@ export const renameCategoryGroup = async (userId: string, budgetId: string, cate
 
     return categoryGroup
 }
+
+export const moveCategory = async (userId: string, budgetId: string, categoryId: string, toCategoryGroupId: string) => {
+    const categoryRef = db
+        .collection('users').doc(userId)
+        .collection('budgets').doc(budgetId)
+        .collection('categories').doc(categoryId)
+    
+    const category = await getCategory(userId, budgetId, categoryId)
+    assert(category, "category doesn't exist")
+    assert(!category.isSystem, "system categories cannot be moved")
+
+    category.categoryGroupId = toCategoryGroupId
+    await categoryRef.update({ categoryGroupId: toCategoryGroupId })
+
+    return category
+}

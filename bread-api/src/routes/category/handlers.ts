@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify"
 import { getUserId } from "../../utils/auth"
-import { assignToCategory, getCategories, getAllCategoryEntriesForMonth, getCategoryGroups, rolloverToNextMonth, getMonthSummary, createCategory, renameCategory, renameCategoryGroup } from "../../services/category-service"
+import { assignToCategory, getCategories, getAllCategoryEntriesForMonth, getCategoryGroups, rolloverToNextMonth, getMonthSummary, createCategory, renameCategory, renameCategoryGroup, moveCategory } from "../../services/category-service"
 import { request } from "http"
 // import { getMonthlyBudgetView } from "../../services/budget-service"
 
@@ -172,6 +172,29 @@ export const renameCategoryGroupHandler = async (request: FastifyRequest, reply:
     try {
         const updatedCategoryGroup = await renameCategoryGroup(userId, budgetId, categoryGroupId, newName)
         return reply.status(200).send(updatedCategoryGroup)
+    } catch (error) {
+        console.error(error)
+        return reply.status(500).send({ error: `internal error: ${error}`})
+    }
+}
+
+export const moveCategoryHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const userId = await getUserId(request)
+    if (!userId) {
+        return reply.status(401).send({ error: "not authenticated" })
+    }
+
+    const { budgetId, categoryId } = request.params as { budgetId: string, categoryId: string }
+
+    const { toGroupId } = request.body as { toGroupId: string }
+
+    if (!toGroupId) {
+        return reply.status(400).send({ error: "newGroupId is required" })
+    }
+
+    try {
+        const updatedCategory = await moveCategory(userId, budgetId, categoryId, toGroupId)
+        return reply.status(200).send(updatedCategory)
     } catch (error) {
         console.error(error)
         return reply.status(500).send({ error: `internal error: ${error}`})
