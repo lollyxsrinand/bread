@@ -197,7 +197,7 @@ const CategoryRow = ({ category, budget, month }: { category: CategoryView, budg
         <div className="w-full px-2 py-1 flex gap-2 hover:bg-neutral-950 items-center justify-between border-t border-neutral-800 group transition-colors">
             {showDropdown && (
                 <Dropdown>
-                    <DropdownItem>
+                    <DropdownItem onClick={() => null}>
                         <span>hello</span>
                     </DropdownItem>
                     <DropdownItem>

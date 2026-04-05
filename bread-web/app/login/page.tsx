@@ -1,6 +1,7 @@
 'use client'
 import { auth, googleProvider } from "@/lib/firebase/client";
 import { signInWithPopup } from "firebase/auth";
+import Image from "next/image";
 
 import { useRouter } from "next/navigation";
 
@@ -31,7 +32,7 @@ const Login = () => {
   return (
     <div className="h-screen w-full flex justify-center items-center">
       <button onClick={handleGoogleLogin} className="w-fit hover:bg-neutral-100 hover:text-black transition-colors px-4 py-2.5 rounded-lg focus:outline-none">
-        login... or signup... same thing. with google :{`)`}
+        login with google
       </button>
     </div>
   );
